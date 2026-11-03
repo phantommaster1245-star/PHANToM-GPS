@@ -1,12 +1,12 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..e439a915a608b7b304683d9887d4d0963206e402 100644
+index d211674657a4308ba7437287558c90117ce56c75..a4b32c9a8c4ef359cb06ada3c42416a2c7d1770d 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
 +    id 'com.google.gms.google-services'
 @@ -10 +11,26 @@ plugins {
 -def tagName = '0.0.6'
-+def tagName = '0.0.13'
++def tagName = '0.0.14'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -37,7 +37,7 @@ index d211674657a4308ba7437287558c90117ce56c75..e439a915a608b7b304683d9887d4d096
 +        applicationId "io.github.phantom.gps"
 @@ -18 +44 @@ android {
 -        versionCode 6
-+        versionCode 13
++        versionCode 14
 @@ -19,0 +46 @@ android {
 +        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://phantom-gps.vercel.app/\""
 @@ -21,0 +49,2 @@ android {
@@ -1441,10 +1441,10 @@ index 0000000000000000000000000000000000000000..06926a9e615e52931cc2cc034a817f88
 +    }
 +}
 diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
-index 0f008127b6ad6e023883872916d8ed40501fbb1e..ede2a54531534f74ae69fef13926598ff478742f 100644
+index 0f008127b6ad6e023883872916d8ed40501fbb1e..9f31bcd8a59e0bb19d6630c4003f635173acae89 100644
 --- a/app/src/main/AndroidManifest.xml
 +++ b/app/src/main/AndroidManifest.xml
-@@ -12,0 +13,9 @@
+@@ -12,0 +13,13 @@
 +    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 +    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 +    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -1454,13 +1454,17 @@ index 0f008127b6ad6e023883872916d8ed40501fbb1e..ede2a54531534f74ae69fef13926598f
 +        android:name="${applicationId}.permission.REFRESH_LOCATION"
 +        android:protectionLevel="signature" />
 +    <uses-permission android:name="${applicationId}.permission.REFRESH_LOCATION" />
-@@ -19 +28 @@
++
++    <queries>
++        <package android:name="com.fulllock.app" />
++    </queries>
+@@ -19 +32 @@
 -        android:roundIcon="@mipmap/ic_launcher"
 +        android:roundIcon="@mipmap/ic_launcher_round"
-@@ -30 +39 @@
+@@ -30 +43 @@
 -            android:name=".ui.MapActivity"
 +            android:name=".ui.ActivationActivity"
-@@ -37,0 +47,9 @@
+@@ -37,0 +51,9 @@
 +        <activity
 +            android:name=".ui.LoginActivity"
 +            android:exported="false" />
@@ -1470,7 +1474,7 @@ index 0f008127b6ad6e023883872916d8ed40501fbb1e..ede2a54531534f74ae69fef13926598f
 +        <activity
 +            android:name=".ui.LockedActivity"
 +            android:exported="false" />
-@@ -42,0 +61,37 @@
+@@ -42,0 +65,45 @@
 +        <service
 +            android:name=".utils.ClipboardMonitorService"
 +            android:exported="false"
@@ -1487,6 +1491,14 @@ index 0f008127b6ad6e023883872916d8ed40501fbb1e..ede2a54531534f74ae69fef13926598f
 +        <receiver
 +            android:name=".utils.ClipboardLocationReceiver"
 +            android:exported="true" />
++
++        <receiver
++            android:name=".utils.DirectLocationReceiver"
++            android:exported="true">
++            <intent-filter>
++                <action android:name="${applicationId}.action.SET_LOCATION_DIRECT" />
++            </intent-filter>
++        </receiver>
 +
 +        <receiver
 +            android:name=".utils.ShellCommandReceiver"
@@ -1508,11 +1520,11 @@ index 0f008127b6ad6e023883872916d8ed40501fbb1e..ede2a54531534f74ae69fef13926598f
 +            </intent-filter>
 +        </receiver>
 +
-@@ -47,3 +101,0 @@
+@@ -47,3 +113,0 @@
 -        <meta-data
 -            android:name="com.maplibre.AccessToken"
 -            android:value="REMOVED_LEGACY_SECRET" />
-@@ -79 +131 @@
+@@ -79 +143 @@
 -</manifest>
 \ No newline at end of file
 +</manifest>
@@ -1656,6 +1668,63 @@ index 1b7c1f031fc01ed9b6f597f0874facae2f4d4ceb..00000000000000000000000000000000
 -        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 -        notificationManager.cancelAll()
 -    }
+-}
+\ No newline at end of file
+diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt b/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt
+deleted file mode 100644
+index c49507362245160560adc43d64d9f59889f18b75..0000000000000000000000000000000000000000
+--- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt
++++ /dev/null
+@@ -1,50 +0,0 @@
+-package io.github.jqssun.gpssetter.xposed
+-import de.robv.android.xposed.XSharedPreferences
+-import io.github.jqssun.gpssetter.BuildConfig
+-
+-class Xshare {
+-
+-    private var xPref: XSharedPreferences? = null
+-
+-    private fun pref() : XSharedPreferences {
+-        xPref = XSharedPreferences(BuildConfig.APPLICATION_ID,"${BuildConfig.APPLICATION_ID}_prefs")
+-        return xPref as XSharedPreferences
+-    }
+-
+-    val isStarted : Boolean
+-    get() = pref().getBoolean(
+-        "start",
+-        false
+-    )
+-
+-    val getLat: Double
+-    get() = pref().getFloat(
+-        "latitude",
+-        45.0000000.toFloat()
+-    ).toDouble()
+-
+-
+-    val getLng : Double
+-    get() = pref().getFloat(
+-        "longitude",
+-        0.0000000.toFloat()
+-    ).toDouble()
+-
+-    val isHookedSystem : Boolean
+-    get() = pref().getBoolean(
+-        "system_hooked",
+-        true
+-    )
+-
+-    val isRandomPosition :Boolean
+-    get() = pref().getBoolean(
+-        "random_position",
+-        false
+-    )
+-
+-    val accuracy : String?
+-    get() = pref().getString("accuracy_level","10")
+-
+-    val reload = pref().reload()
+-
 -}
 \ No newline at end of file
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/App.kt b/app/src/main/java/io/github/phantom/gps/App.kt
@@ -3843,6 +3912,200 @@ index 0000000000000000000000000000000000000000..fec8135e6c6b811f18718daf525ad7ba
 +        }
 +    }
 +}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/DirectLocationProtocol.kt b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationProtocol.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..bff578aefb1edf9e580743e8fca0d3c1529c224e
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationProtocol.kt
+@@ -0,0 +1,38 @@
++package io.github.phantom.gps.utils
++
++object DirectLocationProtocol {
++    const val VERSION = 1
++    const val PACKAGE = "io.github.phantom.gps"
++    const val CALLER_PACKAGE = "com.fulllock.app"
++    const val ACTION = "io.github.phantom.gps.action.SET_LOCATION_DIRECT"
++    const val COMPONENT = "io.github.phantom.gps.utils.DirectLocationReceiver"
++    const val APPLIED = 100
++    const val HOOK_LOADED = 101
++    const val INVALID_REQUEST = 400
++    const val UNAUTHORIZED = 401
++    const val LICENSE_REQUIRED = 402
++    const val LICENSE_LOCKED = 403
++    const val SUPERSEDED = 409
++    const val APPLY_FAILED = 500
++    const val HOOK_TIMEOUT = 504
++}
++
++data class DirectLocationRequest(
++    val id: String, val latitude: Double, val longitude: Double,
++    val label: String = "", val targetPackage: String = ""
++) {
++    fun isValid(): Boolean = id.matches(Regex("[A-Za-z0-9_.-]{1,96}")) &&
++        latitude.isFinite() && longitude.isFinite() && latitude in -90.0..90.0 && longitude in -180.0..180.0 &&
++        label.length <= 160 && (targetPackage.isEmpty() ||
++        (targetPackage.length <= 200 && targetPackage.matches(Regex("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)+")) && targetPackage != DirectLocationProtocol.PACKAGE))
++}
++
++/** A duplicate ID cannot silently refer to different coordinates. Keeps only recent successful writes. */
++class DirectLocationHistory {
++    private val applied = LinkedHashMap<String, DirectLocationRequest>()
++    @Synchronized fun find(id: String): DirectLocationRequest? = applied[id]
++    @Synchronized fun record(request: DirectLocationRequest) {
++        applied[request.id] = request
++        while (applied.size > 64) applied.remove(applied.keys.first())
++    }
++}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/DirectLocationReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationReceiver.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..463f0201936185fa91630562175d37578befd094
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationReceiver.kt
+@@ -0,0 +1,114 @@
++package io.github.phantom.gps.utils
++
++import android.app.PendingIntent
++import android.content.BroadcastReceiver
++import android.content.Context
++import android.content.Intent
++import android.os.Bundle
++import android.os.Handler
++import android.os.Looper
++import android.os.ResultReceiver
++import android.os.SystemClock
++import java.util.concurrent.Executors
++import java.util.concurrent.atomic.AtomicBoolean
++import java.util.concurrent.atomic.AtomicLong
++
++/** Explicit app-to-app numeric path. No clipboard, shell, geocoder, or remote license request. */
++class DirectLocationReceiver : BroadcastReceiver() {
++    override fun onReceive(context: Context, intent: Intent?) {
++        if (intent?.action != DirectLocationProtocol.ACTION) return
++        val receivedAt = SystemClock.elapsedRealtime()
++        val reply = runCatching { intent.getParcelableExtra<ResultReceiver>("reply") }.getOrNull() ?: return
++        val id = intent.getStringExtra("request_id").orEmpty()
++        val result = Responder(reply, id, receivedAt)
++        val identity = runCatching { intent.getParcelableExtra<PendingIntent>("caller_identity") }.getOrNull()
++        val authorized = identity != null && identity.creatorPackage == DirectLocationProtocol.CALLER_PACKAGE &&
++            runCatching { context.packageManager.getPackageUid(DirectLocationProtocol.CALLER_PACKAGE, 0) == identity.creatorUid }.getOrDefault(false)
++        if (!authorized) { result.send(DirectLocationProtocol.UNAUTHORIZED, "UNAUTHORIZED"); return }
++        if (!AppIntegrity.isSelfValid(context)) { result.send(DirectLocationProtocol.APPLY_FAILED, "INTEGRITY_FAILED"); return }
++        val extras = intent.extras
++        val lat = extras?.get("latitude") as? Double
++        val lon = extras?.get("longitude") as? Double
++        if (intent.getIntExtra("api_version", 0) != DirectLocationProtocol.VERSION || lat == null || lon == null) {
++            result.send(DirectLocationProtocol.INVALID_REQUEST, "INVALID_REQUEST"); return
++        }
++        val request = DirectLocationRequest(id, lat, lon, intent.getStringExtra("label").orEmpty(), intent.getStringExtra("target_package").orEmpty())
++        if (!request.isValid()) { result.send(DirectLocationProtocol.INVALID_REQUEST, "INVALID_REQUEST"); return }
++        val sequence = latest.incrementAndGet()
++        val pending = goAsync()
++        val app = context.applicationContext
++        worker.execute {
++            var written = false
++            try {
++                if (sequence != latest.get()) { result.send(DirectLocationProtocol.SUPERSEDED, "SUPERSEDED"); return@execute }
++                if (LicenseStore.isLocked(app)) { result.send(DirectLocationProtocol.LICENSE_LOCKED, "LICENSE_LOCKED"); return@execute }
++                if (!LicenseStore.isActivated(app)) { result.send(DirectLocationProtocol.LICENSE_REQUIRED, "LICENSE_REQUIRED"); return@execute }
++                val old = history.find(id)
++                if (old != null && old != request) { result.send(DirectLocationProtocol.INVALID_REQUEST, "REQUEST_ID_REUSED"); return@execute }
++                if (old == request) {
++                    if (!LicenseGuard.isLocallyAllowedForCriticalAction(app)) { result.send(DirectLocationProtocol.LICENSE_REQUIRED, "LICENSE_REQUIRED"); return@execute }
++                    if (PrefManager.directRequestId != id || !PrefManager.isStarted) { result.send(DirectLocationProtocol.SUPERSEDED, "SUPERSEDED", applied = true); return@execute }
++                    result.send(DirectLocationProtocol.APPLIED, "APPLIED", applied = true)
++                    confirmHook(app, request, result)
++                    return@execute
++                }
++                var reported = false
++                val applied = LocationController.applyImmediately(app, lat, lon, request.label, requestId = id) {
++                    history.record(request)
++                    written = true
++                    reported = true
++                    result.send(DirectLocationProtocol.APPLIED, "APPLIED", applied = true)
++                    confirmHook(app, request, result)
++                }
++                if (!applied && !reported) {
++                    if (!LicenseGuard.isLocallyAllowedForCriticalAction(app)) result.send(DirectLocationProtocol.LICENSE_REQUIRED, "LICENSE_REQUIRED")
++                    else result.send(DirectLocationProtocol.APPLY_FAILED, "APPLY_FAILED")
++                }
++            } catch (_: Exception) {
++                if (!written) result.send(DirectLocationProtocol.APPLY_FAILED, "APPLY_FAILED")
++            } finally { pending.finish() }
++        }
++    }
++
++    private class Responder(private val receiver: ResultReceiver, private val id: String, private val receivedAt: Long) {
++        fun send(code: Int, status: String, applied: Boolean = false, hookPackage: String = "") {
++            runCatching { receiver.send(code, Bundle().apply {
++                putInt("api_version", DirectLocationProtocol.VERSION)
++                putString("request_id", id)
++                putString("status", status)
++                putBoolean("applied", applied)
++                putBoolean("hook_loaded", code == DirectLocationProtocol.HOOK_LOADED)
++                putLong("elapsed_ms", (SystemClock.elapsedRealtime() - receivedAt).coerceAtLeast(0))
++                if (hookPackage.isNotEmpty()) putString("hook_package", hookPackage)
++            }) }
++        }
++    }
++
++    companion object {
++        private val worker = Executors.newSingleThreadExecutor { task -> Thread(task, "Phantom-direct-location").apply { isDaemon = true } }
++        private val latest = AtomicLong()
++        private val history = DirectLocationHistory()
++        private val main = Handler(Looper.getMainLooper())
++
++        private fun confirmHook(context: Context, request: DirectLocationRequest, result: Responder) {
++            if (request.targetPackage.isEmpty()) return
++            val finished = AtomicBoolean(false)
++            val timeout = Runnable {
++                if (finished.compareAndSet(false, true)) result.send(DirectLocationProtocol.HOOK_TIMEOUT, "HOOK_TIMEOUT", applied = true)
++            }
++            val callback = object : ResultReceiver(main) {
++                override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
++                    if (resultData?.getString("request_id") != request.id || !finished.compareAndSet(false, true)) return
++                    main.removeCallbacks(timeout)
++                    if (PrefManager.directRequestId != request.id || resultCode != DirectLocationProtocol.HOOK_LOADED) {
++                        result.send(DirectLocationProtocol.SUPERSEDED, "SUPERSEDED", applied = true)
++                    } else {
++                        result.send(DirectLocationProtocol.HOOK_LOADED, "HOOK_LOADED", applied = true, hookPackage = request.targetPackage)
++                    }
++                }
++            }
++            main.postDelayed(timeout, 1500)
++            LocationRefresh.confirm(context, request.targetPackage, request.id, callback)
++        }
++    }
++}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/HookLocationSnapshot.kt b/app/src/main/java/io/github/phantom/gps/utils/HookLocationSnapshot.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..c0fcf9cb72d803a3be64e3c0222b0134228a0484
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/HookLocationSnapshot.kt
+@@ -0,0 +1,24 @@
++package io.github.phantom.gps.utils
++
++/** One immutable preference snapshot: a request ID can never be paired with half-old coordinates. */
++data class HookLocationSnapshot(
++    val latitude: Double, val longitude: Double, val started: Boolean, val requestId: String,
++    val allowRandom: Boolean, val radiusMeters: Double, val accuracy: Float,
++    val traceId: Long, val capturedAtMs: Long
++) {
++    companion object {
++        fun from(values: Map<String, *>): HookLocationSnapshot {
++            val id = values["direct_request_id"] as? String ?: ""
++            return HookLocationSnapshot(
++                (values["latitude_bits"] as? Long)?.let { Double.fromBits(it) } ?: (values["latitude"] as? Float ?: 45F).toDouble(),
++                (values["longitude_bits"] as? Long)?.let { Double.fromBits(it) } ?: (values["longitude"] as? Float ?: 0F).toDouble(),
++                values["start"] as? Boolean ?: false, id,
++                (values["random_position"] as? Boolean == true) && id.isEmpty(),
++                (values["random_radius_meters"] as? String)?.toDoubleOrNull()?.coerceAtLeast(1.0) ?: 10.0,
++                (values["accuracy_level"] as? String)?.toFloatOrNull() ?: 10F,
++                values["clipboard_trace_id"] as? Long ?: 0,
++                values["clipboard_captured_at_ms"] as? Long ?: 0
++            )
++        }
++    }
++}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/JoystickService.kt b/app/src/main/java/io/github/phantom/gps/utils/JoystickService.kt
 similarity index 97%
 rename from app/src/main/java/io/github/jqssun/gpssetter/utils/JoystickService.kt
@@ -3889,10 +4152,10 @@ index 0000000000000000000000000000000000000000..9b8ee376ca5a8a19d53be2273822b69a
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt b/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..fa5e2a59abb0ee2583c588b63dd0e269e2bc7268
+index 0000000000000000000000000000000000000000..2cf7844f0024d2e3c20fbefbe7018ab5e67d1c64
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,75 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Notification
@@ -3904,9 +4167,16 @@ index 0000000000000000000000000000000000000000..fa5e2a59abb0ee2583c588b63dd0e269
 +object LocationController {
 +
 +    fun start(context: Context, lat: Double, lon: Double, label: String?, trace: ClipboardTrace? = null) {
-+        if (!LicenseGuard.isLocallyAllowedForCriticalAction(context)) return
-+        PrefManager.updateNow(start = true, la = lat, ln = lon, trace = trace)
++        applyImmediately(context, lat, lon, label, trace)
++    }
++
++    fun applyImmediately(context: Context, lat: Double, lon: Double, label: String?,
++        trace: ClipboardTrace? = null, requestId: String = "", onApplied: () -> Unit = {}): Boolean {
++        if (!LicenseGuard.isLocallyAllowedForCriticalAction(context)) return false
++        if (!PrefManager.updateNow(start = true, la = lat, ln = lon, trace = trace, requestId = requestId)) return false
 +        LocationRefresh.send(context, trace)
++        // The caller gets its fast acknowledgement before optional UI and notification work.
++        onApplied()
 +        context.sendBroadcast(
 +            Intent(LocationActions.ACTION_LOCATION_STARTED).apply {
 +                setPackage(context.packageName)
@@ -3920,6 +4190,7 @@ index 0000000000000000000000000000000000000000..fa5e2a59abb0ee2583c588b63dd0e269
 +        )
 +        showStartedNotification(context, label)
 +        trace?.mark("notification_posted")
++        return true
 +    }
 +
 +    fun stop(context: Context) {
@@ -3962,10 +4233,10 @@ index 0000000000000000000000000000000000000000..fa5e2a59abb0ee2583c588b63dd0e269
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/LocationRefresh.kt b/app/src/main/java/io/github/phantom/gps/utils/LocationRefresh.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..815b79467267b50a39a90203c237677282e9c612
+index 0000000000000000000000000000000000000000..42bffaca9e487e7485b15d0a62ab926f1374303b
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/LocationRefresh.kt
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,38 @@
 +package io.github.phantom.gps.utils
 +
 +import android.content.Context
@@ -3975,8 +4246,22 @@ index 0000000000000000000000000000000000000000..815b79467267b50a39a90203c2376772
 +object LocationRefresh {
 +    const val TRACE_ID_PREF = "clipboard_trace_id"
 +    const val CAPTURED_AT_PREF = "clipboard_captured_at_ms"
++    val CONFIRM_ACTION = BuildConfig.APPLICATION_ID + ".action.CONFIRM_LOCATION"
 +    val ACTION = BuildConfig.APPLICATION_ID + ".action.REFRESH_LOCATION"
 +    val SENDER_PERMISSION = BuildConfig.APPLICATION_ID + ".permission.REFRESH_LOCATION"
++
++    fun confirm(context: Context, targetPackage: String, requestId: String, reply: android.os.ResultReceiver) {
++        // The Binder callback is delivered only to the specified target package, not broadcast globally.
++        // Marshal as the platform class, not an anonymous app subclass unavailable in the other process.
++        val parcel = android.os.Parcel.obtain()
++        val remoteReply = try {
++            reply.writeToParcel(parcel, 0)
++            parcel.setDataPosition(0)
++            android.os.ResultReceiver.CREATOR.createFromParcel(parcel)
++        } finally { parcel.recycle() }
++        runCatching { context.sendBroadcast(Intent(CONFIRM_ACTION).setPackage(targetPackage)
++            .addFlags(Intent.FLAG_RECEIVER_FOREGROUND).putExtra("request_id", requestId).putExtra("reply", remoteReply)) }
++    }
 +
 +    fun send(context: Context, trace: ClipboardTrace? = null) {
 +        // No coordinates are transmitted. Hook receivers require our signature permission
@@ -4459,10 +4744,10 @@ index 0000000000000000000000000000000000000000..42c33415002004f2b24906ad517311ff
 +}
 +
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-similarity index 54%
+similarity index 47%
 rename from app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
 rename to app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-index 0e30240e630883a8096962540b38794108dfcf41..a900ddbd7e3d9327c9c45ffb4e451fc13a52e970 100644
+index 0e30240e630883a8096962540b38794108dfcf41..ec6edb5083b0e4e44115051928b90acc6269b825 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
 +++ b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
 @@ -1 +1 @@
@@ -4478,17 +4763,24 @@ index 0e30240e630883a8096962540b38794108dfcf41..a900ddbd7e3d9327c9c45ffb4e451fc1
 @@ -27,0 +29,2 @@ object PrefManager   {
 +    private const val ENABLE_CLIPBOARD_MONITOR = "clipboard_monitor_enabled"
 +    private const val CLIPBOARD_AUTO_START = "clipboard_monitor_auto_start"
-@@ -56,0 +60,4 @@ object PrefManager   {
+@@ -52 +55 @@ object PrefManager   {
+-        get() = pref.getFloat(LATITUDE, 40.7128F).toDouble()
++        get() = if (pref.contains("latitude_bits")) Double.fromBits(pref.getLong("latitude_bits", 0)) else pref.getFloat(LATITUDE, 40.7128F).toDouble()
+@@ -55 +58,7 @@ object PrefManager   {
+-        get() = pref.getFloat(LONGITUDE, -74.0060F).toDouble()
++        get() = if (pref.contains("longitude_bits")) Double.fromBits(pref.getLong("longitude_bits", 0)) else pref.getFloat(LONGITUDE, -74.0060F).toDouble()
++
++    val directRequestId: String get() = pref.getString("direct_request_id", "").orEmpty()
++
 +    fun hasSavedLocation(): Boolean {
 +        return pref.contains(LATITUDE) && pref.contains(LONGITUDE)
 +    }
-+
-@@ -64,0 +72,4 @@ object PrefManager   {
+@@ -64,0 +74,4 @@ object PrefManager   {
 +    var randomRadiusMeters: String?
 +        get() = pref.getString(RANDOM_RADIUS_METERS, "10")
 +        set(value) { pref.edit().putString(RANDOM_RADIUS_METERS, value).apply() }
 +
-@@ -84,0 +96,26 @@ object PrefManager   {
+@@ -84,0 +98,26 @@ object PrefManager   {
 +    var isClipboardMonitorEnabled: Boolean
 +        get() = pref.getBoolean(ENABLE_CLIPBOARD_MONITOR, false)
 +        set(value) = pref.edit().putBoolean(ENABLE_CLIPBOARD_MONITOR, value).apply()
@@ -4515,7 +4807,11 @@ index 0e30240e630883a8096962540b38794108dfcf41..a900ddbd7e3d9327c9c45ffb4e451fc1
 +        isClipboardFormatEnabled(ClipboardFormats.KEYS[4])
 +    )
 +
-@@ -95,0 +133,23 @@ object PrefManager   {
+@@ -87,0 +127,3 @@ object PrefManager   {
++            prefEditor.putLong("latitude_bits", la.toBits())
++            prefEditor.putLong("longitude_bits", ln.toBits())
++            prefEditor.remove("direct_request_id")
+@@ -95,0 +138,27 @@ object PrefManager   {
 +    fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
 +        pref.registerOnSharedPreferenceChangeListener(listener)
 +    }
@@ -4528,18 +4824,22 @@ index 0e30240e630883a8096962540b38794108dfcf41..a900ddbd7e3d9327c9c45ffb4e451fc1
 +     * Synchronous write for cross-process consumers (XSharedPreferences in Xposed).
 +     * Prefer this for "Start/Stop" actions where we want the hook to react immediately.
 +     */
-+    fun updateNow(start: Boolean, la: Double, ln: Double, trace: ClipboardTrace? = null) {
++    fun updateNow(start: Boolean, la: Double, ln: Double, trace: ClipboardTrace? = null, requestId: String = ""): Boolean {
 +        val prefEditor = pref.edit()
++        prefEditor.putLong("latitude_bits", la.toBits())
++        prefEditor.putLong("longitude_bits", ln.toBits())
++        prefEditor.putString("direct_request_id", requestId)
 +        prefEditor.putFloat(LATITUDE, la.toFloat())
 +        prefEditor.putFloat(LONGITUDE, ln.toFloat())
 +        prefEditor.putBoolean(START, start)
 +        prefEditor.putLong(LocationRefresh.TRACE_ID_PREF, trace?.id ?: 0)
 +        prefEditor.putLong(LocationRefresh.CAPTURED_AT_PREF, trace?.capturedAtMs ?: 0)
-+        prefEditor.commit()
-+        trace?.mark("committed")
++        val committed = prefEditor.commit()
++        if (committed) trace?.mark("committed")
++        return committed
 +    }
 +
-@@ -103 +163,2 @@ object PrefManager   {
+@@ -103 +172,2 @@ object PrefManager   {
 -}
 \ No newline at end of file
 +}
@@ -4901,10 +5201,10 @@ index 6448079dcaf9a1e37d3eea479d7b90534a404241..823f8647bc90757a358856746c14511e
 \ No newline at end of file
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-similarity index 78%
+similarity index 75%
 rename from app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
 rename to app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-index 61ed6adaf6b92a8260ae655611f2391470833343..1bb825672347a746c204f253c6683d70a702635f 100644
+index 61ed6adaf6b92a8260ae655611f2391470833343..b48c37863fc975f0b67544645d9c71930e65d28a 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
 @@ -1 +1 @@
@@ -4926,11 +5226,13 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..1bb825672347a746c204f253c6683d70
 @@ -21,0 +30,2 @@ import kotlin.math.cos
 +import kotlin.math.sin
 +import kotlin.math.sqrt
-@@ -32 +42,40 @@ object LocationHook {
+@@ -32 +42,51 @@ object LocationHook {
 -    private var mLastUpdated: Long = 0
 +    @Volatile private var mLastUpdated: Long = 0
 +    @Volatile private var refreshRegistered = false
 +    @Volatile private var currentTrace: ClipboardTrace? = null
++    @Volatile private var loadedDirectRequestId: String = ""
++    @Volatile private var loadedStarted: Boolean = false
 +    private var loadedTraceId: Long = 0
 +    private var consumedTraceId: Long = 0
 +
@@ -4942,16 +5244,25 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..1bb825672347a746c204f253c6683d70
 +        val worker = HandlerThread("Phantom-location-refresh").apply { start() }
 +        val receiver = object : BroadcastReceiver() {
 +            override fun onReceive(context: Context, intent: Intent?) {
-+                if (intent?.action != LocationRefresh.ACTION) return
-+                updateLocation(forceReload = true)
++                if (intent?.action == LocationRefresh.CONFIRM_ACTION) {
++                    val id = intent.getStringExtra("request_id").orEmpty()
++                    val reply = intent.getParcelableExtra<android.os.ResultReceiver>("reply") ?: return
++                    if (id.isBlank()) return
++                    if (loadedDirectRequestId != id) updateLocation(forceReload = true)
++                    val loaded = loadedDirectRequestId == id && loadedStarted
++                    reply.send(if (loaded) 101 else 409, android.os.Bundle().apply { putString("request_id", id) })
++                } else if (intent?.action == LocationRefresh.ACTION) {
++                    updateLocation(forceReload = true)
++                }
 +            }
 +        }
++        val filter = IntentFilter(LocationRefresh.ACTION).apply { addAction(LocationRefresh.CONFIRM_ACTION) }
 +        runCatching {
 +            if (Build.VERSION.SDK_INT >= 33) {
-+                receiverContext.registerReceiver(receiver, IntentFilter(LocationRefresh.ACTION),
++                receiverContext.registerReceiver(receiver, filter,
 +                    LocationRefresh.SENDER_PERMISSION, Handler(worker.looper), Context.RECEIVER_EXPORTED)
 +            } else {
-+                receiverContext.registerReceiver(receiver, IntentFilter(LocationRefresh.ACTION),
++                receiverContext.registerReceiver(receiver, filter,
 +                    LocationRefresh.SENDER_PERMISSION, Handler(worker.looper))
 +            }
 +            refreshRegistered = true
@@ -4968,13 +5279,13 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..1bb825672347a746c204f253c6683d70
 +            trace.mark("hook_first_read")
 +        }
 +    }
-@@ -37 +86,2 @@ object LocationHook {
+@@ -37 +97,2 @@ object LocationHook {
 -    private fun updateLocation() {
 +    @Synchronized
 +    private fun updateLocation(forceReload: Boolean = false) {
-@@ -38,0 +89 @@ object LocationHook {
-+            if (forceReload) settings.forceReload()
-@@ -40,8 +91,21 @@ object LocationHook {
+@@ -38,0 +100 @@ object LocationHook {
++            val snapshot = settings.locationSnapshot(forceReload)
+@@ -40,9 +102,28 @@ object LocationHook {
 -            val x = (rand.nextInt(50) - 15).toDouble()
 -            val y = (rand.nextInt(50) - 15).toDouble()
 -            val dlat = x / earth
@@ -4983,14 +5294,12 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..1bb825672347a746c204f253c6683d70
 -                if (settings.isRandomPosition) settings.getLat + (dlat * 180.0 / pi) else settings.getLat
 -            newlng =
 -                if (settings.isRandomPosition) settings.getLng + (dlng * 180.0 / pi) else settings.getLng
-+            val baseLat = settings.getLat
-+            val baseLng = settings.getLng
+-            accuracy = settings.accuracy!!.toFloat()
++            val baseLat = snapshot.latitude
++            val baseLng = snapshot.longitude
 +
-+            if (settings.isRandomPosition) {
-+                val radiusMeters = settings.randomRadiusMeters
-+                    ?.toDoubleOrNull()
-+                    ?.coerceAtLeast(1.0)
-+                    ?: 10.0
++            if (snapshot.allowRandom) {
++                val radiusMeters = snapshot.radiusMeters
 +                val angle = rand.nextDouble() * 2.0 * pi
 +                val distance = sqrt(rand.nextDouble()) * radiusMeters
 +                val dlat = (distance * cos(angle)) / earth
@@ -5004,15 +5313,17 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..1bb825672347a746c204f253c6683d70
 +                newlat = baseLat
 +                newlng = baseLng
 +            }
-@@ -48,0 +113,7 @@ object LocationHook {
-+            currentTrace = settings.clipboardTrace()
++            accuracy = snapshot.accuracy
++            loadedStarted = snapshot.started
++            loadedDirectRequestId = snapshot.requestId
++            currentTrace = if (snapshot.traceId > 0 && snapshot.capturedAtMs > 0) ClipboardTrace(snapshot.traceId, snapshot.capturedAtMs) else null
 +            currentTrace?.let { trace ->
 +                if (trace.id != loadedTraceId) {
 +                    loadedTraceId = trace.id
 +                    trace.mark("hook_loaded")
 +                }
 +            }
-@@ -57,0 +129,10 @@ object LocationHook {
+@@ -57,0 +139,10 @@ object LocationHook {
 +        (AndroidAppHelper.currentApplication() as? Context)?.let { ensureRefreshReceiver(it) }
 +        if (lpparam.packageName != "android" && lpparam.packageName != BuildConfig.APPLICATION_ID) {
 +            XposedHelpers.findAndHookMethod(android.app.Application::class.java, "attach", Context::class.java,
@@ -5023,64 +5334,58 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..1bb825672347a746c204f253c6683d70
 +                })
 +        }
 +
-@@ -59 +140 @@ object LocationHook {
+@@ -59 +150 @@ object LocationHook {
 -        if (lpparam.packageName == "android") { XposedBridge.log("Hooking system server")
 +        if (lpparam.packageName == "android") {
-@@ -78,0 +160 @@ object LocationHook {
+@@ -78,0 +170 @@ object LocationHook {
 +                            markLocationRead()
-@@ -130,0 +213 @@ object LocationHook {
+@@ -130,0 +223 @@ object LocationHook {
 +                            markLocationRead()
-@@ -136 +218,0 @@ object LocationHook {
+@@ -136 +228,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -163 +245,2 @@ object LocationHook {
+@@ -163 +255,2 @@ object LocationHook {
 -                                    location.latitude = newlat
 +                                    markLocationRead()
 +                            location.latitude = newlat
-@@ -211,0 +295 @@ object LocationHook {
+@@ -211,0 +305 @@ object LocationHook {
 +                            markLocationRead()
-@@ -217 +300,0 @@ object LocationHook {
+@@ -217 +310,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -248,0 +332 @@ object LocationHook {
+@@ -248,0 +342 @@ object LocationHook {
 +                                    markLocationRead()
-@@ -262,0 +347 @@ object LocationHook {
+@@ -262,0 +357 @@ object LocationHook {
 +                                    markLocationRead()
-@@ -311,0 +397 @@ object LocationHook {
+@@ -311,0 +407 @@ object LocationHook {
 +                            markLocationRead()
-@@ -317 +402,0 @@ object LocationHook {
+@@ -317 +412,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -344,0 +430 @@ object LocationHook {
+@@ -344,0 +440 @@ object LocationHook {
 +                            markLocationRead()
-@@ -350 +435,0 @@ object LocationHook {
+@@ -350 +445,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -365,0 +451 @@ object LocationHook {
+@@ -365,0 +461 @@ object LocationHook {
 +
-diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
-similarity index 32%
-rename from app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt
-rename to app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
-index c49507362245160560adc43d64d9f59889f18b75..48b230b8c9745af6be0e311c292fd8a45ee478af 100644
---- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt
+diff --git a/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..89549b82d5be777a69520e6523151bac4cf5bfd5
+--- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
-@@ -1 +1,2 @@
--package io.github.jqssun.gpssetter.xposed
+@@ -0,0 +1,88 @@
 +package io.github.phantom.gps.xposed
 +
-@@ -3 +4,2 @@ import de.robv.android.xposed.XSharedPreferences
--import io.github.jqssun.gpssetter.BuildConfig
++import de.robv.android.xposed.XSharedPreferences
 +import io.github.phantom.gps.BuildConfig
 +import android.os.SystemClock
-@@ -7 +9,6 @@ class Xshare {
--    private var xPref: XSharedPreferences? = null
++
++class Xshare {
++
 +    private val prefsName = "${BuildConfig.APPLICATION_ID}_prefs"
 +    private val xPref: XSharedPreferences by lazy {
 +        XSharedPreferences(BuildConfig.APPLICATION_ID, prefsName)
 +    }
 +
 +    private var lastReloadUptimeMs: Long = 0
-@@ -9,3 +16,22 @@ class Xshare {
--    private fun pref() : XSharedPreferences {
--        xPref = XSharedPreferences(BuildConfig.APPLICATION_ID,"${BuildConfig.APPLICATION_ID}_prefs")
--        return xPref as XSharedPreferences
++
 +    @Synchronized
 +    private fun pref(): XSharedPreferences {
 +        val now = SystemClock.elapsedRealtime()
@@ -5098,25 +5403,61 @@ index c49507362245160560adc43d64d9f59889f18b75..48b230b8c9745af6be0e311c292fd8a4
 +        lastReloadUptimeMs = SystemClock.elapsedRealtime()
 +    }
 +
++    @Synchronized
++    fun locationSnapshot(force: Boolean = false): io.github.phantom.gps.utils.HookLocationSnapshot {
++        if (force) forceReload()
++        return io.github.phantom.gps.utils.HookLocationSnapshot.from(pref().all)
++    }
++
 +    fun clipboardTrace(): io.github.phantom.gps.utils.ClipboardTrace? {
 +        val p = pref()
 +        val id = p.getLong(io.github.phantom.gps.utils.LocationRefresh.TRACE_ID_PREF, 0)
 +        val capturedAt = p.getLong(io.github.phantom.gps.utils.LocationRefresh.CAPTURED_AT_PREF, 0)
 +        return if (id > 0 && capturedAt > 0) io.github.phantom.gps.utils.ClipboardTrace(id, capturedAt) else null
-@@ -44,0 +71,3 @@ class Xshare {
++    }
++
++    val directRequestId: String get() = pref().getString("direct_request_id", "").orEmpty()
++
++    val isStarted : Boolean
++    get() = pref().getBoolean(
++        "start",
++        false
++    )
++
++    val getLat: Double get() {
++        val p = pref()
++        return if (p.contains("latitude_bits")) Double.fromBits(p.getLong("latitude_bits", 0)) else p.getFloat("latitude", 45F).toDouble()
++    }
++
++    val getLng: Double get() {
++        val p = pref()
++        return if (p.contains("longitude_bits")) Double.fromBits(p.getLong("longitude_bits", 0)) else p.getFloat("longitude", 0F).toDouble()
++    }
++
++    val isHookedSystem : Boolean
++    get() = pref().getBoolean(
++        "system_hooked",
++        true
++    )
++
++    val isRandomPosition :Boolean
++    get() = pref().getBoolean(
++        "random_position",
++        false
++    )
++
 +    val randomRadiusMeters: String?
 +    get() = pref().getString("random_radius_meters","10")
 +
-@@ -48 +77,5 @@ class Xshare {
--    val reload = pref().reload()
++    val accuracy : String?
++    get() = pref().getString("accuracy_level","10")
++
 +    val isClipboardMonitorEnabled : Boolean
 +    get() = pref().getBoolean(
 +        "clipboard_monitor_enabled",
 +        false
 +    )
-@@ -50 +83 @@ class Xshare {
--}
-\ No newline at end of file
++
 +}
 diff --git a/app/src/main/res/drawable-nodpi/ic_launcher_foreground.png b/app/src/main/res/drawable-nodpi/ic_launcher_foreground.png
 new file mode 100644
@@ -13726,6 +14067,81 @@ index 0000000000000000000000000000000000000000..4c3d3a5f4e946372053ca6d2e420ff27
 +        assertEquals("", none.coordinateText("13.7563,100.5018"))
 +        assertNull(none.addressText("นนทบุรี"))
 +        assertTrue(none.urls("geo:13.7,100.5").isEmpty())
++    }
++}
+diff --git a/app/src/test/java/io/github/phantom/gps/utils/DirectLocationProtocolTest.kt b/app/src/test/java/io/github/phantom/gps/utils/DirectLocationProtocolTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..328715afee7548dfb8824a6f979e0386604553f7
+--- /dev/null
++++ b/app/src/test/java/io/github/phantom/gps/utils/DirectLocationProtocolTest.kt
+@@ -0,0 +1,36 @@
++package io.github.phantom.gps.utils
++
++import org.junit.Assert.*
++import org.junit.Test
++
++class DirectLocationProtocolTest {
++    private val request = DirectLocationRequest("job-123", 13.756300123456, 100.501800123456, "Pickup", "com.example.driver")
++    @Test fun acceptsNativeDoubleCoordinatesWithoutRounding() {
++        assertTrue(request.isValid())
++        assertEquals(request.latitude, Double.fromBits(request.latitude.toBits()), 0.0)
++        assertEquals(request.longitude, Double.fromBits(request.longitude.toBits()), 0.0)
++        assertNotEquals(request.latitude, request.latitude.toFloat().toDouble())
++        assertTrue(request.copy(latitude = -90.0, longitude = 180.0).isValid())
++    }
++    @Test fun rejectsInvalidAndNonFiniteNumbers() {
++        for (value in listOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 90.0001, -90.0001)) assertFalse(request.copy(latitude = value).isValid())
++        for (value in listOf(Double.NaN, Double.POSITIVE_INFINITY, 180.0001, -180.0001)) assertFalse(request.copy(longitude = value).isValid())
++    }
++    @Test fun checksCorrelationAndTargetMetadata() {
++        assertFalse(request.copy(id = "").isValid())
++        assertFalse(request.copy(id = "x".repeat(97)).isValid())
++        assertFalse(request.copy(targetPackage = "https://example.com").isValid())
++        assertFalse(request.copy(targetPackage = DirectLocationProtocol.PACKAGE).isValid())
++        assertFalse(request.copy(label = "x".repeat(161)).isValid())
++        assertTrue(request.copy(targetPackage = "").isValid())
++    }
++    @Test fun historyRetainsOriginalPayloadForDuplicateValidation() {
++        val history = DirectLocationHistory()
++        history.record(request)
++        assertEquals(request, history.find(request.id))
++        assertNotEquals(request.copy(latitude = 14.0), history.find(request.id))
++        for (i in 0..64) history.record(request.copy(id = "job-$i"))
++        assertNull(history.find(request.id))
++        assertNotNull(history.find("job-64"))
++    }
++}
+diff --git a/app/src/test/java/io/github/phantom/gps/utils/HookLocationSnapshotTest.kt b/app/src/test/java/io/github/phantom/gps/utils/HookLocationSnapshotTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..632698bddc2c55ec24d2ac2418aa0d7a653b6847
+--- /dev/null
++++ b/app/src/test/java/io/github/phantom/gps/utils/HookLocationSnapshotTest.kt
+@@ -0,0 +1,27 @@
++package io.github.phantom.gps.utils
++
++import org.junit.Assert.*
++import org.junit.Test
++
++class HookLocationSnapshotTest {
++    @Test fun preservesExactDoubleCoordinatesAndCorrelatedRequest() {
++        val lat = 13.756300123456; val lon = 100.501800123456
++        val s = HookLocationSnapshot.from(mapOf("latitude_bits" to lat.toBits(), "longitude_bits" to lon.toBits(), "direct_request_id" to "job-1", "start" to true))
++        assertEquals(lat, s.latitude, 0.0); assertEquals(lon, s.longitude, 0.0)
++        assertEquals("job-1", s.requestId); assertTrue(s.started)
++    }
++    @Test fun legacyFloatSettingsStillWork() {
++        val s = HookLocationSnapshot.from(mapOf("latitude" to 13.75F, "longitude" to 100.5F))
++        assertEquals(13.75, s.latitude, 0.0); assertEquals(100.5, s.longitude, 0.0)
++    }
++    @Test fun directRequestsStayExactWhileOtherChannelsKeepRandomSetting() {
++        assertFalse(HookLocationSnapshot.from(mapOf("random_position" to true, "direct_request_id" to "job-1")).allowRandom)
++        assertTrue(HookLocationSnapshot.from(mapOf("random_position" to true)).allowRandom)
++    }
++    @Test fun laterPreferenceChangesDoNotMutateLoadedPair() {
++        val data = mutableMapOf<String, Any>("latitude_bits" to 13.0.toBits(), "longitude_bits" to 100.0.toBits(), "direct_request_id" to "A")
++        val snapshot = HookLocationSnapshot.from(data)
++        data["latitude_bits"] = 14.0.toBits(); data["direct_request_id"] = "B"
++        assertEquals(13.0, snapshot.latitude, 0.0); assertEquals("A", snapshot.requestId)
 +    }
 +}
 diff --git a/build.gradle b/build.gradle

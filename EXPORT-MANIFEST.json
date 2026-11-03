@@ -1,6 +1,6 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "source": "19bb209427fc7ca049662482efc22d50c2ed7f84",
+  "source": "0ea5734c9729ebe85958586be3124b3c34e65af6",
   "files": [
     {
       "path": ".gitattributes",
@@ -11,6 +11,11 @@
       "path": ".gitignore",
       "bytes": 110,
       "sha256": "bfbaf26e48821bf10c6ac163c0f2000ce54a8e25bd7e2f11eb5d32dd04372fe6"
+    },
+    {
+      "path": "INTENT_LOCATION_BRIDGE.md",
+      "bytes": 19127,
+      "sha256": "017092c5bbbcbfe41d6d739660742058a7bf87bb2fd1e4360a8f9559b7f01157"
     },
     {
       "path": "LICENSE",
@@ -25,17 +30,17 @@
     {
       "path": "PROVENANCE.md",
       "bytes": 1621,
-      "sha256": "1d52eb305ef7582294a4886a47daf1c942e7dc495e15a0c4cbf1743595475a0c"
+      "sha256": "b2e687fd5582278191e0965153544a26a39abcd374d3acff6578806eeab79cf3"
     },
     {
       "path": "README.md",
-      "bytes": 3735,
-      "sha256": "8c49f168ed959156fb7983218a48418ea62398f2d155e2e565f634429d3221c0"
+      "bytes": 4386,
+      "sha256": "a8e6276cbd1733193ff5019b7ba70ef7f11ef37aaba5f3589f6986498fdc2d6c"
     },
     {
       "path": "VALIDATION.txt",
-      "bytes": 952,
-      "sha256": "37d2b6cdf9e7fac05642f5f7a7dc95a4e8d45e8f1724cbc2ec4484cf47709de6"
+      "bytes": 1181,
+      "sha256": "9fb183abfeebbead6b32d1a8eac6dfc7931dad82feef4116c5e70c5eb18db1f1"
     },
     {
       "path": "build.gradle",
@@ -254,8 +259,8 @@
     },
     {
       "path": "patches/phantom-gps.patch",
-      "bytes": 788597,
-      "sha256": "c25076b820d1b72994d307c53f968f20537b35d2772cb35c8dc2351e4ab5d082"
+      "bytes": 809939,
+      "sha256": "c00f95d9641b450d9fea8355b52da941d42e326502d3f53e22e8e87f95f5a10f"
     },
     {
       "path": "settings.gradle",
@@ -275,7 +280,7 @@
     {
       "path": "web/README.md",
       "bytes": 1730,
-      "sha256": "f5cedb347ae205d31cd4577504a1834e1533f32ef5b5d83de9b37c3e085c0c18"
+      "sha256": "bc9a94356fc535680b63a39622644037d0cbd4160df8d996267c50c102230e32"
     },
     {
       "path": "web/dist/assets/LICENSE.txt",
@@ -313,14 +318,14 @@
       "sha256": "a141520082ceeac2043e39defeb2b4afc065bdbd7db952a9a9bfb1e67cd50472"
     },
     {
-      "path": "web/dist/downloads/PHANToM-GPS-v0.0.13.apk",
-      "bytes": 3415767,
-      "sha256": "e6e4248b5e8f72ddfbb4cd8278df863ac036d49100ccdff505789478a3c2aab2"
+      "path": "web/dist/downloads/PHANToM-GPS-v0.0.14.apk",
+      "bytes": 3415863,
+      "sha256": "c7d0a0b76a45c5cb45c4ff49c50766ddffc3721854142d0c50b18dd9d5d8e336"
     },
     {
       "path": "web/dist/downloads/version.json",
-      "bytes": 940,
-      "sha256": "232419d9162f75feeeeb3d1aa997899763f39889acb1101a0ceec2af7b543836"
+      "bytes": 927,
+      "sha256": "1e0f2c260c79ed7b33cfb3a532d99311b34ea6f76f9f44ccd6fc1ee39845583d"
     },
     {
       "path": "web/dist/index.html",
@@ -334,8 +339,8 @@
     },
     {
       "path": "web/tools/publish-apk.mjs",
-      "bytes": 2216,
-      "sha256": "d9316afa791d28f9e60ee41d017dabb19a260c512176e1db8271bdd42cb23ef9"
+      "bytes": 2203,
+      "sha256": "d01bb2983ab954d117d0e0f52e479c8ce18385a0a11bec497ca4a092da9a121d"
     }
   ]
 }
