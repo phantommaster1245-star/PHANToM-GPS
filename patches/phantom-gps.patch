@@ -1,12 +1,12 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..a4b32c9a8c4ef359cb06ada3c42416a2c7d1770d 100644
+index d211674657a4308ba7437287558c90117ce56c75..15fd9ca078137f36ccdeaf915678139f0f24e975 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
 +    id 'com.google.gms.google-services'
 @@ -10 +11,26 @@ plugins {
 -def tagName = '0.0.6'
-+def tagName = '0.0.14'
++def tagName = '0.0.15'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -37,7 +37,7 @@ index d211674657a4308ba7437287558c90117ce56c75..a4b32c9a8c4ef359cb06ada3c42416a2
 +        applicationId "io.github.phantom.gps"
 @@ -18 +44 @@ android {
 -        versionCode 6
-+        versionCode 14
++        versionCode 15
 @@ -19,0 +46 @@ android {
 +        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://phantom-gps.vercel.app/\""
 @@ -21,0 +49,2 @@ android {
@@ -3914,10 +3914,10 @@ index 0000000000000000000000000000000000000000..fec8135e6c6b811f18718daf525ad7ba
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/DirectLocationProtocol.kt b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationProtocol.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..bff578aefb1edf9e580743e8fca0d3c1529c224e
+index 0000000000000000000000000000000000000000..151f66490356412525cf3f0b4b57a111f5fb9ae9
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationProtocol.kt
-@@ -0,0 +1,38 @@
+@@ -0,0 +1,39 @@
 +package io.github.phantom.gps.utils
 +
 +object DirectLocationProtocol {
@@ -3933,6 +3933,7 @@ index 0000000000000000000000000000000000000000..bff578aefb1edf9e580743e8fca0d3c1
 +    const val LICENSE_REQUIRED = 402
 +    const val LICENSE_LOCKED = 403
 +    const val SUPERSEDED = 409
++    const val HOOK_NOT_READY = 412
 +    const val APPLY_FAILED = 500
 +    const val HOOK_TIMEOUT = 504
 +}
@@ -3944,7 +3945,7 @@ index 0000000000000000000000000000000000000000..bff578aefb1edf9e580743e8fca0d3c1
 +    fun isValid(): Boolean = id.matches(Regex("[A-Za-z0-9_.-]{1,96}")) &&
 +        latitude.isFinite() && longitude.isFinite() && latitude in -90.0..90.0 && longitude in -180.0..180.0 &&
 +        label.length <= 160 && (targetPackage.isEmpty() ||
-+        (targetPackage.length <= 200 && targetPackage.matches(Regex("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)+")) && targetPackage != DirectLocationProtocol.PACKAGE))
++        (targetPackage.length <= 200 && (targetPackage == "android" || targetPackage.matches(Regex("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)+"))) && targetPackage != DirectLocationProtocol.PACKAGE))
 +}
 +
 +/** A duplicate ID cannot silently refer to different coordinates. Keeps only recent successful writes. */
@@ -3958,10 +3959,10 @@ index 0000000000000000000000000000000000000000..bff578aefb1edf9e580743e8fca0d3c1
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/DirectLocationReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationReceiver.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..463f0201936185fa91630562175d37578befd094
+index 0000000000000000000000000000000000000000..57907df65744c77a9c45771c669e128cb97efc43
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationReceiver.kt
-@@ -0,0 +1,114 @@
+@@ -0,0 +1,116 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.PendingIntent
@@ -4064,10 +4065,12 @@ index 0000000000000000000000000000000000000000..463f0201936185fa91630562175d3757
 +                override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
 +                    if (resultData?.getString("request_id") != request.id || !finished.compareAndSet(false, true)) return
 +                    main.removeCallbacks(timeout)
-+                    if (PrefManager.directRequestId != request.id || resultCode != DirectLocationProtocol.HOOK_LOADED) {
++                    if (PrefManager.directRequestId != request.id || resultCode == DirectLocationProtocol.SUPERSEDED) {
 +                        result.send(DirectLocationProtocol.SUPERSEDED, "SUPERSEDED", applied = true)
-+                    } else {
++                    } else if (resultCode == DirectLocationProtocol.HOOK_LOADED) {
 +                        result.send(DirectLocationProtocol.HOOK_LOADED, "HOOK_LOADED", applied = true, hookPackage = request.targetPackage)
++                    } else {
++                        result.send(DirectLocationProtocol.HOOK_NOT_READY, "HOOK_NOT_READY", applied = true)
 +                    }
 +                }
 +            }
@@ -5201,10 +5204,10 @@ index 6448079dcaf9a1e37d3eea479d7b90534a404241..823f8647bc90757a358856746c14511e
 \ No newline at end of file
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-similarity index 75%
+similarity index 70%
 rename from app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
 rename to app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-index 61ed6adaf6b92a8260ae655611f2391470833343..b48c37863fc975f0b67544645d9c71930e65d28a 100644
+index 61ed6adaf6b92a8260ae655611f2391470833343..efe3a25e499cda2444fd1c5708e84c5a1777c156 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
 @@ -1 +1 @@
@@ -5226,13 +5229,14 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..b48c37863fc975f0b67544645d9c7193
 @@ -21,0 +30,2 @@ import kotlin.math.cos
 +import kotlin.math.sin
 +import kotlin.math.sqrt
-@@ -32 +42,51 @@ object LocationHook {
+@@ -32 +42,54 @@ object LocationHook {
 -    private var mLastUpdated: Long = 0
 +    @Volatile private var mLastUpdated: Long = 0
 +    @Volatile private var refreshRegistered = false
 +    @Volatile private var currentTrace: ClipboardTrace? = null
 +    @Volatile private var loadedDirectRequestId: String = ""
 +    @Volatile private var loadedStarted: Boolean = false
++    @Volatile private var systemHooksReady: Boolean = false
 +    private var loadedTraceId: Long = 0
 +    private var consumedTraceId: Long = 0
 +
@@ -5249,8 +5253,10 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..b48c37863fc975f0b67544645d9c7193
 +                    val reply = intent.getParcelableExtra<android.os.ResultReceiver>("reply") ?: return
 +                    if (id.isBlank()) return
 +                    if (loadedDirectRequestId != id) updateLocation(forceReload = true)
-+                    val loaded = loadedDirectRequestId == id && loadedStarted
-+                    reply.send(if (loaded) 101 else 409, android.os.Bundle().apply { putString("request_id", id) })
++                    val matching = loadedDirectRequestId == id
++                    val modeReady = receiverContext.packageName != "android" || (systemHooksReady && settings.isHookedSystem)
++                    val code = if (!matching) 409 else if (loadedStarted && modeReady) 101 else 412
++                    reply.send(code, android.os.Bundle().apply { putString("request_id", id) })
 +                } else if (intent?.action == LocationRefresh.ACTION) {
 +                    updateLocation(forceReload = true)
 +                }
@@ -5279,13 +5285,13 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..b48c37863fc975f0b67544645d9c7193
 +            trace.mark("hook_first_read")
 +        }
 +    }
-@@ -37 +97,2 @@ object LocationHook {
+@@ -37 +100,2 @@ object LocationHook {
 -    private fun updateLocation() {
 +    @Synchronized
 +    private fun updateLocation(forceReload: Boolean = false) {
-@@ -38,0 +100 @@ object LocationHook {
+@@ -38,0 +103 @@ object LocationHook {
 +            val snapshot = settings.locationSnapshot(forceReload)
-@@ -40,9 +102,28 @@ object LocationHook {
+@@ -40,9 +105,28 @@ object LocationHook {
 -            val x = (rand.nextInt(50) - 15).toDouble()
 -            val y = (rand.nextInt(50) - 15).toDouble()
 -            val dlat = x / earth
@@ -5323,7 +5329,7 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..b48c37863fc975f0b67544645d9c7193
 +                    trace.mark("hook_loaded")
 +                }
 +            }
-@@ -57,0 +139,10 @@ object LocationHook {
+@@ -57,0 +142,10 @@ object LocationHook {
 +        (AndroidAppHelper.currentApplication() as? Context)?.let { ensureRefreshReceiver(it) }
 +        if (lpparam.packageName != "android" && lpparam.packageName != BuildConfig.APPLICATION_ID) {
 +            XposedHelpers.findAndHookMethod(android.app.Application::class.java, "attach", Context::class.java,
@@ -5334,36 +5340,62 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..b48c37863fc975f0b67544645d9c7193
 +                })
 +        }
 +
-@@ -59 +150 @@ object LocationHook {
+@@ -59,2 +153,12 @@ object LocationHook {
 -        if (lpparam.packageName == "android") { XposedBridge.log("Hooking system server")
+-        if (settings.isStarted && (settings.isHookedSystem && !ignorePkg.contains(lpparam.packageName))) {
 +        if (lpparam.packageName == "android") {
-@@ -78,0 +170 @@ object LocationHook {
++            // Register after ActivityManager is ready, including when Clipboard monitor is off.
++            runCatching {
++                val server = XposedHelpers.findClass("com.android.server.SystemServer", lpparam.classLoader)
++                XposedBridge.hookAllMethods(server, "startOtherServices", object : XC_MethodHook() {
++                    override fun afterHookedMethod(param: MethodHookParam) {
++                        runCatching { XposedHelpers.getObjectField(param.thisObject, "mSystemContext") as? Context }
++                            .getOrNull()?.let { ensureRefreshReceiver(it) }
++                    }
++                })
++            }
++        if (!ignorePkg.contains(lpparam.packageName)) {
+@@ -76,0 +181 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -78,0 +184 @@ object LocationHook {
 +                            markLocationRead()
-@@ -130,0 +223 @@ object LocationHook {
+@@ -99,0 +206 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -114,0 +222 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -130,0 +239 @@ object LocationHook {
 +                            markLocationRead()
-@@ -136 +228,0 @@ object LocationHook {
+@@ -136 +244,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -163 +255,2 @@ object LocationHook {
+@@ -160,0 +269 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -163 +272,2 @@ object LocationHook {
 -                                    location.latitude = newlat
 +                                    markLocationRead()
 +                            location.latitude = newlat
-@@ -211,0 +305 @@ object LocationHook {
+@@ -182,0 +293 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -195,0 +307 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -211,0 +324 @@ object LocationHook {
 +                            markLocationRead()
-@@ -217 +310,0 @@ object LocationHook {
+@@ -217 +329,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -248,0 +342 @@ object LocationHook {
+@@ -228,0 +341 @@ object LocationHook {
++                systemHooksReady = true
+@@ -248,0 +362 @@ object LocationHook {
 +                                    markLocationRead()
-@@ -262,0 +357 @@ object LocationHook {
+@@ -262,0 +377 @@ object LocationHook {
 +                                    markLocationRead()
-@@ -311,0 +407 @@ object LocationHook {
+@@ -311,0 +427 @@ object LocationHook {
 +                            markLocationRead()
-@@ -317 +412,0 @@ object LocationHook {
+@@ -317 +432,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -344,0 +440 @@ object LocationHook {
+@@ -344,0 +460 @@ object LocationHook {
 +                            markLocationRead()
-@@ -350 +445,0 @@ object LocationHook {
+@@ -350 +465,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -365,0 +461 @@ object LocationHook {
+@@ -365,0 +481 @@ object LocationHook {
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
 new file mode 100644
@@ -14071,10 +14103,10 @@ index 0000000000000000000000000000000000000000..4c3d3a5f4e946372053ca6d2e420ff27
 +}
 diff --git a/app/src/test/java/io/github/phantom/gps/utils/DirectLocationProtocolTest.kt b/app/src/test/java/io/github/phantom/gps/utils/DirectLocationProtocolTest.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..328715afee7548dfb8824a6f979e0386604553f7
+index 0000000000000000000000000000000000000000..14a6373e912781ad33993f4e5f19250537cc22b9
 --- /dev/null
 +++ b/app/src/test/java/io/github/phantom/gps/utils/DirectLocationProtocolTest.kt
-@@ -0,0 +1,36 @@
+@@ -0,0 +1,37 @@
 +package io.github.phantom.gps.utils
 +
 +import org.junit.Assert.*
@@ -14100,6 +14132,7 @@ index 0000000000000000000000000000000000000000..328715afee7548dfb8824a6f979e0386
 +        assertFalse(request.copy(targetPackage = DirectLocationProtocol.PACKAGE).isValid())
 +        assertFalse(request.copy(label = "x".repeat(161)).isValid())
 +        assertTrue(request.copy(targetPackage = "").isValid())
++        assertTrue(request.copy(targetPackage = "android").isValid())
 +    }
 +    @Test fun historyRetainsOriginalPayloadForDuplicateValidation() {
 +        val history = DirectLocationHistory()

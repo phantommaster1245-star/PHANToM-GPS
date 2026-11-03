@@ -24,12 +24,12 @@ The root Gradle files in this repository build only the standalone Installer. Th
 
 ## Public website and updates
 
-PHANToM GPS 0.0.14 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
+PHANToM GPS 0.0.15 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
 
 Website: https://phantom-gps.vercel.app/
 Download: https://phantom-gps.vercel.app/download.html
 
-Install version 0.0.14 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.
+Install version 0.0.15 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.
 
 ## Deploy on Vercel
 
@@ -45,12 +45,12 @@ In Settings, open **Clipboard monitor** and expand **รูปแบบข้อ
 
 ## Clipboard latency and activation verification
 
-Version 0.0.14 uses a direct local clipboard queue, merges duplicate system/service deliveries, and refreshes scoped hooks after committing coordinates. Existing-license verification hides activation input and submit controls; a failed check offers a separate verification retry. The main switch is named Clipboard monitor with a Thai description.
+Version 0.0.15 uses a direct local clipboard queue, merges duplicate system/service deliveries, and refreshes scoped hooks after committing coordinates. Existing-license verification hides activation input and submit controls; a failed check offers a separate verification retry. The main switch is named Clipboard monitor with a Thai description.
 
 Reboot once after this module update to load the changed hooks. See PERFORMANCE.md for timing stages and device validation instructions.
 
 ## Full Lock direct Intent integration
 
-Version 0.0.14 receives native Double latitude/longitude through an explicit Intent from com.fulllock.app. It commits coordinates, requests Hook refresh, and replies with APPLIED before notification work. Optional target-package confirmation produces HOOK_LOADED only after that Hook loads the matching request snapshot. This channel is independent of Clipboard monitor and does not execute su or ADB commands.
+Version 0.0.15 receives native Double latitude/longitude through an explicit Intent from com.fulllock.app. It commits coordinates, requests Hook refresh, and replies with APPLIED before notification work. Optional target-package confirmation produces HOOK_LOADED only after that Hook loads the matching request snapshot. This channel is independent of Clipboard monitor and does not execute su or ADB commands.
 
 See [INTENT_LOCATION_BRIDGE.md](INTENT_LOCATION_BRIDGE.md) for the complete protocol, Java client helper, authentication token, result semantics, and integration test steps for the Full Lock agent.

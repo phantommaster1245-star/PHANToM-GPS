@@ -1,6 +1,6 @@
 # คู่มือเชื่อม Full Lock → PHANToM GPS ด้วย Intent
 
-API version **1** · PHANToM GPS **0.0.14 / versionCode 14 ขึ้นไป**
+API version **1** · PHANToM GPS **0.0.15 / versionCode 15 ขึ้นไป**
 
 เอกสารนี้สำหรับ agent ที่ดูแล Full Lock เปลี่ยนปุ่ม/ป้ายตำแหน่งต้นทางจากการคัดลอก lat,lng เป็นการส่งตัวเลขตรงมายัง PHANToM GPS แล้วแสดงผลตอบกลับ ไม่ต้องเรียก `su`, `am`, ADB, ไม่ต้องเขียนคลิปบอร์ด และไม่ต้องเปิด Clipboard monitor
 
@@ -64,12 +64,13 @@ Action:    io.github.phantom.gps.action.SET_LOCATION_DIRECT
 | 402 | `LICENSE_REQUIRED` | PHANToM ยังไม่ Activate หรือไม่มีข้อมูลใบอนุญาตที่ใช้ได้ |
 | 403 | `LICENSE_LOCKED` | ใบอนุญาตถูกล็อก ให้ผู้ใช้เปิด PHANToM ตรวจสอบ |
 | 409 | `SUPERSEDED` | มีคำสั่งใหม่กว่า หรือพิกัดของ ID นี้ไม่ได้เป็นค่าปัจจุบันแล้ว |
+| 412 | `HOOK_NOT_READY` | บันทึกแล้ว แต่ Hook ของ target ยังไม่พร้อม เช่น ปิด System hook หรือระบบรุ่นนั้นไม่รองรับ |
 | 500 | `APPLY_FAILED` / `INTEGRITY_FAILED` | บันทึกไม่ได้หรือการตรวจตัวแอปไม่ผ่าน |
 | 504 | `HOOK_TIMEOUT` | บันทึกแล้ว แต่ไม่ได้รับคำยืนยันจาก target ภายใน 1,500 ms |
 
 Bundle มี `api_version:int`, `request_id:String`, `status:String`, `applied:boolean`, `hook_loaded:boolean`, `elapsed_ms:long` และมี `hook_package:String` เมื่อได้รับ `HOOK_LOADED`
 
-`applied=true` หมายถึง request นี้เคย commit สำเร็จ ไม่ใช่การรับประกันว่ายังเป็นคำสั่งล่าสุดอยู่ตลอดไป โดย `HOOK_TIMEOUT` จะมี `applied=true` จึงไม่ควรแสดงว่า “ส่งพิกัดไม่สำเร็จ” ให้แสดงว่า “ตั้งพิกัดแล้ว แต่ยังยืนยันโมดูลไม่ได้” แทน
+`applied=true` หมายถึง request นี้เคย commit สำเร็จ ไม่ใช่การรับประกันว่ายังเป็นคำสั่งล่าสุดอยู่ตลอดไป โดย `HOOK_TIMEOUT` และ `HOOK_NOT_READY` จะมี `applied=true` จึงไม่ควรแสดงว่า “ส่งพิกัดไม่สำเร็จ” ให้แสดงว่า “ตั้งพิกัดแล้ว แต่ยังยืนยันโมดูลไม่ได้” แทน
 
 `elapsed_ms` เริ่มนับเมื่อ Receiver ของ PHANToM ได้รับข้อความ ไม่รวมเวลาที่ Full Lock เตรียมข้อมูลหรือเวลาปลุก process ก่อนเข้า Receiver ฝั่ง Full Lock ควรจับ `SystemClock.elapsedRealtime()` ตั้งแต่แตะป้ายเพื่อวัดเวลา end-to-end อีกชั้น
 
@@ -190,18 +191,19 @@ public final class PhantomGpsBridge {
 
 จุดที่ agent ฝั่ง Full Lock ต้องเชื่อม: ใน click listener ของป้ายพิกัดต้นทาง นำ double lat/lng ที่มีอยู่แล้วเรียก helper ด้านบน **แทน** การเขียนคลิปบอร์ด อย่า parse พิกัดกลับจากข้อความบนป้ายหากมี numeric model อยู่แล้ว
 
-- ส่ง `targetPackage` จาก package จริงของแอปที่ต้องใช้พิกัด ไม่ใช้ package ของ Full Lock และไม่ hardcode ชื่อตัวอย่าง
+- หากใช้ scope **Android Framework** ตามค่าแนะนำของ PHANToM ให้ใช้ `targetPackage = "android"` และเปิด System hook ใน PHANToM
+- หากใช้ scope แบบรายแอป ส่ง `targetPackage` จาก package จริงของแอปนั้น ไม่ใช้ package ของ Full Lock และไม่ hardcode ชื่อตัวอย่าง
 - หากต้องการเพียงผลเร็ว ไม่ต้องส่ง `target_package`; ใช้ `APPLIED` แสดงสำเร็จได้โดยระบุข้อความให้ตรงความหมาย
 - เก็บ request ID ล่าสุดต่อป้าย/การเลือก แล้วละทิ้งผลของ request เก่า เพื่อไม่ให้ผลตอบกลับช้ามาทับการแตะครั้งใหม่
 - ใน UI ให้สถานะ `HOOK_LOADED` มีลำดับสูงกว่า `APPLIED`; อย่าถอยสถานะเมื่อผลเก่ามาถึงทีหลัง
 - ไม่ block main thread และไม่รอด้วย sleep/polling ขณะส่ง
-- ตรวจว่าติดตั้ง PHANToM versionCode >=14 ก่อนส่ง ถ้าไม่ติดตั้ง/ถูก force-stop/ROM ไม่ส่ง Broadcast อาจไม่มี callback ให้ใช้ watchdog และให้ผู้ใช้เปิด PHANToM หนึ่งครั้ง
+- ตรวจว่าติดตั้ง PHANToM versionCode >=15 ก่อนส่ง ถ้าไม่ติดตั้ง/ถูก force-stop/ROM ไม่ส่ง Broadcast อาจไม่มี callback ให้ใช้ watchdog และให้ผู้ใช้เปิด PHANToM หนึ่งครั้ง
 - หาก retry network/การส่ง ให้ retry ด้วย ID และ payload เดิม ห้ามใช้ ID เดิมกับพิกัดใหม่ ผลล่าสุดถูกจำไว้ใน process สูงสุด 64 รายการ ไม่ใช่ระบบ exactly-once แบบถาวรข้ามการปิด process
 - ไม่ต้องสร้างรหัส Activate ใหม่เมื่อเกิด timeout ของ IPC ให้แยกกรณี License ออกจากการส่งข้อมูลให้ชัดเจน
 
 ## การทดสอบร่วมกันบนเครื่องจริง
 
-1. ติดตั้ง PHANToM 0.0.14 ที่ Activate แล้ว เปิด LSPosed scope ให้แอปปลายทาง และรีบูต
+1. ติดตั้ง PHANToM 0.0.15 ที่ Activate แล้ว เปิด LSPosed scope ให้แอปปลายทาง และรีบูต
 2. ปิด Clipboard monitor และเปิด/ปิด Auto start สลับกัน การส่ง direct ต้องเริ่มพิกัดได้เหมือนเดิม
 3. แตะป้ายใน Full Lock แล้วตรวจ `APPLIED`; ถ้าระบุ target ที่กำลังทำงานและโหลด Hook อยู่ ให้ตรวจ `HOOK_LOADED` ต่อ
 4. ตรวจว่า clipboard เดิมไม่เปลี่ยน และไม่มีหน้ากรอกรหัสเด้งจาก direct request

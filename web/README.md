@@ -23,4 +23,4 @@ The coordinate preview is illustrative and does not change device location. Orig
 
 The repository-root vercel.json sets these build/output values and the APK/metadata response headers. It publishes only the public static directory. There is no Sites hosting configuration in this website source.
 
-The 0.0.14 APK checks https://phantom-gps.vercel.app/downloads/version.json and opens https://phantom-gps.vercel.app/download.html for updates. Deploy to that domain before distributing the APK. Older APKs that use a previous host require a one-time manual update.
+The 0.0.15 APK checks https://phantom-gps.vercel.app/downloads/version.json and opens https://phantom-gps.vercel.app/download.html for updates. Deploy to that domain before distributing the APK. Older APKs that use a previous host require a one-time manual update.
