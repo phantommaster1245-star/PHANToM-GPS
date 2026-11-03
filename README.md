@@ -24,9 +24,17 @@ The root Gradle files in this repository build only the standalone Installer. Th
 
 ## Public website and updates
 
-PHANToM GPS 0.0.10 adds website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
+PHANToM GPS 0.0.11 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
 
-Website: https://phantom-gps.mysticsiren256.chatgpt.site/
-Download: https://phantom-gps.mysticsiren256.chatgpt.site/download.html
+Website: https://phantom-gps.vercel.app/
+Download: https://phantom-gps.vercel.app/download.html
 
-Install version 0.0.10 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.
+Install version 0.0.11 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.
+
+## Deploy on Vercel
+
+Import this GitHub repository with Root Directory set to the repository root (`./`) and Framework Preset **Other**. The root vercel.json declares the build check and static output directory web/dist. No environment variables or dependencies are required for the website. Assign the production domain https://phantom-gps.vercel.app/ to match the Android update endpoint.
+
+Only web/dist is published. Android source, Firebase code, Installer files, and repository metadata are outside the website output.
+
+The previous Sites deployment has owner-only access and is no longer publicly accessible. Publication and production deployment on Vercel are managed by the repository owner.

@@ -1,4 +1,5 @@
 Patch applied successfully to sanitized base 0577d8e8a3a0fea7d0e421509be8506c760080ba.
-All 124 tracked app/build/settings/test files match source 4c63de488ea272c6a0d7d630134dc5386d158aa9 after normalizing Windows line endings.
-Android :app:testFullReleaseUnitTest (4 tests) and :app:assembleFullRelease passed. APK version 0.0.10-full, versionCode 10.
-Website tests: 4 passed; download size and SHA-256 matched the full release APK.
+All 124 tracked app/build/settings/test files match source 1e6df7123337d82edadfe0c142ed88e6a3ac5df0 after normalizing Windows line endings.
+Android :app:testFullReleaseUnitTest (4 tests) and :app:assembleFullRelease passed. APK version 0.0.11-full, versionCode 11. Signing certificate matches the previous APK.
+Website tests: 4 passed; download size and SHA-256 match the full release APK. APK DEX contains the Vercel origin and no Sites origin.
+Sites public access disabled (owner-only); homepage, metadata and old APK return HTTP 401 unauthenticated. Vercel deployment is managed by the repository owner and was not performed.

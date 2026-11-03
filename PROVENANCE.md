@@ -2,7 +2,7 @@
 
 PHANToM GPS is derived from https://github.com/jqssun/android-gps-setter.
 Base revision: `0577d8e8a3a0fea7d0e421509be8506c760080ba`.
-PHANToM snapshot reference: `4c63de488ea272c6a0d7d630134dc5386d158aa9`. No original Git history is included.
+PHANToM snapshot reference: `1e6df7123337d82edadfe0c142ed88e6a3ac5df0`. No original Git history is included.
 
 Included:
 - installer/: the PHANToM installer module added after the base revision.
@@ -17,4 +17,4 @@ Excluded: unchanged upstream application files, upstream README and store metada
 
 The patch has zero context to reduce unchanged content. Removal lines and rename metadata are retained where necessary. Legacy Mapbox secret values in the patch have been replaced with REMOVED_LEGACY_SECRET; sanitize the base manifest the same way before applying.
 
-See VALIDATION.txt for patch reconstruction verification. Android release build and unit tests passed for 0.0.10. No backend deployment was performed.
+See VALIDATION.txt for patch reconstruction verification. Android release build and unit tests passed for 0.0.11. No backend deployment was performed.
