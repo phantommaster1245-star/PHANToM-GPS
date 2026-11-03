@@ -24,12 +24,12 @@ The root Gradle files in this repository build only the standalone Installer. Th
 
 ## Public website and updates
 
-PHANToM GPS 0.0.12 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
+PHANToM GPS 0.0.13 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
 
 Website: https://phantom-gps.vercel.app/
 Download: https://phantom-gps.vercel.app/download.html
 
-Install version 0.0.12 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.
+Install version 0.0.13 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.
 
 ## Deploy on Vercel
 
@@ -41,4 +41,10 @@ The previous Sites deployment has owner-only access and is no longer publicly ac
 
 ## Clipboard message selection
 
-In Settings, open **อ่านตำแหน่งที่คัดลอก** and expand **รูปแบบข้อความที่ต้องการอ่าน**. Five independent switches control numeric coordinates, coordinate links, Plus Codes, place/address text, and place-search links. All are enabled by default to preserve existing support. Turn off the other four to read only numeric coordinate pairs outside URLs. Turning every switch off ignores clipboard input. Auto-start remains a separate choice.
+In Settings, open **Clipboard monitor** and expand **รูปแบบข้อความที่ต้องการอ่าน**. Five independent switches control numeric coordinates, coordinate links, Plus Codes, place/address text, and place-search links. All are enabled by default to preserve existing support. Turn off the other four to read only numeric coordinate pairs outside URLs. Turning every switch off ignores clipboard input. Auto-start remains a separate choice.
+
+## Clipboard latency and activation verification
+
+Version 0.0.13 uses a direct local clipboard queue, merges duplicate system/service deliveries, and refreshes scoped hooks after committing coordinates. Existing-license verification hides activation input and submit controls; a failed check offers a separate verification retry. The main switch is named Clipboard monitor with a Thai description.
+
+Reboot once after this module update to load the changed hooks. See PERFORMANCE.md for timing stages and device validation instructions.

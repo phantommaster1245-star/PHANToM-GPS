@@ -1,6 +1,7 @@
 Patch applied successfully to sanitized base 0577d8e8a3a0fea7d0e421509be8506c760080ba.
-All 126 tracked app/build/settings/test files match source 02a8e0500ffb013060017ae7737f47c3ed6fa091 after normalizing Windows line endings.
-Android :app:testFullReleaseUnitTest (9 tests) and :app:assembleFullRelease passed. APK version 0.0.12-full, versionCode 12.
-Clipboard tests cover number-only input, embedded coordinates, semicolon separators, URL exclusion, disabled-format fallback, all-off behavior and cache namespaces.
+All 133 tracked app/build/settings/test files match source 19bb209427fc7ca049662482efc22d50c2ed7f84 after normalizing Windows line endings.
+Android :app:testFullReleaseUnitTest (16 tests) and :app:assembleFullRelease passed. APK version 0.0.13-full, versionCode 13. Signing certificate matches the previous APK.
+Tests cover activation visibility/submit gating, duplicate-delivery suppression and immediate acceptance of different clipboard content, format selection, and release metadata.
 Website tests: 4 passed; download size and SHA-256 match the full release APK. APK contains the Vercel origin and no Sites origin.
+No physical Android device is connected; end-to-end latency and activation UI were not tested on a device. See PERFORMANCE.md for duration-only trace collection.
 Vercel deployment is managed by the repository owner; no deployment was performed.

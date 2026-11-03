@@ -1,12 +1,12 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..18bc9d8be228d81d8d01de186fd87b994bafc31a 100644
+index d211674657a4308ba7437287558c90117ce56c75..e439a915a608b7b304683d9887d4d0963206e402 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
 +    id 'com.google.gms.google-services'
 @@ -10 +11,26 @@ plugins {
 -def tagName = '0.0.6'
-+def tagName = '0.0.12'
++def tagName = '0.0.13'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -37,7 +37,7 @@ index d211674657a4308ba7437287558c90117ce56c75..18bc9d8be228d81d8d01de186fd87b99
 +        applicationId "io.github.phantom.gps"
 @@ -18 +44 @@ android {
 -        versionCode 6
-+        versionCode 12
++        versionCode 13
 @@ -19,0 +46 @@ android {
 +        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://phantom-gps.vercel.app/\""
 @@ -21,0 +49,2 @@ android {
@@ -1441,21 +1441,26 @@ index 0000000000000000000000000000000000000000..06926a9e615e52931cc2cc034a817f88
 +    }
 +}
 diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
-index 0f008127b6ad6e023883872916d8ed40501fbb1e..0937b23c3ad1776ff93163e0f64da94775f33af5 100644
+index 0f008127b6ad6e023883872916d8ed40501fbb1e..ede2a54531534f74ae69fef13926598ff478742f 100644
 --- a/app/src/main/AndroidManifest.xml
 +++ b/app/src/main/AndroidManifest.xml
-@@ -12,0 +13,4 @@
+@@ -12,0 +13,9 @@
 +    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 +    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 +    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 +    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-@@ -19 +23 @@
++
++    <permission
++        android:name="${applicationId}.permission.REFRESH_LOCATION"
++        android:protectionLevel="signature" />
++    <uses-permission android:name="${applicationId}.permission.REFRESH_LOCATION" />
+@@ -19 +28 @@
 -        android:roundIcon="@mipmap/ic_launcher"
 +        android:roundIcon="@mipmap/ic_launcher_round"
-@@ -30 +34 @@
+@@ -30 +39 @@
 -            android:name=".ui.MapActivity"
 +            android:name=".ui.ActivationActivity"
-@@ -37,0 +42,9 @@
+@@ -37,0 +47,9 @@
 +        <activity
 +            android:name=".ui.LoginActivity"
 +            android:exported="false" />
@@ -1465,7 +1470,7 @@ index 0f008127b6ad6e023883872916d8ed40501fbb1e..0937b23c3ad1776ff93163e0f64da947
 +        <activity
 +            android:name=".ui.LockedActivity"
 +            android:exported="false" />
-@@ -42,0 +56,37 @@
+@@ -42,0 +61,37 @@
 +        <service
 +            android:name=".utils.ClipboardMonitorService"
 +            android:exported="false"
@@ -1503,11 +1508,11 @@ index 0f008127b6ad6e023883872916d8ed40501fbb1e..0937b23c3ad1776ff93163e0f64da947
 +            </intent-filter>
 +        </receiver>
 +
-@@ -47,3 +96,0 @@
+@@ -47,3 +101,0 @@
 -        <meta-data
 -            android:name="com.maplibre.AccessToken"
 -            android:value="REMOVED_LEGACY_SECRET" />
-@@ -79 +126 @@
+@@ -79 +131 @@
 -</manifest>
 \ No newline at end of file
 +</manifest>
@@ -1851,10 +1856,10 @@ index ccd4d0ba21f278802fd8009f7ddde16ab501efd0..618da30537d0fc9f0035945c65e6fdae
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..2aad627e20e0a7db186fd92610202251f5152319
+index 0000000000000000000000000000000000000000..669a12af0768be2de9d93fb0c3a824bb69ed7f3b
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,103 @@
 +package io.github.phantom.gps.ui
 +
 +import android.content.Intent
@@ -1865,17 +1870,19 @@ index 0000000000000000000000000000000000000000..2aad627e20e0a7db186fd92610202251
 +import android.widget.ProgressBar
 +import android.widget.TextView
 +import androidx.activity.OnBackPressedCallback
++import androidx.activity.viewModels
 +import androidx.appcompat.app.AppCompatActivity
 +import io.github.phantom.gps.R
 +import io.github.phantom.gps.utils.AppIntegrity
-+import io.github.phantom.gps.utils.LicenseGuard
-+import io.github.phantom.gps.utils.LicenseStore
 +
 +class ActivationActivity : AppCompatActivity() {
 +    private lateinit var activationInput: EditText
 +    private lateinit var activateButton: Button
 +    private lateinit var progressBar: ProgressBar
 +    private lateinit var errorText: TextView
++    private val model: ActivationViewModel by viewModels()
++    private lateinit var statusText: TextView
++    private lateinit var retryButton: Button
 +
 +    override fun onCreate(savedInstanceState: Bundle?) {
 +        super.onCreate(savedInstanceState)
@@ -1889,6 +1896,8 @@ index 0000000000000000000000000000000000000000..2aad627e20e0a7db186fd92610202251
 +        activateButton = findViewById(R.id.activateButton)
 +        progressBar = findViewById(R.id.activationProgress)
 +        errorText = findViewById(R.id.activationError)
++        statusText = findViewById(R.id.activationStatus)
++        retryButton = findViewById(R.id.retryVerificationButton)
 +        prefillActivationCodeFromIntent()
 +
 +        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -1897,59 +1906,33 @@ index 0000000000000000000000000000000000000000..2aad627e20e0a7db186fd92610202251
 +            }
 +        })
 +
-+        if (LicenseStore.isLocked(this)) {
-+            openLockedAndFinish()
-+            return
-+        }
-+
-+        if (LicenseStore.isActivated(this) && LicenseStore.hasLicenseData(this)) {
-+            verifyExistingLicense()
-+            return
-+        }
-+
-+        if (LicenseStore.isActivated(this) && !LicenseStore.hasLicenseData(this)) {
-+            LicenseGuard.clearLicenseAndDeactivate(this)
-+        }
-+
 +        activateButton.setOnClickListener {
-+            setLoading(true)
-+            errorText.visibility = View.GONE
-+            LicenseGuard.activate(this, activationInput.text?.toString().orEmpty()) { result ->
-+                runOnUiThread {
-+                    setLoading(false)
-+                    if (result.success) {
-+                        openMainAndFinish()
-+                    } else {
-+                        errorText.text = result.errorMessage ?: getString(R.string.activation_error_generic)
-+                        errorText.visibility = View.VISIBLE
-+                    }
-+                }
++            model.submit(activationInput.text?.toString().orEmpty())
++        }
++        retryButton.setOnClickListener { model.retryVerification() }
++        model.uiState.observe(this) { state ->
++            render(state)
++            when (state.mode) {
++                ActivationMode.OPEN_MAIN -> openMainAndFinish()
++                ActivationMode.OPEN_LOCKED -> openLockedAndFinish()
++                else -> Unit
 +            }
 +        }
 +    }
 +
-+    private fun verifyExistingLicense() {
-+        setLoading(true)
-+        errorText.visibility = View.GONE
-+        LicenseGuard.verifyNowForeground(this) { success ->
-+            runOnUiThread {
-+                setLoading(false)
-+                when {
-+                    success && !LicenseStore.isLocked(this) -> openMainAndFinish()
-+                    LicenseStore.isLocked(this) -> openLockedAndFinish()
-+                    else -> {
-+                        errorText.text = getString(R.string.activation_error_network)
-+                        errorText.visibility = View.VISIBLE
-+                    }
-+                }
-+            }
-+        }
-+    }
-+
-+    private fun setLoading(loading: Boolean) {
-+        progressBar.visibility = if (loading) View.VISIBLE else View.GONE
-+        activateButton.isEnabled = !loading
-+        activationInput.isEnabled = !loading
++    private fun render(state: ActivationUiState) {
++        activationInput.visibility = if (state.showForm) View.VISIBLE else View.GONE
++        findViewById<View>(R.id.activationSubtitle).visibility = if (state.showForm) View.VISIBLE else View.GONE
++        activationInput.isEnabled = state.canSubmit
++        activateButton.visibility = if (state.canSubmit) View.VISIBLE else View.GONE
++        activateButton.isEnabled = state.canSubmit
++        progressBar.visibility = if (state.isBusy) View.VISIBLE else View.GONE
++        retryButton.visibility = if (state.canRetryVerification) View.VISIBLE else View.GONE
++        retryButton.isEnabled = state.canRetryVerification
++        statusText.visibility = if (state.isBusy) View.VISIBLE else View.GONE
++        statusText.setText(if (state.mode == ActivationMode.SUBMITTING) R.string.activation_submitting else R.string.activation_checking)
++        errorText.text = state.error.orEmpty()
++        errorText.visibility = if (state.error.isNullOrBlank()) View.GONE else View.VISIBLE
 +    }
 +
 +    private fun openMainAndFinish() {
@@ -1978,6 +1961,80 @@ index 0000000000000000000000000000000000000000..2aad627e20e0a7db186fd92610202251
 +
 +    companion object {
 +        const val EXTRA_ACTIVATION_CODE = "io.github.phantom.gps.extra.ACTIVATION_CODE"
++    }
++}
+diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationUiState.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationUiState.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..923a2e32dd8e5d073d2d6cbabde23b3b6379783f
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/ui/ActivationUiState.kt
+@@ -0,0 +1,10 @@
++package io.github.phantom.gps.ui
++
++enum class ActivationMode { CHECKING, CHECK_FAILED, READY, SUBMITTING, ACTIVATION_FAILED, OPEN_MAIN, OPEN_LOCKED }
++
++data class ActivationUiState(val mode: ActivationMode, val error: String? = null) {
++    val canSubmit: Boolean get() = mode == ActivationMode.READY || mode == ActivationMode.ACTIVATION_FAILED
++    val showForm: Boolean get() = canSubmit || mode == ActivationMode.SUBMITTING
++    val isBusy: Boolean get() = mode == ActivationMode.CHECKING || mode == ActivationMode.SUBMITTING
++    val canRetryVerification: Boolean get() = mode == ActivationMode.CHECK_FAILED
++}
+diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationViewModel.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationViewModel.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..93a7599c72678d96d94be268647e3dc762fcac30
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/ui/ActivationViewModel.kt
+@@ -0,0 +1,52 @@
++package io.github.phantom.gps.ui
++
++import android.app.Application
++import androidx.lifecycle.AndroidViewModel
++import androidx.lifecycle.LiveData
++import androidx.lifecycle.MutableLiveData
++import io.github.phantom.gps.R
++import io.github.phantom.gps.utils.LicenseGuard
++import io.github.phantom.gps.utils.LicenseStore
++
++/** Keeps an in-flight operation across rotation; checking never submits an activation code. */
++class ActivationViewModel(application: Application) : AndroidViewModel(application) {
++    private val app = application.applicationContext
++    private val state = MutableLiveData(ActivationUiState(ActivationMode.CHECKING))
++    val uiState: LiveData<ActivationUiState> = state
++
++    init {
++        when {
++            LicenseStore.isLocked(app) -> state.value = ActivationUiState(ActivationMode.OPEN_LOCKED)
++            LicenseStore.isActivated(app) && LicenseStore.hasLicenseData(app) -> verifyExisting()
++            else -> {
++                if (LicenseStore.isActivated(app)) LicenseGuard.clearLicenseAndDeactivate(app)
++                state.value = ActivationUiState(ActivationMode.READY)
++            }
++        }
++    }
++
++    fun submit(code: String) {
++        if (state.value?.canSubmit != true) return
++        state.value = ActivationUiState(ActivationMode.SUBMITTING)
++        LicenseGuard.activate(app, code) { result ->
++            state.value = if (result.success) ActivationUiState(ActivationMode.OPEN_MAIN)
++                else ActivationUiState(ActivationMode.ACTIVATION_FAILED, result.errorMessage ?: app.getString(R.string.activation_error_generic))
++        }
++    }
++
++    fun retryVerification() {
++        if (state.value?.canRetryVerification != true) return
++        verifyExisting()
++    }
++
++    private fun verifyExisting() {
++        state.value = ActivationUiState(ActivationMode.CHECKING)
++        LicenseGuard.verifyNowForeground(app) { success ->
++            state.value = when {
++                success && !LicenseStore.isLocked(app) -> ActivationUiState(ActivationMode.OPEN_MAIN)
++                LicenseStore.isLocked(app) -> ActivationUiState(ActivationMode.OPEN_LOCKED)
++                else -> ActivationUiState(ActivationMode.CHECK_FAILED, app.getString(R.string.activation_error_network))
++            }
++        }
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
@@ -2887,6 +2944,25 @@ index 0000000000000000000000000000000000000000..15b52f72a353df4d709b60a4c43ea362
 +        }
 +    }
 +}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardEventGate.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardEventGate.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..9470fbc8f8b659462d5c7c7707c8a4a67eb59380
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardEventGate.kt
+@@ -0,0 +1,13 @@
++package io.github.phantom.gps.utils
++
++/** Suppresses duplicate deliveries, never sleeps and permits an intentional repeat shortly after. */
++class ClipboardEventGate(private val windowMs: Long = 300) {
++    private var lastKey: String? = null
++    private var lastAt = Long.MIN_VALUE
++    @Synchronized fun accept(key: String, now: Long): Boolean {
++        if (key == lastKey && now >= lastAt && now - lastAt <= windowMs) return false
++        lastKey = key
++        lastAt = now
++        return true
++    }
++}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardFormats.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardFormats.kt
 new file mode 100644
 index 0000000000000000000000000000000000000000..766793b659dfbc0dc421a79a6a181e512f0f2b64
@@ -2929,10 +3005,10 @@ index 0000000000000000000000000000000000000000..766793b659dfbc0dc421a79a6a181e51
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardLocationReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardLocationReceiver.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..c211697b1a5ba063267359920f3c067a120bac8d
+index 0000000000000000000000000000000000000000..b36b24ba80240d7ef707363b996091e944056a03
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardLocationReceiver.kt
-@@ -0,0 +1,707 @@
+@@ -0,0 +1,695 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Notification
@@ -2968,38 +3044,42 @@ index 0000000000000000000000000000000000000000..c211697b1a5ba063267359920f3c067a
 +class ClipboardLocationReceiver : BroadcastReceiver() {
 +
 +    override fun onReceive(context: Context, intent: Intent?) {
-+        if (!AppIntegrity.isSelfValid(context)) return
-+        if (!LicenseGuard.isLocallyAllowedForCriticalAction(context)) return
 +        if (intent?.action != LocationActions.ACTION_CLIPBOARD_TEXT) return
-+        val forceFromCommand = intent.getBooleanExtra(LocationActions.EXTRA_FORCE, false)
-+        if (!PrefManager.isClipboardMonitorEnabled && !forceFromCommand) return
++        val text = intent.getStringExtra(LocationActions.EXTRA_CLIPBOARD_TEXT) ?: return
++        val pendingResult = goAsync()
++        val job = submit(context, text,
++            intent.getLongExtra(ClipboardTrace.EXTRA_CAPTURED_AT, SystemClock.elapsedRealtime()),
++            intent.getBooleanExtra(LocationActions.EXTRA_FORCE, false))
++        if (job == null) pendingResult.finish()
++        else job.invokeOnCompletion { pendingResult.finish() }
++    }
 +
-+        val text = intent.getStringExtra(LocationActions.EXTRA_CLIPBOARD_TEXT)?.trim()
-+            ?: return
-+        if (text.isEmpty()) return
-+        if (!PrefManager.clipboardFormats().anyEnabled) return
-+        if (isDuplicate(cacheKey(text))) return
-+
-+        val generation = synchronized(lock) {
++    /** The local service shares this queue directly; the system hook uses the broadcast entry. */
++    fun submit(context: Context, input: String, capturedAtMs: Long, forceFromCommand: Boolean = false): Job? {
++        if (!AppIntegrity.isSelfValid(context)) return null
++        if (!LicenseGuard.isLocallyAllowedForCriticalAction(context)) return null
++        if (!PrefManager.isClipboardMonitorEnabled && !forceFromCommand) return null
++        val text = input.trim()
++        if (text.isEmpty() || !PrefManager.clipboardFormats().anyEnabled) return null
++        val trace = ClipboardTrace.begin(capturedAtMs)
++        trace.mark("received")
++        synchronized(lock) {
++            if (!eventGate.accept(cacheKey(text), SystemClock.elapsedRealtime())) {
++                trace.mark("duplicate_ignored")
++                return null
++            }
 +            activeProcessingJob?.cancel()
 +            latestGeneration += 1
-+            latestGeneration
-+        }
-+
-+        val pendingResult = goAsync()
-+        val job = CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
-+            try {
-+                processClipboard(context.applicationContext, text, generation)
-+            } finally {
-+                pendingResult.finish()
++            val generation = latestGeneration
++            val job = processingScope.launch {
++                processClipboard(context.applicationContext, text, generation, trace)
 +            }
-+        }
-+        synchronized(lock) {
 +            activeProcessingJob = job
++            return job
 +        }
 +    }
 +
-+    private suspend fun processClipboard(context: Context, text: String, generation: Long) {
++    private suspend fun processClipboard(context: Context, text: String, generation: Long, trace: ClipboardTrace) {
 +        val formats = PrefManager.clipboardFormats()
 +        if (!isLatestGeneration(generation) || PrefManager.clipboardFormats() != formats) return
 +
@@ -3011,11 +3091,10 @@ index 0000000000000000000000000000000000000000..c211697b1a5ba063267359920f3c067a
 +                showOutsideThailandNotification(context, label, latLng.first, latLng.second)
 +                return
 +            }
++            trace.mark("parsed_offline")
 +            if (PrefManager.isClipboardAutoStart) {
-+                showFoundStatusNotification(context, label, latLng.first, latLng.second, autoStart = true)
-+                LicenseGuard.runCriticalActionIfAllowed(context) {
-+                    LocationController.start(context, latLng.first, latLng.second, label)
-+                }
++                // LocationController rechecks the local license immediately before committing.
++                LocationController.start(context, latLng.first, latLng.second, label, trace)
 +            } else {
 +                showFoundStatusNotification(context, label, latLng.first, latLng.second, autoStart = false)
 +                showPendingNotification(context, latLng.first, latLng.second, label)
@@ -3042,11 +3121,9 @@ index 0000000000000000000000000000000000000000..c211697b1a5ba063267359920f3c067a
 +        }
 +        val label = text
 +
++        trace.mark("geocoded")
 +        if (PrefManager.isClipboardAutoStart) {
-+            showFoundStatusNotification(context, label, latLng.first, latLng.second, autoStart = true)
-+            LicenseGuard.runCriticalActionIfAllowed(context) {
-+                LocationController.start(context, latLng.first, latLng.second, label)
-+            }
++            LocationController.start(context, latLng.first, latLng.second, label, trace)
 +        } else {
 +            showFoundStatusNotification(context, label, latLng.first, latLng.second, autoStart = false)
 +            showPendingNotification(context, latLng.first, latLng.second, label)
@@ -3551,19 +3628,9 @@ index 0000000000000000000000000000000000000000..c211697b1a5ba063267359920f3c067a
 +            lon in THAILAND_LOWER_LEFT_LON..THAILAND_UPPER_RIGHT_LON
 +    }
 +
-+    private fun isDuplicate(text: String): Boolean {
-+        val now = System.currentTimeMillis()
-+        synchronized(lock) {
-+            if (text == lastText && (now - lastTimeMs) <= DUPLICATE_WINDOW_MS) {
-+                return true
-+            }
-+            lastText = text
-+            lastTimeMs = now
-+        }
-+        return false
-+    }
-+
 +    companion object {
++        private val processingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
++        private val eventGate = ClipboardEventGate()
 +        private val LAT_LNG_PATTERN =
 +            Pattern.compile("[-+]?\\d{1,3}([.]\\d+)?\\s*,\\s*[-+]?\\d{1,3}([.]\\d+)?")
 +        private val AT_COORDS_PATTERN =
@@ -3626,7 +3693,6 @@ index 0000000000000000000000000000000000000000..c211697b1a5ba063267359920f3c067a
 +        private const val GEOCODE_FAST_TIMEOUT_MS = 650L
 +        private const val GEOCODE_TOTAL_TIMEOUT_MS = 1800L
 +        private const val NOMINATIM_TIMEOUT_MS = 700L
-+        private const val DUPLICATE_WINDOW_MS = 1500L
 +        private const val THAILAND_LOWER_LEFT_LAT = 5.0
 +        private const val THAILAND_LOWER_LEFT_LON = 96.0
 +        private const val THAILAND_UPPER_RIGHT_LAT = 21.0
@@ -3635,17 +3701,15 @@ index 0000000000000000000000000000000000000000..c211697b1a5ba063267359920f3c067a
 +        private val lock = Any()
 +        private var activeProcessingJob: Job? = null
 +        private var latestGeneration: Long = 0
-+        private var lastText: String? = null
-+        private var lastTimeMs: Long = 0
 +        private var lastResolvedLatLng: Pair<Double, Double>? = null
 +    }
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardMonitorService.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardMonitorService.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..fe8b9ba972c4f17c39a9907a57661e3142629610
+index 0000000000000000000000000000000000000000..b7eb5b1b482237fad40bda0c6f5fddf89682807c
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardMonitorService.kt
-@@ -0,0 +1,114 @@
+@@ -0,0 +1,107 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Notification
@@ -3664,7 +3728,7 @@ index 0000000000000000000000000000000000000000..fe8b9ba972c4f17c39a9907a57661e31
 +    private val notificationsChannel = NotificationsChannel()
 +    private val clipboard by lazy { getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
 +
-+    private var lastDispatched: String? = null
++    private val receiver = ClipboardLocationReceiver()
 +
 +    private val listener = ClipboardManager.OnPrimaryClipChangedListener {
 +        handleClipboard()
@@ -3720,16 +3784,9 @@ index 0000000000000000000000000000000000000000..fe8b9ba972c4f17c39a9907a57661e31
 +    }
 +
 +    private fun handleClipboard() {
++        val capturedAtMs = android.os.SystemClock.elapsedRealtime()
 +        val text = getClipboardText() ?: return
-+        val dispatchKey = PrefManager.clipboardFormats().signature + ":" + text
-+        if (dispatchKey == lastDispatched) return
-+        lastDispatched = dispatchKey
-+        sendBroadcast(Intent(this, ClipboardLocationReceiver::class.java).apply {
-+            action = LocationActions.ACTION_CLIPBOARD_TEXT
-+            addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
-+            addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
-+            putExtra(LocationActions.EXTRA_CLIPBOARD_TEXT, text)
-+        })
++        receiver.submit(this, text, capturedAtMs)
 +    }
 +
 +    private fun getClipboardText(): String? {
@@ -3760,6 +3817,32 @@ index 0000000000000000000000000000000000000000..fe8b9ba972c4f17c39a9907a57661e31
 +    }
 +}
 +
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardTrace.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardTrace.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..fec8135e6c6b811f18718daf525ad7ba107951a9
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardTrace.kt
+@@ -0,0 +1,20 @@
++package io.github.phantom.gps.utils
++
++import android.os.SystemClock
++import android.util.Log
++
++/** Duration-only diagnostics: never includes clipboard text, coordinates, codes or labels. */
++data class ClipboardTrace(val id: Long, val capturedAtMs: Long) {
++    fun mark(stage: String) {
++        Log.i(TAG, "trace=$id stage=$stage elapsed_ms=${(SystemClock.elapsedRealtime() - capturedAtMs).coerceAtLeast(0)}")
++    }
++    companion object {
++        const val TAG = "PhantomClipboardPerf"
++        const val EXTRA_CAPTURED_AT = "clipboard_captured_at_ms"
++        const val EXTRA_TRACE_ID = "clipboard_trace_id"
++        fun begin(capturedAtMs: Long): ClipboardTrace {
++            val now = SystemClock.elapsedRealtime()
++            return ClipboardTrace(SystemClock.elapsedRealtimeNanos(), capturedAtMs.coerceIn(0, now))
++        }
++    }
++}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/JoystickService.kt b/app/src/main/java/io/github/phantom/gps/utils/JoystickService.kt
 similarity index 97%
 rename from app/src/main/java/io/github/jqssun/gpssetter/utils/JoystickService.kt
@@ -3806,10 +3889,10 @@ index 0000000000000000000000000000000000000000..9b8ee376ca5a8a19d53be2273822b69a
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt b/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..4369ecfd4bcf3292c1547559c1771dd473bf6454
+index 0000000000000000000000000000000000000000..fa5e2a59abb0ee2583c588b63dd0e269e2bc7268
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,67 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Notification
@@ -3820,10 +3903,10 @@ index 0000000000000000000000000000000000000000..4369ecfd4bcf3292c1547559c1771dd4
 +
 +object LocationController {
 +
-+    fun start(context: Context, lat: Double, lon: Double, label: String?) {
++    fun start(context: Context, lat: Double, lon: Double, label: String?, trace: ClipboardTrace? = null) {
 +        if (!LicenseGuard.isLocallyAllowedForCriticalAction(context)) return
-+        PrefManager.updateNow(start = true, la = lat, ln = lon)
-+        showStartedNotification(context, label)
++        PrefManager.updateNow(start = true, la = lat, ln = lon, trace = trace)
++        LocationRefresh.send(context, trace)
 +        context.sendBroadcast(
 +            Intent(LocationActions.ACTION_LOCATION_STARTED).apply {
 +                setPackage(context.packageName)
@@ -3835,10 +3918,13 @@ index 0000000000000000000000000000000000000000..4369ecfd4bcf3292c1547559c1771dd4
 +                }
 +            }
 +        )
++        showStartedNotification(context, label)
++        trace?.mark("notification_posted")
 +    }
 +
 +    fun stop(context: Context) {
 +        PrefManager.updateNow(start = false, la = PrefManager.getLat, ln = PrefManager.getLng)
++        LocationRefresh.send(context)
 +        context.stopService(Intent(context, JoystickService::class.java))
 +        NotificationsChannel().cancelNotification(context, NotificationsChannel.NOTIFICATION_ID_LOCATION)
 +        context.sendBroadcast(
@@ -3871,6 +3957,36 @@ index 0000000000000000000000000000000000000000..4369ecfd4bcf3292c1547559c1771dd4
 +                context.getString(R.string.action_stop),
 +                NotificationIntents.stopLocationPendingIntent(context)
 +            )
++        }
++    }
++}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/LocationRefresh.kt b/app/src/main/java/io/github/phantom/gps/utils/LocationRefresh.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..815b79467267b50a39a90203c237677282e9c612
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/LocationRefresh.kt
+@@ -0,0 +1,24 @@
++package io.github.phantom.gps.utils
++
++import android.content.Context
++import android.content.Intent
++import io.github.phantom.gps.BuildConfig
++
++object LocationRefresh {
++    const val TRACE_ID_PREF = "clipboard_trace_id"
++    const val CAPTURED_AT_PREF = "clipboard_captured_at_ms"
++    val ACTION = BuildConfig.APPLICATION_ID + ".action.REFRESH_LOCATION"
++    val SENDER_PERMISSION = BuildConfig.APPLICATION_ID + ".permission.REFRESH_LOCATION"
++
++    fun send(context: Context, trace: ClipboardTrace? = null) {
++        // No coordinates are transmitted. Hook receivers require our signature permission
++        // from the sender and read the committed module preferences themselves.
++        runCatching {
++            context.sendBroadcast(Intent(ACTION).addFlags(Intent.FLAG_RECEIVER_FOREGROUND))
++            trace?.mark("refresh_sent")
++        }.onFailure {
++            // Existing preference polling remains the fallback on restricted ROMs.
++            trace?.mark("refresh_unavailable")
 +        }
 +    }
 +}
@@ -4343,10 +4459,10 @@ index 0000000000000000000000000000000000000000..42c33415002004f2b24906ad517311ff
 +}
 +
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-similarity index 56%
+similarity index 54%
 rename from app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
 rename to app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-index 0e30240e630883a8096962540b38794108dfcf41..d2e058928d49a6c95b9cd4639315d0bb1c35a68c 100644
+index 0e30240e630883a8096962540b38794108dfcf41..a900ddbd7e3d9327c9c45ffb4e451fc13a52e970 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
 +++ b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
 @@ -1 +1 @@
@@ -4399,7 +4515,7 @@ index 0e30240e630883a8096962540b38794108dfcf41..d2e058928d49a6c95b9cd4639315d0bb
 +        isClipboardFormatEnabled(ClipboardFormats.KEYS[4])
 +    )
 +
-@@ -95,0 +133,20 @@ object PrefManager   {
+@@ -95,0 +133,23 @@ object PrefManager   {
 +    fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
 +        pref.registerOnSharedPreferenceChangeListener(listener)
 +    }
@@ -4412,15 +4528,18 @@ index 0e30240e630883a8096962540b38794108dfcf41..d2e058928d49a6c95b9cd4639315d0bb
 +     * Synchronous write for cross-process consumers (XSharedPreferences in Xposed).
 +     * Prefer this for "Start/Stop" actions where we want the hook to react immediately.
 +     */
-+    fun updateNow(start: Boolean, la: Double, ln: Double) {
++    fun updateNow(start: Boolean, la: Double, ln: Double, trace: ClipboardTrace? = null) {
 +        val prefEditor = pref.edit()
 +        prefEditor.putFloat(LATITUDE, la.toFloat())
 +        prefEditor.putFloat(LONGITUDE, ln.toFloat())
 +        prefEditor.putBoolean(START, start)
++        prefEditor.putLong(LocationRefresh.TRACE_ID_PREF, trace?.id ?: 0)
++        prefEditor.putLong(LocationRefresh.CAPTURED_AT_PREF, trace?.capturedAtMs ?: 0)
 +        prefEditor.commit()
++        trace?.mark("committed")
 +    }
 +
-@@ -103 +160,2 @@ object PrefManager   {
+@@ -103 +163,2 @@ object PrefManager   {
 -}
 \ No newline at end of file
 +}
@@ -4621,10 +4740,10 @@ index 8a60ae98b348c0a0563422826b681001391875de..9bec9b78cf4ec5d0e70da72eba0fb31a
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/xposed/ClipboardHook.kt b/app/src/main/java/io/github/phantom/gps/xposed/ClipboardHook.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..caf021e9f10f157b5640dc22af2128cf1c2cf615
+index 0000000000000000000000000000000000000000..ca1e24492563d7fc471ba2c9d0573ef3ba7c2be0
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/ClipboardHook.kt
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,123 @@
 +package io.github.phantom.gps.xposed
 +
 +import android.app.AndroidAppHelper
@@ -4637,13 +4756,17 @@ index 0000000000000000000000000000000000000000..caf021e9f10f157b5640dc22af2128cf
 +import de.robv.android.xposed.callbacks.XC_LoadPackage
 +import io.github.phantom.gps.BuildConfig
 +import io.github.phantom.gps.utils.LocationActions
++import io.github.phantom.gps.utils.ClipboardTrace
++import io.github.phantom.gps.utils.ClipboardEventGate
++import android.os.SystemClock
++import java.util.concurrent.Executors
 +
 +object ClipboardHook {
 +
 +    private val settings = Xshare()
 +    private var initialized = false
-+    private var lastText: String? = null
-+    private var lastTimeMs: Long = 0
++    private val eventGate = ClipboardEventGate()
++    private val dispatcher = Executors.newSingleThreadExecutor { task -> Thread(task, "Phantom-clipboard-dispatch").apply { isDaemon = true } }
 +
 +    fun initHooks(lpparam: XC_LoadPackage.LoadPackageParam) {
 +        if (lpparam.packageName != "android" || initialized) return
@@ -4684,7 +4807,9 @@ index 0000000000000000000000000000000000000000..caf021e9f10f157b5640dc22af2128cf
 +
 +            runCatching {
 +                XposedBridge.hookMethod(method, object : XC_MethodHook() {
-+                    override fun beforeHookedMethod(param: MethodHookParam) {
++                    override fun afterHookedMethod(param: MethodHookParam) {
++                        if (param.hasThrowable()) return
++                        val capturedAtMs = SystemClock.elapsedRealtime()
 +                        if (!settings.isClipboardMonitorEnabled) return
 +                        val clip = param.args.getOrNull(clipArgIndex) as? ClipData ?: return
 +                        if (clip.itemCount <= 0) return
@@ -4694,9 +4819,11 @@ index 0000000000000000000000000000000000000000..caf021e9f10f157b5640dc22af2128cf
 +                            ?: context?.let { item.coerceToText(it)?.toString() }
 +                        val text = raw?.trim()
 +                        if (text.isNullOrEmpty()) return
-+                        if (isDuplicate(text)) return
-+
-+                        dispatchClipboardText(context, text)
++                        if (!eventGate.accept(text, SystemClock.elapsedRealtime())) return
++                        dispatcher.execute {
++                            if (context != null) LocationHook.ensureRefreshReceiver(context)
++                            dispatchClipboardText(context, text, capturedAtMs)
++                        }
 +                    }
 +                })
 +                count += 1
@@ -4708,7 +4835,7 @@ index 0000000000000000000000000000000000000000..caf021e9f10f157b5640dc22af2128cf
 +        return count
 +    }
 +
-+    private fun dispatchClipboardText(context: Context?, text: String) {
++    private fun dispatchClipboardText(context: Context?, text: String, capturedAtMs: Long) {
 +        val ctx = context ?: return
 +        ctx.sendBroadcast(Intent().apply {
 +            action = LocationActions.ACTION_CLIPBOARD_TEXT
@@ -4719,6 +4846,7 @@ index 0000000000000000000000000000000000000000..caf021e9f10f157b5640dc22af2128cf
 +            addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
 +            addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
 +            putExtra(LocationActions.EXTRA_CLIPBOARD_TEXT, text)
++            putExtra(ClipboardTrace.EXTRA_CAPTURED_AT, capturedAtMs)
 +        })
 +    }
 +
@@ -4738,17 +4866,6 @@ index 0000000000000000000000000000000000000000..caf021e9f10f157b5640dc22af2128cf
 +        return null
 +    }
 +
-+    private fun isDuplicate(text: String): Boolean {
-+        val now = System.currentTimeMillis()
-+        synchronized(this) {
-+            if (text == lastText && (now - lastTimeMs) <= 1000) {
-+                return true
-+            }
-+            lastText = text
-+            lastTimeMs = now
-+        }
-+        return false
-+    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/HookEntry.kt b/app/src/main/java/io/github/phantom/gps/xposed/HookEntry.kt
 similarity index 48%
@@ -4784,24 +4901,80 @@ index 6448079dcaf9a1e37d3eea479d7b90534a404241..823f8647bc90757a358856746c14511e
 \ No newline at end of file
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-similarity index 93%
+similarity index 78%
 rename from app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
 rename to app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-index 61ed6adaf6b92a8260ae655611f2391470833343..250746d6adade0871c79f21aec1f3ee407f86cd4 100644
+index 61ed6adaf6b92a8260ae655611f2391470833343..1bb825672347a746c204f253c6683d70a702635f 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
 @@ -1 +1 @@
 -package io.github.jqssun.gpssetter.xposed
 +package io.github.phantom.gps.xposed
-@@ -17 +17 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
+@@ -7,0 +8,7 @@ import android.content.Context
++import android.content.BroadcastReceiver
++import android.content.Intent
++import android.content.IntentFilter
++import android.os.Handler
++import android.os.HandlerThread
++import io.github.phantom.gps.utils.LocationRefresh
++import io.github.phantom.gps.utils.ClipboardTrace
+@@ -17 +24 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
 -import io.github.jqssun.gpssetter.BuildConfig
 +import io.github.phantom.gps.BuildConfig
-@@ -20,0 +21 @@ import java.util.*
+@@ -20,0 +28 @@ import java.util.*
 +import kotlin.math.abs
-@@ -21,0 +23,2 @@ import kotlin.math.cos
+@@ -21,0 +30,2 @@ import kotlin.math.cos
 +import kotlin.math.sin
 +import kotlin.math.sqrt
-@@ -40,8 +43,21 @@ object LocationHook {
+@@ -32 +42,40 @@ object LocationHook {
+-    private var mLastUpdated: Long = 0
++    @Volatile private var mLastUpdated: Long = 0
++    @Volatile private var refreshRegistered = false
++    @Volatile private var currentTrace: ClipboardTrace? = null
++    private var loadedTraceId: Long = 0
++    private var consumedTraceId: Long = 0
++
++    @Synchronized
++    fun ensureRefreshReceiver(source: Context) {
++        if (refreshRegistered) return
++        val receiverContext = source.applicationContext ?: source
++        if (receiverContext.packageName == BuildConfig.APPLICATION_ID) return
++        val worker = HandlerThread("Phantom-location-refresh").apply { start() }
++        val receiver = object : BroadcastReceiver() {
++            override fun onReceive(context: Context, intent: Intent?) {
++                if (intent?.action != LocationRefresh.ACTION) return
++                updateLocation(forceReload = true)
++            }
++        }
++        runCatching {
++            if (Build.VERSION.SDK_INT >= 33) {
++                receiverContext.registerReceiver(receiver, IntentFilter(LocationRefresh.ACTION),
++                    LocationRefresh.SENDER_PERMISSION, Handler(worker.looper), Context.RECEIVER_EXPORTED)
++            } else {
++                receiverContext.registerReceiver(receiver, IntentFilter(LocationRefresh.ACTION),
++                    LocationRefresh.SENDER_PERMISSION, Handler(worker.looper))
++            }
++            refreshRegistered = true
++            // The first clipboard event can beat receiver registration. Load the
++            // latest committed snapshot once so that an early refresh is not lost.
++            updateLocation(forceReload = true)
++        }.onFailure { worker.quitSafely() }
++    }
++
++    @Synchronized private fun markLocationRead() {
++        val trace = currentTrace ?: return
++        if (trace.id != consumedTraceId) {
++            consumedTraceId = trace.id
++            trace.mark("hook_first_read")
++        }
++    }
+@@ -37 +86,2 @@ object LocationHook {
+-    private fun updateLocation() {
++    @Synchronized
++    private fun updateLocation(forceReload: Boolean = false) {
+@@ -38,0 +89 @@ object LocationHook {
++            if (forceReload) settings.forceReload()
+@@ -40,8 +91,21 @@ object LocationHook {
 -            val x = (rand.nextInt(50) - 15).toDouble()
 -            val y = (rand.nextInt(50) - 15).toDouble()
 -            val dlat = x / earth
@@ -4831,24 +5004,61 @@ index 61ed6adaf6b92a8260ae655611f2391470833343..250746d6adade0871c79f21aec1f3ee4
 +                newlat = baseLat
 +                newlng = baseLng
 +            }
-@@ -59 +75 @@ object LocationHook {
+@@ -48,0 +113,7 @@ object LocationHook {
++            currentTrace = settings.clipboardTrace()
++            currentTrace?.let { trace ->
++                if (trace.id != loadedTraceId) {
++                    loadedTraceId = trace.id
++                    trace.mark("hook_loaded")
++                }
++            }
+@@ -57,0 +129,10 @@ object LocationHook {
++        (AndroidAppHelper.currentApplication() as? Context)?.let { ensureRefreshReceiver(it) }
++        if (lpparam.packageName != "android" && lpparam.packageName != BuildConfig.APPLICATION_ID) {
++            XposedHelpers.findAndHookMethod(android.app.Application::class.java, "attach", Context::class.java,
++                object : XC_MethodHook() {
++                    override fun afterHookedMethod(param: MethodHookParam) {
++                        (param.args.firstOrNull() as? Context)?.let { ensureRefreshReceiver(it) }
++                    }
++                })
++        }
++
+@@ -59 +140 @@ object LocationHook {
 -        if (lpparam.packageName == "android") { XposedBridge.log("Hooking system server")
 +        if (lpparam.packageName == "android") {
-@@ -136 +151,0 @@ object LocationHook {
+@@ -78,0 +160 @@ object LocationHook {
++                            markLocationRead()
+@@ -130,0 +213 @@ object LocationHook {
++                            markLocationRead()
+@@ -136 +218,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -217 +231,0 @@ object LocationHook {
+@@ -163 +245,2 @@ object LocationHook {
+-                                    location.latitude = newlat
++                                    markLocationRead()
++                            location.latitude = newlat
+@@ -211,0 +295 @@ object LocationHook {
++                            markLocationRead()
+@@ -217 +300,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -317 +330,0 @@ object LocationHook {
+@@ -248,0 +332 @@ object LocationHook {
++                                    markLocationRead()
+@@ -262,0 +347 @@ object LocationHook {
++                                    markLocationRead()
+@@ -311,0 +397 @@ object LocationHook {
++                            markLocationRead()
+@@ -317 +402,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -350 +362,0 @@ object LocationHook {
+@@ -344,0 +430 @@ object LocationHook {
++                            markLocationRead()
+@@ -350 +435,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -365,0 +378 @@ object LocationHook {
+@@ -365,0 +451 @@ object LocationHook {
 +
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
-similarity index 40%
+similarity index 32%
 rename from app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt
 rename to app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
-index c49507362245160560adc43d64d9f59889f18b75..d9affee01d57f7f796d686e6bbe22c2c883f8c40 100644
+index c49507362245160560adc43d64d9f59889f18b75..48b230b8c9745af6be0e311c292fd8a45ee478af 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
 @@ -1 +1,2 @@
@@ -4859,7 +5069,7 @@ index c49507362245160560adc43d64d9f59889f18b75..d9affee01d57f7f796d686e6bbe22c2c
 -import io.github.jqssun.gpssetter.BuildConfig
 +import io.github.phantom.gps.BuildConfig
 +import android.os.SystemClock
-@@ -7 +9,16 @@ class Xshare {
+@@ -7 +9,6 @@ class Xshare {
 -    private var xPref: XSharedPreferences? = null
 +    private val prefsName = "${BuildConfig.APPLICATION_ID}_prefs"
 +    private val xPref: XSharedPreferences by lazy {
@@ -4867,7 +5077,11 @@ index c49507362245160560adc43d64d9f59889f18b75..d9affee01d57f7f796d686e6bbe22c2c
 +    }
 +
 +    private var lastReloadUptimeMs: Long = 0
-+
+@@ -9,3 +16,22 @@ class Xshare {
+-    private fun pref() : XSharedPreferences {
+-        xPref = XSharedPreferences(BuildConfig.APPLICATION_ID,"${BuildConfig.APPLICATION_ID}_prefs")
+-        return xPref as XSharedPreferences
++    @Synchronized
 +    private fun pref(): XSharedPreferences {
 +        val now = SystemClock.elapsedRealtime()
 +        // XSharedPreferences doesn't auto-update; reload throttled to keep hooks fast.
@@ -4877,25 +5091,30 @@ index c49507362245160560adc43d64d9f59889f18b75..d9affee01d57f7f796d686e6bbe22c2c
 +        }
 +        return xPref
 +    }
-@@ -9,3 +26,3 @@ class Xshare {
--    private fun pref() : XSharedPreferences {
--        xPref = XSharedPreferences(BuildConfig.APPLICATION_ID,"${BuildConfig.APPLICATION_ID}_prefs")
--        return xPref as XSharedPreferences
++
++    @Synchronized
 +    fun forceReload() {
 +        runCatching { xPref.reload() }
 +        lastReloadUptimeMs = SystemClock.elapsedRealtime()
-@@ -44,0 +62,3 @@ class Xshare {
++    }
++
++    fun clipboardTrace(): io.github.phantom.gps.utils.ClipboardTrace? {
++        val p = pref()
++        val id = p.getLong(io.github.phantom.gps.utils.LocationRefresh.TRACE_ID_PREF, 0)
++        val capturedAt = p.getLong(io.github.phantom.gps.utils.LocationRefresh.CAPTURED_AT_PREF, 0)
++        return if (id > 0 && capturedAt > 0) io.github.phantom.gps.utils.ClipboardTrace(id, capturedAt) else null
+@@ -44,0 +71,3 @@ class Xshare {
 +    val randomRadiusMeters: String?
 +    get() = pref().getString("random_radius_meters","10")
 +
-@@ -48 +68,5 @@ class Xshare {
+@@ -48 +77,5 @@ class Xshare {
 -    val reload = pref().reload()
 +    val isClipboardMonitorEnabled : Boolean
 +    get() = pref().getBoolean(
 +        "clipboard_monitor_enabled",
 +        false
 +    )
-@@ -50 +74 @@ class Xshare {
+@@ -50 +83 @@ class Xshare {
 -}
 \ No newline at end of file
 +}
@@ -7739,10 +7958,10 @@ index 7b0cd4c437beac7223a7c08be5f6bd6b6c6380ba..00000000000000000000000000000000
 -</vector>
 diff --git a/app/src/main/res/layout/activity_activation.xml b/app/src/main/res/layout/activity_activation.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..7307c6f8a7e84bed519f9f86e5effaf263d9bf9b
+index 0000000000000000000000000000000000000000..411c6ccadb1c2b06b6d69fe05a4cac10795aed18
 --- /dev/null
 +++ b/app/src/main/res/layout/activity_activation.xml
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,77 @@
 +<?xml version="1.0" encoding="utf-8"?>
 +<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 +    android:layout_width="match_parent"
@@ -7764,11 +7983,14 @@ index 0000000000000000000000000000000000000000..7307c6f8a7e84bed519f9f86e5effaf2
 +        android:layout_height="wrap_content"
 +        android:layout_marginTop="12dp"
 +        android:gravity="center"
++        android:id="@+id/activationSubtitle"
++        android:visibility="gone"
 +        android:text="@string/activation_subtitle"
 +        android:textSize="14sp" />
 +
 +    <EditText
 +        android:id="@+id/activationCodeInput"
++        android:visibility="gone"
 +        android:layout_width="match_parent"
 +        android:layout_height="wrap_content"
 +        android:layout_marginTop="20dp"
@@ -7777,6 +7999,7 @@ index 0000000000000000000000000000000000000000..7307c6f8a7e84bed519f9f86e5effaf2
 +
 +    <Button
 +        android:id="@+id/activateButton"
++        android:visibility="gone"
 +        android:layout_width="match_parent"
 +        android:layout_height="wrap_content"
 +        android:layout_marginTop="16dp"
@@ -7787,6 +8010,23 @@ index 0000000000000000000000000000000000000000..7307c6f8a7e84bed519f9f86e5effaf2
 +        android:layout_width="wrap_content"
 +        android:layout_height="wrap_content"
 +        android:layout_marginTop="16dp"
++        android:visibility="gone" />
++
++    <TextView
++        android:id="@+id/activationStatus"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:layout_marginTop="12dp"
++        android:gravity="center"
++        android:text="@string/activation_checking"
++        android:visibility="gone" />
++
++    <Button
++        android:id="@+id/retryVerificationButton"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:layout_marginTop="16dp"
++        android:text="@string/activation_retry_check"
 +        android:visibility="gone" />
 +
 +    <TextView
@@ -13125,7 +13365,7 @@ index 93e8e6d939a758aa333d2776ca2adb9912ee6757..b4344661f76c85c338c9b6787a18beef
 \ No newline at end of file
 +</resources>
 diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
-index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..db302931b2f2e97ea8b69a5814e37587c212cb1e 100644
+index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..e2e2382b0f15094f1fe6eeeaeef5b86b8b2faecf 100644
 --- a/app/src/main/res/values/strings.xml
 +++ b/app/src/main/res/values/strings.xml
 @@ -4,2 +4,2 @@
@@ -13153,7 +13393,7 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..db302931b2f2e97ea8b69a5814e37587
 +    <string name="clipboard_monitor_title">Clipboard monitor</string>
 +    <string name="clipboard_monitor_desc">Listening for location in clipboard</string>
 +    <string name="clipboard_monitor_channel_desc">Background clipboard listener</string>
-+    <string name="clipboard_monitor_toggle">อ่านตำแหน่งที่คัดลอก</string>
++    <string name="clipboard_monitor_toggle">Clipboard monitor</string>
 +    <string name="clipboard_monitor_toggle_summary">ตรวจข้อความที่คัดลอก แล้วอ่านเฉพาะรูปแบบที่คุณเปิดไว้</string>
 +    <string name="clipboard_auto_start">ใช้พิกัดทันทีเมื่อพบ</string>
 +    <string name="clipboard_auto_start_summary">ปิดเพื่อแสดงแจ้งเตือนให้กดยืนยันก่อนเปลี่ยนพิกัด</string>
@@ -13200,7 +13440,7 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..db302931b2f2e97ea8b69a5814e37587
 +    <string name="license_locked_reason_package_mismatch">This license does not match this app package.</string>
 +    <string name="license_locked_reason_missing">This license could not be found on the server.</string>
 +    <string name="license_locked_reason_generic">This device cannot use the app until the license is verified again.</string>
-@@ -61 +113,22 @@
+@@ -61 +113,25 @@
 -</resources>
 \ No newline at end of file
 +    <string name="check_update_now">ตรวจสอบอัปเดตตอนนี้</string>
@@ -13224,6 +13464,9 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..db302931b2f2e97ea8b69a5814e37587
 +    <string name="clipboard_format_place_text_summary">ค้นหาพิกัดจากชื่อสถานที่หรือที่อยู่ภาษาไทยและอังกฤษ</string>
 +    <string name="clipboard_format_map_places">ลิงก์ค้นหาสถานที่</string>
 +    <string name="clipboard_format_map_places_summary">ค้นหาพิกัดจากชื่อสถานที่หรือที่อยู่ในลิงก์แผนที่</string>
++    <string name="activation_checking">กำลังตรวจสอบการเปิดใช้งาน…</string>
++    <string name="activation_submitting">กำลังเปิดใช้งานแอป…</string>
++    <string name="activation_retry_check">ตรวจสอบอีกครั้ง</string>
 +</resources>
 diff --git a/app/src/main/res/xml/preferences.xml b/app/src/main/res/xml/preferences.xml
 index fabf1050343e8e29653fb416f06b5c06054115ed..9e32fe36a847d01ce838873ec6f5a581c1f53bae 100644
@@ -13315,6 +13558,43 @@ index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..85f00d5de5dba13c0b8975b2bb632c63
 -io.github.jqssun.gpssetter.xposed.HookEntry
 \ No newline at end of file
 +io.github.phantom.gps.xposed.HookEntry
+diff --git a/app/src/test/java/io/github/phantom/gps/ui/ActivationUiStateTest.kt b/app/src/test/java/io/github/phantom/gps/ui/ActivationUiStateTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..5daff7608f2bc98f64508ae24b071dc184c27ade
+--- /dev/null
++++ b/app/src/test/java/io/github/phantom/gps/ui/ActivationUiStateTest.kt
+@@ -0,0 +1,31 @@
++package io.github.phantom.gps.ui
++
++import org.junit.Assert.*
++import org.junit.Test
++
++class ActivationUiStateTest {
++    @Test fun existingLicenseCheckHidesFormAndForbidsSubmission() {
++        val checking = ActivationUiState(ActivationMode.CHECKING)
++        assertTrue(checking.isBusy)
++        assertFalse(checking.canSubmit)
++        assertFalse(checking.showForm)
++        assertFalse(checking.canRetryVerification)
++    }
++    @Test fun failedVerificationOffersOnlyVerificationRetry() {
++        val failed = ActivationUiState(ActivationMode.CHECK_FAILED)
++        assertTrue(failed.canRetryVerification)
++        assertFalse(failed.canSubmit)
++        assertFalse(failed.showForm)
++        assertFalse(failed.isBusy)
++    }
++    @Test fun repeatedActivationTapIsRejectedUntilSubmissionFinishes() {
++        assertTrue(ActivationUiState(ActivationMode.READY).canSubmit)
++        val submitting = ActivationUiState(ActivationMode.SUBMITTING)
++        assertTrue(submitting.isBusy)
++        assertFalse(submitting.canSubmit)
++        assertTrue(submitting.showForm)
++        assertTrue(ActivationUiState(ActivationMode.ACTIVATION_FAILED).canSubmit)
++        assertFalse(ActivationUiState(ActivationMode.OPEN_MAIN).canSubmit)
++        assertFalse(ActivationUiState(ActivationMode.OPEN_LOCKED).canSubmit)
++    }
++}
 diff --git a/app/src/test/java/io/github/phantom/gps/update/PublicReleaseTest.kt b/app/src/test/java/io/github/phantom/gps/update/PublicReleaseTest.kt
 new file mode 100644
 index 0000000000000000000000000000000000000000..83476dfca217b02387f7a7efd685777dd42fcf84
@@ -13358,6 +13638,41 @@ index 0000000000000000000000000000000000000000..83476dfca217b02387f7a7efd685777d
 +        assertFalse(valid.copy(bytes = 101L * 1024 * 1024).isValid())
 +        assertFalse(valid.copy(publishedAt = "bad").isValid())
 +        assertFalse(valid.copy(changes = List(21) { "extra" }).isValid())
++    }
++}
+diff --git a/app/src/test/java/io/github/phantom/gps/utils/ClipboardEventGateTest.kt b/app/src/test/java/io/github/phantom/gps/utils/ClipboardEventGateTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..dbc0f8479aed8c922c6c9bfec580f849308067fd
+--- /dev/null
++++ b/app/src/test/java/io/github/phantom/gps/utils/ClipboardEventGateTest.kt
+@@ -0,0 +1,29 @@
++package io.github.phantom.gps.utils
++
++import org.junit.Assert.*
++import org.junit.Test
++
++class ClipboardEventGateTest {
++    @Test fun twoSourcesWithSameTextProduceOneAcceptedJob() {
++        val gate = ClipboardEventGate()
++        assertTrue(gate.accept("11000:13.7,100.5", 1000))
++        assertFalse(gate.accept("11000:13.7,100.5", 1010))
++        assertFalse(gate.accept("11000:13.7,100.5", 1299))
++    }
++    @Test fun aDifferentCoordinateNeverWaitsForDuplicateWindow() {
++        val gate = ClipboardEventGate()
++        assertTrue(gate.accept("13.7,100.5", 1000))
++        assertTrue(gate.accept("13.8,100.6", 1001))
++    }
++    @Test fun sameTextCanBeRetriedAndFormatChangesAreAccepted() {
++        val gate = ClipboardEventGate()
++        assertTrue(gate.accept("11000:VGX5+R5C", 1000))
++        assertTrue(gate.accept("11000:VGX5+R5C", 1301))
++        assertTrue(gate.accept("11100:VGX5+R5C", 1302))
++    }
++    @Test fun clockResetDoesNotSuppressInput() {
++        val gate = ClipboardEventGate()
++        assertTrue(gate.accept("input", 1000))
++        assertTrue(gate.accept("input", 10))
 +    }
 +}
 diff --git a/app/src/test/java/io/github/phantom/gps/utils/ClipboardFormatsTest.kt b/app/src/test/java/io/github/phantom/gps/utils/ClipboardFormatsTest.kt
