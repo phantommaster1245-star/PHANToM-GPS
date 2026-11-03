@@ -1,12 +1,12 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..96e5f00364e0c1f1dca8ddd517d45d5ffe4d70ce 100644
+index d211674657a4308ba7437287558c90117ce56c75..18bc9d8be228d81d8d01de186fd87b994bafc31a 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
 +    id 'com.google.gms.google-services'
 @@ -10 +11,26 @@ plugins {
 -def tagName = '0.0.6'
-+def tagName = '0.0.11'
++def tagName = '0.0.12'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -37,7 +37,7 @@ index d211674657a4308ba7437287558c90117ce56c75..96e5f00364e0c1f1dca8ddd517d45d5f
 +        applicationId "io.github.phantom.gps"
 @@ -18 +44 @@ android {
 -        versionCode 6
-+        versionCode 11
++        versionCode 12
 @@ -19,0 +46 @@ android {
 +        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://phantom-gps.vercel.app/\""
 @@ -21,0 +49,2 @@ android {
@@ -2365,10 +2365,10 @@ index 0000000000000000000000000000000000000000..610e33609a6781da93f0f89994e8dadc
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/SettingsActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
-similarity index 64%
+similarity index 55%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/SettingsActivity.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
-index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..e3f5dd8c6a4129f2f7c38541078866d65d5ecd68 100644
+index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..cb6b7c2c7d092a7dd09ef3d43d95e56c176d0a63 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/SettingsActivity.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
 @@ -1 +1 @@
@@ -2380,12 +2380,14 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..e3f5dd8c6a4129f2f7c38541078866d6
 +import io.github.phantom.gps.update.UpdateChecker
 +import com.google.android.material.dialog.MaterialAlertDialogBuilder
 +import io.github.phantom.gps.BuildConfig
-@@ -28,5 +33,8 @@ import androidx.preference.PreferenceFragmentCompat
+@@ -28,5 +33,10 @@ import androidx.preference.PreferenceFragmentCompat
 -import io.github.jqssun.gpssetter.R
 -import io.github.jqssun.gpssetter.databinding.ActivitySettingsBinding
 -import io.github.jqssun.gpssetter.utils.JoystickService
 -import io.github.jqssun.gpssetter.utils.PrefManager
 -import io.github.jqssun.gpssetter.utils.ext.showToast
++import androidx.preference.PreferenceCategory
++import io.github.phantom.gps.utils.ClipboardFormats
 +import io.github.phantom.gps.R
 +import io.github.phantom.gps.databinding.ActivitySettingsBinding
 +import io.github.phantom.gps.utils.AppIntegrity
@@ -2394,17 +2396,21 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..e3f5dd8c6a4129f2f7c38541078866d6
 +import io.github.phantom.gps.utils.LicenseGuard
 +import io.github.phantom.gps.utils.PrefManager
 +import io.github.phantom.gps.utils.ext.showToast
-@@ -46,0 +55,2 @@ class ActivitySettings : AppCompatActivity() {
+@@ -41,0 +52 @@ class ActivitySettings : AppCompatActivity() {
++            if (key in ClipboardFormats.KEYS) return PrefManager.isClipboardFormatEnabled(key!!)
+@@ -46,0 +58,2 @@ class ActivitySettings : AppCompatActivity() {
 +                "clipboard_monitor_enabled" -> PrefManager.isClipboardMonitorEnabled
 +                "clipboard_monitor_auto_start" -> PrefManager.isClipboardAutoStart
-@@ -56,0 +67,2 @@ class ActivitySettings : AppCompatActivity() {
+@@ -51,0 +65 @@ class ActivitySettings : AppCompatActivity() {
++            if (key in ClipboardFormats.KEYS) { PrefManager.setClipboardFormatEnabled(key!!, value); return }
+@@ -56,0 +71,2 @@ class ActivitySettings : AppCompatActivity() {
 +                "clipboard_monitor_enabled" -> PrefManager.isClipboardMonitorEnabled = value
 +                "clipboard_monitor_auto_start" -> PrefManager.isClipboardAutoStart = value
-@@ -63,0 +76 @@ class ActivitySettings : AppCompatActivity() {
+@@ -63,0 +80 @@ class ActivitySettings : AppCompatActivity() {
 +                "random_radius_meters" -> PrefManager.randomRadiusMeters
-@@ -72,0 +86 @@ class ActivitySettings : AppCompatActivity() {
+@@ -72,0 +90 @@ class ActivitySettings : AppCompatActivity() {
 +                "random_radius_meters" -> PrefManager.randomRadiusMeters = value
-@@ -81,0 +96,8 @@ class ActivitySettings : AppCompatActivity() {
+@@ -81,0 +100,8 @@ class ActivitySettings : AppCompatActivity() {
 +        if (!AppIntegrity.isSelfValid(this)) {
 +            finish()
 +            return
@@ -2413,7 +2419,39 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..e3f5dd8c6a4129f2f7c38541078866d6
 +            finish()
 +            return
 +        }
-@@ -118,0 +141,22 @@ class ActivitySettings : AppCompatActivity() {
+@@ -114,0 +141,7 @@ class ActivitySettings : AppCompatActivity() {
++        private var formatsExpanded = false
++
++        override fun onSaveInstanceState(outState: Bundle) {
++            outState.putBoolean("clipboard_formats_expanded", formatsExpanded)
++            super.onSaveInstanceState(outState)
++        }
++
+@@ -118,0 +152,46 @@ class ActivitySettings : AppCompatActivity() {
++            val formatGroup = findPreference<PreferenceCategory>("clipboard_formats_group")!!
++            val formatHeader = findPreference<Preference>("clipboard_formats_expand")!!
++            formatsExpanded = savedInstanceState?.getBoolean("clipboard_formats_expanded") ?: false
++            fun updateFormatHeader(changedKey: String? = null, changedValue: Boolean? = null) {
++                val count = ClipboardFormats.KEYS.count { key ->
++                    if (key == changedKey) changedValue == true else PrefManager.isClipboardFormatEnabled(key)
++                }
++                formatGroup.isVisible = formatsExpanded
++                formatHeader.title = getString(if (formatsExpanded) R.string.clipboard_formats_collapse else R.string.clipboard_formats_expand)
++                formatHeader.summary = if (count == 0) getString(R.string.clipboard_formats_none) else getString(R.string.clipboard_formats_count, count)
++            }
++            updateFormatHeader()
++            formatHeader.setOnPreferenceClickListener {
++                formatsExpanded = !formatsExpanded
++                updateFormatHeader()
++                true
++            }
++            ClipboardFormats.KEYS.forEach { key ->
++                findPreference<Preference>(key)?.setOnPreferenceChangeListener { _, newValue ->
++                    updateFormatHeader(key, newValue as Boolean)
++                    true
++                }
++            }
++
 +            findPreference<Preference>("check_update_now")?.setOnPreferenceClickListener { preference ->
 +                preference.isEnabled = false
 +                lifecycleScope.launch {
@@ -2436,7 +2474,7 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..e3f5dd8c6a4129f2f7c38541078866d6
 +                true
 +            }
 +
-@@ -143,0 +188,23 @@ class ActivitySettings : AppCompatActivity() {
+@@ -143,0 +223,23 @@ class ActivitySettings : AppCompatActivity() {
 +            findPreference<EditTextPreference>("random_radius_meters")?.let {
 +                it.summary = "${PrefManager.randomRadiusMeters} m"
 +                it.setOnBindEditTextListener { editText ->
@@ -2460,7 +2498,7 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..e3f5dd8c6a4129f2f7c38541078866d6
 +                }
 +            }
 +
-@@ -168,0 +236,14 @@ class ActivitySettings : AppCompatActivity() {
+@@ -168,0 +271,14 @@ class ActivitySettings : AppCompatActivity() {
 +
 +            findPreference<Preference>("clipboard_monitor_enabled")?.let { pref ->
 +                pref.setOnPreferenceChangeListener { _, newValue ->
@@ -2475,10 +2513,10 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..e3f5dd8c6a4129f2f7c38541078866d6
 +                    true
 +                }
 +            }
-@@ -175 +256 @@ class ActivitySettings : AppCompatActivity() {
+@@ -175 +291 @@ class ActivitySettings : AppCompatActivity() {
 -                if ("io.github.jqssun.gpssetter.utils.JoystickService" == service.service.className) {
 +                if ("io.github.phantom.gps.utils.JoystickService" == service.service.className) {
-@@ -221 +302,2 @@ class ActivitySettings : AppCompatActivity() {
+@@ -221 +337,2 @@ class ActivitySettings : AppCompatActivity() {
 -}
 \ No newline at end of file
 +}
@@ -2849,12 +2887,52 @@ index 0000000000000000000000000000000000000000..15b52f72a353df4d709b60a4c43ea362
 +        }
 +    }
 +}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardFormats.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardFormats.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..766793b659dfbc0dc421a79a6a181e512f0f2b64
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardFormats.kt
+@@ -0,0 +1,34 @@
++package io.github.phantom.gps.utils
++
++/** Separate clipboard input routes; URLs never fall through to the plain-text route. */
++data class ClipboardFormats(
++    val coordinates: Boolean = true,
++    val mapCoordinates: Boolean = true,
++    val plusCodes: Boolean = true,
++    val placeText: Boolean = true,
++    val mapPlaces: Boolean = true
++) {
++    val signature: String get() = listOf(coordinates, mapCoordinates, plusCodes, placeText, mapPlaces).joinToString("") { if (it) "1" else "0" }
++    val anyEnabled: Boolean get() = coordinates || mapCoordinates || plusCodes || placeText || mapPlaces
++    fun plainText(text: String): String = URL.replace(text, " ").trim()
++    fun coordinateText(text: String): String = if (coordinates) plainText(text) else ""
++    fun coordinatesFrom(text: String): Pair<Double, Double>? = if (coordinates) parsePair(plainText(text)) else null
++    fun addressText(text: String): String? {
++        if (!placeText) return null
++        val plain = plainText(text)
++        if (plain.isBlank() || COORDINATES.containsMatchIn(plain.replace(';', ',')) || OpenLocationCode.extractFromText(plain) != null) return null
++        return plain
++    }
++    fun urls(text: String): List<String> = if (mapCoordinates || mapPlaces) URL.findAll(text).map { it.value }.distinct().toList() else emptyList()
++    companion object {
++        val KEYS = listOf("clipboard_format_coordinates", "clipboard_format_map_coordinates", "clipboard_format_plus_codes", "clipboard_format_place_text", "clipboard_format_map_places")
++        private val URL = Regex("(?i)\\b(?:https?://|geo:)[^\\s]+")
++        private val COORDINATES = Regex("([-+]?\\d{1,3}(?:[.]\\d+)?)\\s*[,;]\\s*([-+]?\\d{1,3}(?:[.]\\d+)?)")
++        fun parsePair(text: String): Pair<Double, Double>? {
++            val match = COORDINATES.find(text) ?: return null
++            val lat = match.groupValues[1].toDoubleOrNull() ?: return null
++            val lon = match.groupValues[2].toDoubleOrNull() ?: return null
++            return if (lat in -90.0..90.0 && lon in -180.0..180.0) lat to lon else null
++        }
++    }
++}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardLocationReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardLocationReceiver.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..1f31ca480453368f7c4625a8b5d5cc42708bf86b
+index 0000000000000000000000000000000000000000..c211697b1a5ba063267359920f3c067a120bac8d
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardLocationReceiver.kt
-@@ -0,0 +1,763 @@
+@@ -0,0 +1,707 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Notification
@@ -2899,7 +2977,8 @@ index 0000000000000000000000000000000000000000..1f31ca480453368f7c4625a8b5d5cc42
 +        val text = intent.getStringExtra(LocationActions.EXTRA_CLIPBOARD_TEXT)?.trim()
 +            ?: return
 +        if (text.isEmpty()) return
-+        if (isDuplicate(text)) return
++        if (!PrefManager.clipboardFormats().anyEnabled) return
++        if (isDuplicate(cacheKey(text))) return
 +
 +        val generation = synchronized(lock) {
 +            activeProcessingJob?.cancel()
@@ -2921,11 +3000,12 @@ index 0000000000000000000000000000000000000000..1f31ca480453368f7c4625a8b5d5cc42
 +    }
 +
 +    private suspend fun processClipboard(context: Context, text: String, generation: Long) {
-+        if (!isLatestGeneration(generation)) return
++        val formats = PrefManager.clipboardFormats()
++        if (!isLatestGeneration(generation) || PrefManager.clipboardFormats() != formats) return
 +
 +        // Fast-path: coordinates/URLs that already contain coordinates.
-+        resolveLocationNoGeocode(text)?.let { latLng ->
-+            if (!isLatestGeneration(generation)) return
++        resolveLocationNoGeocode(text, formats)?.let { latLng ->
++            if (!isLatestGeneration(generation) || PrefManager.clipboardFormats() != formats) return
 +            val label = text
 +            if (!isInThailandBounds(latLng.first, latLng.second)) {
 +                showOutsideThailandNotification(context, label, latLng.first, latLng.second)
@@ -2943,16 +3023,19 @@ index 0000000000000000000000000000000000000000..1f31ca480453368f7c4625a8b5d5cc42
 +            return
 +        }
 +
-+        val previewQuery = bestQueryForGeocoder(text)
++        val urls = formats.urls(text)
++        val address = formats.addressText(text)
++        if (address == null && (!formats.mapPlaces || urls.none { parseFromMapsUrl(it) == null && extractSearchQueryFromUrl(it) != null })) return
++        val previewQuery = bestQueryForGeocoder(address ?: text)
 +        showSearchingNotification(context, previewQuery.ifBlank { text })
 +
-+        val latLng = resolveLocationFast(context, text) ?: run {
-+            if (isLatestGeneration(generation)) {
++        val latLng = resolveLocationFast(context, text, formats) ?: run {
++            if (isLatestGeneration(generation) && PrefManager.clipboardFormats() == formats) {
 +                showNotFoundStatusNotification(context, previewQuery.ifBlank { text })
 +            }
 +            return
 +        }
-+        if (!isLatestGeneration(generation)) return
++        if (!isLatestGeneration(generation) || PrefManager.clipboardFormats() != formats) return
 +        if (!isInThailandBounds(latLng.first, latLng.second)) {
 +            showOutsideThailandNotification(context, previewQuery.ifBlank { text }, latLng.first, latLng.second)
 +            return
@@ -2970,45 +3053,22 @@ index 0000000000000000000000000000000000000000..1f31ca480453368f7c4625a8b5d5cc42
 +        }
 +    }
 +
-+    private fun resolveLocationNoGeocode(text: String): Pair<Double, Double>? {
++    private fun resolveLocationNoGeocode(text: String, formats: ClipboardFormats): Pair<Double, Double>? {
 +        val normalized = text.trim()
 +        if (normalized.isEmpty()) return null
-+
-+        getCachedLocation(normalized)?.let { return it }
-+
-+        // Offline: Plus Codes (Open Location Code), full/short.
-+        OpenLocationCode.extractFromText(normalized)?.let { plusCode ->
-+            val ref = resolveReferenceForShortPlusCode(normalized)
-+            val latLng = OpenLocationCode.decodeToCenter(plusCode, ref?.first, ref?.second)
-+            if (latLng != null) {
-+                cacheLocation(normalized, latLng)
-+                return latLng
++        val plain = formats.plainText(normalized)
++        if (formats.plusCodes) {
++            OpenLocationCode.extractFromText(plain)?.let { plusCode ->
++                val ref = resolveReferenceForShortPlusCode(plain)
++                OpenLocationCode.decodeToCenter(plusCode, ref?.first, ref?.second)?.let { return it }
 +            }
 +        }
-+
-+        parseLatLng(normalized)?.let {
-+            cacheLocation(normalized, it)
-+            return it
-+        }
-+
-+        parseGoogleBangCoords(normalized)?.let {
-+            cacheLocation(normalized, it)
-+            return it
-+        }
-+
-+        parseFromMapsUrl(normalized)?.let {
-+            cacheLocation(normalized, it)
-+            return it
-+        }
-+
-+        val urls = extractUrls(normalized)
-+        urls.forEach { urlText ->
-+            parseFromMapsUrl(urlText)?.let {
-+                cacheLocation(normalized, it)
-+                return it
++        formats.coordinatesFrom(normalized)?.let { return it }
++        if (formats.mapCoordinates) {
++            formats.urls(normalized).forEach { url ->
++                parseFromMapsUrl(url)?.let { return it }
 +            }
 +        }
-+
 +        return null
 +    }
 +
@@ -3126,60 +3186,29 @@ index 0000000000000000000000000000000000000000..1f31ca480453368f7c4625a8b5d5cc42
 +        }
 +    }
 +
-+    private suspend fun resolveLocationFast(context: Context, text: String): Pair<Double, Double>? {
-+        val normalized = text.trim()
-+        if (normalized.isEmpty()) return null
-+
-+        getCachedLocation(normalized)?.let { return it }
-+
-+        parseLatLng(normalized)?.let {
-+            cacheLocation(normalized, it)
-+            return it
-+        }
-+
-+        parseGoogleBangCoords(normalized)?.let {
-+            cacheLocation(normalized, it)
-+            return it
-+        }
-+
-+        parseFromMapsUrl(normalized)?.let {
-+            cacheLocation(normalized, it)
-+            return it
-+        }
-+
-+        // If the clipboard contains multiple lines (e.g., address + maps URL), scan embedded URLs.
-+        val urls = extractUrls(normalized)
-+        urls.forEach { urlText ->
-+            parseFromMapsUrl(urlText)?.let {
-+                cacheLocation(normalized, it)
-+                return it
-+            }
-+        }
-+
-+        extractSearchQueryFromUrl(normalized)?.let { query ->
-+            val q = bestQueryForGeocoder(query)
-+            geocodeUsingAppMethod(context, q)?.let {
-+                cacheLocation(normalized, it)
-+                return it
-+            }
-+        }
-+
-+        urls.forEach { urlText ->
-+            extractSearchQueryFromUrl(urlText)?.let { query ->
-+                val q = bestQueryForGeocoder(query)
-+                geocodeUsingAppMethod(context, q)?.let {
-+                    cacheLocation(normalized, it)
-+                    return it
++    private suspend fun resolveLocationFast(context: Context, text: String, formats: ClipboardFormats): Pair<Double, Double>? {
++        if (PrefManager.clipboardFormats() != formats) return null
++        // Cache entries carry the enabled-format signature, so changing switches cannot reuse a disabled route.
++        getCachedLocation(text)?.let { return it }
++        if (formats.mapPlaces) {
++            formats.urls(text).forEach { url ->
++                // A coordinate link is not a place-name query when coordinate links are disabled.
++                if (parseFromMapsUrl(url) == null) {
++                    extractSearchQueryFromUrl(url)?.let { query ->
++                        geocodeUsingAppMethod(context, bestQueryForGeocoder(query))?.let {
++                            if (PrefManager.clipboardFormats() == formats) cacheLocation(text, it)
++                            return it
++                        }
++                    }
 +                }
 +            }
 +        }
-+
-+        val geocodeQuery = bestQueryForGeocoder(normalized)
-+        geocodeUsingAppMethod(context, geocodeQuery)?.let {
-+            cacheLocation(normalized, it)
-+            return it
++        formats.addressText(text)?.let { query ->
++            geocodeUsingAppMethod(context, bestQueryForGeocoder(query))?.let {
++                if (PrefManager.clipboardFormats() == formats) cacheLocation(text, it)
++                return it
++            }
 +        }
-+
 +        return null
 +    }
 +
@@ -3236,14 +3265,7 @@ index 0000000000000000000000000000000000000000..1f31ca480453368f7c4625a8b5d5cc42
 +    }
 +
 +    private fun parseLatLng(text: String): Pair<Double, Double>? {
-+        val matcher = LAT_LNG_PATTERN.matcher(text.replace(';', ','))
-+        if (!matcher.find()) return null
-+        val values = matcher.group().split(",")
-+        if (values.size < 2) return null
-+        val lat = values[0].trim().toDoubleOrNull() ?: return null
-+        val lon = values[1].trim().toDoubleOrNull() ?: return null
-+        if (lat !in -90.0..90.0 || lon !in -180.0..180.0) return null
-+        return lat to lon
++        return ClipboardFormats.parsePair(text)
 +    }
 +
 +    private fun parseFromMapsUrl(text: String): Pair<Double, Double>? {
@@ -3509,7 +3531,7 @@ index 0000000000000000000000000000000000000000..1f31ca480453368f7c4625a8b5d5cc42
 +    }
 +
 +    private fun cacheKey(text: String): String {
-+        return text.trim().lowercase(Locale.US)
++        return PrefManager.clipboardFormats().signature + ":" + text.trim().lowercase(Locale.US)
 +    }
 +
 +    private fun decode(value: String): String {
@@ -3620,10 +3642,10 @@ index 0000000000000000000000000000000000000000..1f31ca480453368f7c4625a8b5d5cc42
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardMonitorService.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardMonitorService.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..5aed7e3aa329ab708f9685b1f54606d03c9f131a
+index 0000000000000000000000000000000000000000..fe8b9ba972c4f17c39a9907a57661e3142629610
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardMonitorService.kt
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,114 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Notification
@@ -3699,8 +3721,9 @@ index 0000000000000000000000000000000000000000..5aed7e3aa329ab708f9685b1f54606d0
 +
 +    private fun handleClipboard() {
 +        val text = getClipboardText() ?: return
-+        if (text == lastDispatched) return
-+        lastDispatched = text
++        val dispatchKey = PrefManager.clipboardFormats().signature + ":" + text
++        if (dispatchKey == lastDispatched) return
++        lastDispatched = dispatchKey
 +        sendBroadcast(Intent(this, ClipboardLocationReceiver::class.java).apply {
 +            action = LocationActions.ACTION_CLIPBOARD_TEXT
 +            addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
@@ -4320,10 +4343,10 @@ index 0000000000000000000000000000000000000000..42c33415002004f2b24906ad517311ff
 +}
 +
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-similarity index 64%
+similarity index 56%
 rename from app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
 rename to app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-index 0e30240e630883a8096962540b38794108dfcf41..23c387555b2d549c5bbd0111849370019cf9214e 100644
+index 0e30240e630883a8096962540b38794108dfcf41..d2e058928d49a6c95b9cd4639315d0bb1c35a68c 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
 +++ b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
 @@ -1 +1 @@
@@ -4349,7 +4372,7 @@ index 0e30240e630883a8096962540b38794108dfcf41..23c387555b2d549c5bbd011184937001
 +        get() = pref.getString(RANDOM_RADIUS_METERS, "10")
 +        set(value) { pref.edit().putString(RANDOM_RADIUS_METERS, value).apply() }
 +
-@@ -84,0 +96,8 @@ object PrefManager   {
+@@ -84,0 +96,26 @@ object PrefManager   {
 +    var isClipboardMonitorEnabled: Boolean
 +        get() = pref.getBoolean(ENABLE_CLIPBOARD_MONITOR, false)
 +        set(value) = pref.edit().putBoolean(ENABLE_CLIPBOARD_MONITOR, value).apply()
@@ -4358,7 +4381,25 @@ index 0e30240e630883a8096962540b38794108dfcf41..23c387555b2d549c5bbd011184937001
 +        get() = pref.getBoolean(CLIPBOARD_AUTO_START, true)
 +        set(value) = pref.edit().putBoolean(CLIPBOARD_AUTO_START, value).apply()
 +
-@@ -95,0 +115,20 @@ object PrefManager   {
++    fun isClipboardFormatEnabled(key: String): Boolean {
++        require(key in ClipboardFormats.KEYS)
++        return pref.getBoolean(key, true)
++    }
++
++    fun setClipboardFormatEnabled(key: String, enabled: Boolean) {
++        require(key in ClipboardFormats.KEYS)
++        pref.edit().putBoolean(key, enabled).apply()
++    }
++
++    fun clipboardFormats(): ClipboardFormats = ClipboardFormats(
++        isClipboardFormatEnabled(ClipboardFormats.KEYS[0]),
++        isClipboardFormatEnabled(ClipboardFormats.KEYS[1]),
++        isClipboardFormatEnabled(ClipboardFormats.KEYS[2]),
++        isClipboardFormatEnabled(ClipboardFormats.KEYS[3]),
++        isClipboardFormatEnabled(ClipboardFormats.KEYS[4])
++    )
++
+@@ -95,0 +133,20 @@ object PrefManager   {
 +    fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
 +        pref.registerOnSharedPreferenceChangeListener(listener)
 +    }
@@ -4379,7 +4420,7 @@ index 0e30240e630883a8096962540b38794108dfcf41..23c387555b2d549c5bbd011184937001
 +        prefEditor.commit()
 +    }
 +
-@@ -103 +142,2 @@ object PrefManager   {
+@@ -103 +160,2 @@ object PrefManager   {
 -}
 \ No newline at end of file
 +}
@@ -13084,7 +13125,7 @@ index 93e8e6d939a758aa333d2776ca2adb9912ee6757..b4344661f76c85c338c9b6787a18beef
 \ No newline at end of file
 +</resources>
 diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
-index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..049d7b29b0f088cb067d82a6a290fc5150ff1733 100644
+index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..db302931b2f2e97ea8b69a5814e37587c212cb1e 100644
 --- a/app/src/main/res/values/strings.xml
 +++ b/app/src/main/res/values/strings.xml
 @@ -4,2 +4,2 @@
@@ -13112,10 +13153,10 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..049d7b29b0f088cb067d82a6a290fc51
 +    <string name="clipboard_monitor_title">Clipboard monitor</string>
 +    <string name="clipboard_monitor_desc">Listening for location in clipboard</string>
 +    <string name="clipboard_monitor_channel_desc">Background clipboard listener</string>
-+    <string name="clipboard_monitor_toggle">Clipboard monitor</string>
-+    <string name="clipboard_monitor_toggle_summary">Enable listening for locations copied to clipboard</string>
-+    <string name="clipboard_auto_start">Auto start from clipboard</string>
-+    <string name="clipboard_auto_start_summary">Start location immediately after finding a match</string>
++    <string name="clipboard_monitor_toggle">อ่านตำแหน่งที่คัดลอก</string>
++    <string name="clipboard_monitor_toggle_summary">ตรวจข้อความที่คัดลอก แล้วอ่านเฉพาะรูปแบบที่คุณเปิดไว้</string>
++    <string name="clipboard_auto_start">ใช้พิกัดทันทีเมื่อพบ</string>
++    <string name="clipboard_auto_start_summary">ปิดเพื่อแสดงแจ้งเตือนให้กดยืนยันก่อนเปลี่ยนพิกัด</string>
 +    <string name="enter_valid_radius_input">Enter a valid radius of at least 1 meter</string>
 +    <string name="action_start">Start</string>
 +    <string name="location_ready">Location ready</string>
@@ -13159,7 +13200,7 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..049d7b29b0f088cb067d82a6a290fc51
 +    <string name="license_locked_reason_package_mismatch">This license does not match this app package.</string>
 +    <string name="license_locked_reason_missing">This license could not be found on the server.</string>
 +    <string name="license_locked_reason_generic">This device cannot use the app until the license is verified again.</string>
-@@ -61 +113,7 @@
+@@ -61 +113,22 @@
 -</resources>
 \ No newline at end of file
 +    <string name="check_update_now">ตรวจสอบอัปเดตตอนนี้</string>
@@ -13168,9 +13209,24 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..049d7b29b0f088cb067d82a6a290fc51
 +    <string name="update_check_failed">ตรวจอัปเดตไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่</string>
 +    <string name="update_later">ไว้ภายหลัง</string>
 +    <string name="update_website_message">%1$s\n\nเปิดหน้าดาวน์โหลดเพื่อดูรายละเอียดและติดตั้งรุ่นใหม่ การตั้งค่าจะอยู่ครบเมื่อติดตั้งทับแอปเดิม</string>
++    <string name="clipboard_formats_expand">รูปแบบข้อความที่ต้องการอ่าน ▾</string>
++    <string name="clipboard_formats_collapse">รูปแบบข้อความที่ต้องการอ่าน ▴</string>
++    <string name="clipboard_formats_group">เปิดเฉพาะรูปแบบที่ต้องการ</string>
++    <string name="clipboard_formats_count">เปิดอยู่ %1$d จาก 5 รูปแบบ · แตะเพื่อแสดงหรือซ่อนตัวเลือก</string>
++    <string name="clipboard_formats_none">ปิดทุกรูปแบบ · จะไม่อ่านข้อความจากคลิปบอร์ด</string>
++    <string name="clipboard_format_coordinates">พิกัดตัวเลข</string>
++    <string name="clipboard_format_coordinates_summary">เช่น 13.7563, 100.5018 หรือ 13.7563; 100.5018 รวมถึงพิกัดในข้อความ</string>
++    <string name="clipboard_format_map_coordinates">ลิงก์แผนที่ที่มีพิกัด</string>
++    <string name="clipboard_format_map_coordinates_summary">อ่านตัวเลขพิกัดจากลิงก์ Google Maps และ geo: ไม่รวมลิงก์สั้นที่ยังไม่มีพิกัด</string>
++    <string name="clipboard_format_plus_codes">รหัสตำแหน่ง (Plus Code)</string>
++    <string name="clipboard_format_plus_codes_summary">เช่น VGX5+R5C รหัสแบบย่อต้องมีจุดอ้างอิงใกล้เคียง</string>
++    <string name="clipboard_format_place_text">ชื่อสถานที่และที่อยู่</string>
++    <string name="clipboard_format_place_text_summary">ค้นหาพิกัดจากชื่อสถานที่หรือที่อยู่ภาษาไทยและอังกฤษ</string>
++    <string name="clipboard_format_map_places">ลิงก์ค้นหาสถานที่</string>
++    <string name="clipboard_format_map_places_summary">ค้นหาพิกัดจากชื่อสถานที่หรือที่อยู่ในลิงก์แผนที่</string>
 +</resources>
 diff --git a/app/src/main/res/xml/preferences.xml b/app/src/main/res/xml/preferences.xml
-index fabf1050343e8e29653fb416f06b5c06054115ed..75ec03f5551c080d746701296ddf708e23b3edb2 100644
+index fabf1050343e8e29653fb416f06b5c06054115ed..9e32fe36a847d01ce838873ec6f5a581c1f53bae 100644
 --- a/app/src/main/res/xml/preferences.xml
 +++ b/app/src/main/res/xml/preferences.xml
 @@ -25,0 +26,6 @@
@@ -13180,7 +13236,7 @@ index fabf1050343e8e29653fb416f06b5c06054115ed..75ec03f5551c080d746701296ddf708e
 +            android:summary="@string/check_update_now_summary"
 +            android:icon="@drawable/ic_update" />
 +
-@@ -40,0 +47,16 @@
+@@ -40,0 +47,56 @@
 +        <SwitchPreferenceCompat
 +            android:title="@string/clipboard_monitor_toggle"
 +            android:summary="@string/clipboard_monitor_toggle_summary"
@@ -13188,6 +13244,46 @@ index fabf1050343e8e29653fb416f06b5c06054115ed..75ec03f5551c080d746701296ddf708e
 +            android:key="clipboard_monitor_enabled"
 +            android:defaultValue="false"
 +            android:widgetLayout="@layout/preference_switch_widget" />
++
++        <Preference
++            android:key="clipboard_formats_expand"
++            android:title="@string/clipboard_formats_expand"
++            android:icon="@drawable/ic_baseline_search_24" />
++        <PreferenceCategory
++            android:key="clipboard_formats_group"
++            android:title="@string/clipboard_formats_group"
++            app:isPreferenceVisible="false">
++            <SwitchPreferenceCompat
++                android:key="clipboard_format_coordinates"
++                android:title="@string/clipboard_format_coordinates"
++                android:summary="@string/clipboard_format_coordinates_summary"
++                android:defaultValue="true"
++                android:widgetLayout="@layout/preference_switch_widget" />
++            <SwitchPreferenceCompat
++                android:key="clipboard_format_map_coordinates"
++                android:title="@string/clipboard_format_map_coordinates"
++                android:summary="@string/clipboard_format_map_coordinates_summary"
++                android:defaultValue="true"
++                android:widgetLayout="@layout/preference_switch_widget" />
++            <SwitchPreferenceCompat
++                android:key="clipboard_format_plus_codes"
++                android:title="@string/clipboard_format_plus_codes"
++                android:summary="@string/clipboard_format_plus_codes_summary"
++                android:defaultValue="true"
++                android:widgetLayout="@layout/preference_switch_widget" />
++            <SwitchPreferenceCompat
++                android:key="clipboard_format_place_text"
++                android:title="@string/clipboard_format_place_text"
++                android:summary="@string/clipboard_format_place_text_summary"
++                android:defaultValue="true"
++                android:widgetLayout="@layout/preference_switch_widget" />
++            <SwitchPreferenceCompat
++                android:key="clipboard_format_map_places"
++                android:title="@string/clipboard_format_map_places"
++                android:summary="@string/clipboard_format_map_places_summary"
++                android:defaultValue="true"
++                android:widgetLayout="@layout/preference_switch_widget" />
++        </PreferenceCategory>
 +
 +        <SwitchPreferenceCompat
 +            android:title="@string/clipboard_auto_start"
@@ -13197,7 +13293,7 @@ index fabf1050343e8e29653fb416f06b5c06054115ed..75ec03f5551c080d746701296ddf708e
 +            android:defaultValue="true"
 +            android:widgetLayout="@layout/preference_switch_widget" />
 +
-@@ -68,0 +91,9 @@
+@@ -68,0 +131,9 @@
 +        <EditTextPreference
 +            android:defaultValue="10"
 +            android:digits="0123456789"
@@ -13207,7 +13303,7 @@ index fabf1050343e8e29653fb416f06b5c06054115ed..75ec03f5551c080d746701296ddf708e
 +            android:dependency="random_position"
 +            android:summary="10 m" />
 +
-@@ -71 +102 @@
+@@ -71 +142 @@
 -</PreferenceScreen>
 \ No newline at end of file
 +</PreferenceScreen>
@@ -13262,6 +13358,59 @@ index 0000000000000000000000000000000000000000..83476dfca217b02387f7a7efd685777d
 +        assertFalse(valid.copy(bytes = 101L * 1024 * 1024).isValid())
 +        assertFalse(valid.copy(publishedAt = "bad").isValid())
 +        assertFalse(valid.copy(changes = List(21) { "extra" }).isValid())
++    }
++}
+diff --git a/app/src/test/java/io/github/phantom/gps/utils/ClipboardFormatsTest.kt b/app/src/test/java/io/github/phantom/gps/utils/ClipboardFormatsTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..4c3d3a5f4e946372053ca6d2e420ff271ad63378
+--- /dev/null
++++ b/app/src/test/java/io/github/phantom/gps/utils/ClipboardFormatsTest.kt
+@@ -0,0 +1,47 @@
++package io.github.phantom.gps.utils
++
++import org.junit.Assert.*
++import org.junit.Test
++
++class ClipboardFormatsTest {
++    private val numbersOnly = ClipboardFormats(true, false, false, false, false)
++    @Test fun parsesEnabledCoordinatePairsAndChecksBounds() {
++        assertEquals(13.7563 to 100.5018, numbersOnly.coordinatesFrom("จุดรับ 13.7563, 100.5018 หมายเหตุ"))
++        assertEquals(13.7563 to 100.5018, numbersOnly.coordinatesFrom("13.7563; 100.5018"))
++        assertNull(numbersOnly.coordinatesFrom("91, 100"))
++        assertNull(numbersOnly.coordinatesFrom("13, 181"))
++        assertNull(numbersOnly.coordinatesFrom("https://maps.google.com/?q=13.7563,100.5018"))
++        assertNull(numbersOnly.copy(coordinates=false).coordinatesFrom("13.7563, 100.5018"))
++    }
++    @Test fun coordinatesOnlyPreservesEmbeddedPairsButExcludesLinks() {
++        assertEquals("จุดรับ 13.7563, 100.5018", numbersOnly.coordinateText("จุดรับ 13.7563, 100.5018"))
++        assertEquals("13.7563; 100.5018", numbersOnly.coordinateText("13.7563; 100.5018"))
++        assertEquals("", numbersOnly.coordinateText("https://maps.google.com/?q=13.7563,100.5018"))
++        assertEquals("", numbersOnly.coordinateText("geo:13.7563,100.5018"))
++        assertTrue(numbersOnly.urls("https://maps.google.com/?q=13.7563,100.5018").isEmpty())
++        assertNull(numbersOnly.addressText("เทศบาลนครปากเกร็ด นนทบุรี"))
++        assertFalse(numbersOnly.plusCodes)
++    }
++    @Test fun disablingNumbersCannotFallThroughToGeocoding() {
++        val addresses = ClipboardFormats(false, false, false, true, false)
++        assertNull(addresses.addressText("พิกัด 13.7563, 100.5018"))
++        assertNull(addresses.addressText("พิกัด 13.7563; 100.5018"))
++        assertNull(addresses.addressText("VGX5+R5C เทศบาลนครปากเกร็ด นนทบุรี"))
++        assertNull(addresses.addressText("https://maps.google.com/?q=นนทบุรี"))
++        assertEquals("เทศบาลนครปากเกร็ด นนทบุรี", addresses.addressText("เทศบาลนครปากเกร็ด นนทบุรี"))
++    }
++    @Test fun mixedTextDoesNotExposeUrlCoordinatesToNumberRoute() {
++        assertEquals("จุดรับ 13.75, 100.50", numbersOnly.coordinateText("จุดรับ 13.75, 100.50 https://maps.google.com/@18.78,98.98"))
++    }
++    @Test fun defaultsKeepSupportAndEachSwitchChangesCacheNamespace() {
++        val defaults = ClipboardFormats()
++        assertTrue(defaults.anyEnabled)
++        assertEquals(5, ClipboardFormats.KEYS.size)
++        for (selection in listOf(defaults.copy(coordinates=false), defaults.copy(mapCoordinates=false), defaults.copy(plusCodes=false), defaults.copy(placeText=false), defaults.copy(mapPlaces=false))) assertNotEquals(defaults.signature, selection.signature)
++        val none = ClipboardFormats(false,false,false,false,false)
++        assertFalse(none.anyEnabled)
++        assertEquals("", none.coordinateText("13.7563,100.5018"))
++        assertNull(none.addressText("นนทบุรี"))
++        assertTrue(none.urls("geo:13.7,100.5").isEmpty())
 +    }
 +}
 diff --git a/build.gradle b/build.gradle

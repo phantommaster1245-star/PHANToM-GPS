@@ -1,6 +1,6 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "source": "1e6df7123337d82edadfe0c142ed88e6a3ac5df0",
+  "source": "02a8e0500ffb013060017ae7737f47c3ed6fa091",
   "files": [
     {
       "path": ".gitattributes",
@@ -20,17 +20,17 @@
     {
       "path": "PROVENANCE.md",
       "bytes": 1621,
-      "sha256": "6325dd225833d331b4079e1147defd42b010bdbf30e60f7671c154fe5f9cbdd6"
+      "sha256": "5665d501613b8f14f2205c0d4b0531029dc5e90f63cad4e804845d749c9453ad"
     },
     {
       "path": "README.md",
-      "bytes": 2677,
-      "sha256": "8082fd0980baf246275ff5957e458b5449c2b3fe3915bcae412d54da9a3c0ffc"
+      "bytes": 3241,
+      "sha256": "f6e81a2271accd36f6462dd52231247c4a249970f51e19f72df81d4b35841ae2"
     },
     {
       "path": "VALIDATION.txt",
-      "bytes": 716,
-      "sha256": "42fef125488ecda7a612346976881db0f233e2e46f911d7d34aa0b6007a290ea"
+      "bytes": 731,
+      "sha256": "5cf0cab979a9504abc8d10613aa62620be799e6ab148f1d5d96414572763f953"
     },
     {
       "path": "build.gradle",
@@ -249,8 +249,8 @@
     },
     {
       "path": "patches/phantom-gps.patch",
-      "bytes": 758676,
-      "sha256": "d94e34fc992c5645508e0c499f9cc4604a64078d96e29ddc2c89a1f0efa58637"
+      "bytes": 772036,
+      "sha256": "6d3c0f51708e262ab8cbdb08617447dc46917ca6e73cce045ed125a1f900c8c7"
     },
     {
       "path": "settings.gradle",
@@ -270,7 +270,7 @@
     {
       "path": "web/README.md",
       "bytes": 1730,
-      "sha256": "19409c2c0bf74c143e785e888cbdcd8d9b658055eaac2db49d46f1ea04205bd3"
+      "sha256": "5bbe6d72fd3ba2291bc42282889d742fe6dee066356d07a1b1159c3381ba1d7c"
     },
     {
       "path": "web/dist/assets/LICENSE.txt",
@@ -308,14 +308,14 @@
       "sha256": "a141520082ceeac2043e39defeb2b4afc065bdbd7db952a9a9bfb1e67cd50472"
     },
     {
-      "path": "web/dist/downloads/PHANToM-GPS-v0.0.11.apk",
-      "bytes": 3405999,
-      "sha256": "db4c22f6be8abdc107737775822db137f18890cd21b1e03d8bccc6d71676d62b"
+      "path": "web/dist/downloads/PHANToM-GPS-v0.0.12.apk",
+      "bytes": 3414223,
+      "sha256": "7688f74495be0c3abd5f6b40cfda845bf9f7df7aa0583b2cfe6df263aa515fd6"
     },
     {
       "path": "web/dist/downloads/version.json",
-      "bytes": 802,
-      "sha256": "4515725af8c78303d111ba669bc85bfc803cb847afa10d080f0c0bf9093d5617"
+      "bytes": 925,
+      "sha256": "3b8dba0738b496387cb6cbc0f32f577760eb3f20ba252c28083bd6b25a7448ac"
     },
     {
       "path": "web/dist/index.html",
@@ -329,8 +329,8 @@
     },
     {
       "path": "web/tools/publish-apk.mjs",
-      "bytes": 2078,
-      "sha256": "508aecdf9671d36e5e407dad20ab0bf154d3792054bade1dd0d114a51a3fed7a"
+      "bytes": 2201,
+      "sha256": "73e753866c463ef07592edfd9d046a68f903938455c22c7fba62f36dd9a7722e"
     }
   ]
 }

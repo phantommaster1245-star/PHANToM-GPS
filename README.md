@@ -24,12 +24,12 @@ The root Gradle files in this repository build only the standalone Installer. Th
 
 ## Public website and updates
 
-PHANToM GPS 0.0.11 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
+PHANToM GPS 0.0.12 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
 
 Website: https://phantom-gps.vercel.app/
 Download: https://phantom-gps.vercel.app/download.html
 
-Install version 0.0.11 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.
+Install version 0.0.12 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.
 
 ## Deploy on Vercel
 
@@ -38,3 +38,7 @@ Import this GitHub repository with Root Directory set to the repository root (`.
 Only web/dist is published. Android source, Firebase code, Installer files, and repository metadata are outside the website output.
 
 The previous Sites deployment has owner-only access and is no longer publicly accessible. Publication and production deployment on Vercel are managed by the repository owner.
+
+## Clipboard message selection
+
+In Settings, open **อ่านตำแหน่งที่คัดลอก** and expand **รูปแบบข้อความที่ต้องการอ่าน**. Five independent switches control numeric coordinates, coordinate links, Plus Codes, place/address text, and place-search links. All are enabled by default to preserve existing support. Turn off the other four to read only numeric coordinate pairs outside URLs. Turning every switch off ignores clipboard input. Auto-start remains a separate choice.
