@@ -1,0 +1,261 @@
+{
+  "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
+  "source": "53e0b8d74a293126143400f92b834b72c52d6da9",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 9,
+      "sha256": "8b9c3028d6467ff3be7c793141927841d70f47f52d0590677438f488ca154992"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 97,
+      "sha256": "4c2b498360961ac26455200e550db2e49ac7f2f99924abc7ad56483a38b54d8f"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 35823,
+      "sha256": "230184f60bae2feaf244f10a8bac053c8ff33a183bcc365b4d8b876d2b7f4809"
+    },
+    {
+      "path": "PROVENANCE.md",
+      "bytes": 1623,
+      "sha256": "8aae9816f9beee00c61880d2c7d58f8c3fd94b014ad430c017a4513cb5764d89"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1563,
+      "sha256": "141a3ea18e32cabd04d0724a282724e99e1b7f289e9585cbe2b51c0ac95e7dc6"
+    },
+    {
+      "path": "VALIDATION.txt",
+      "bytes": 224,
+      "sha256": "71bc8061fe83a27f08fee75225ba17e00d697a13e447c738a24bcc069d5e00d4"
+    },
+    {
+      "path": "build.gradle",
+      "bytes": 144,
+      "sha256": "9967b9b53026a21dd80e981a38c0420c4b57d06029d5a02a4ad99772966470be"
+    },
+    {
+      "path": "firebase/ADMIN_HELPERS.md",
+      "bytes": 1560,
+      "sha256": "f0031241a10976a2df13744f4c79ee358640ff5fb67fc86de700302b3e19347b"
+    },
+    {
+      "path": "firebase/firebase.json",
+      "bytes": 51,
+      "sha256": "3bdfbec1d62846c93d9091b8616ab27f6ac1acc203f6fe176f692dd3aff2f7a3"
+    },
+    {
+      "path": "firebase/firestore.rules",
+      "bytes": 902,
+      "sha256": "c86e478ff739c0118343c9da1eefb1f90d0aedef2ae230e961bbc5f2afd72cfc"
+    },
+    {
+      "path": "firebase/functions/index.js",
+      "bytes": 25183,
+      "sha256": "a4b43339b00007fbe01321b5fe2ff413d6b8035b6beb47542f2eb7265f686e31"
+    },
+    {
+      "path": "firebase/functions/package-lock.json",
+      "bytes": 99590,
+      "sha256": "9f3379fb722948c225600c2e1271730d60af119ad15d728bed8e7fe7e0e8d0bd"
+    },
+    {
+      "path": "firebase/functions/package.json",
+      "bytes": 415,
+      "sha256": "c8a6c5ae8c4c3a3bddab9bffa57f66cde605c1d30524553002bac588c6a833a9"
+    },
+    {
+      "path": "firebase/functions/scripts/create-activation-code.js",
+      "bytes": 10020,
+      "sha256": "7f25fb9c3c9279bb4167139b449d37229d36b7a02606a289f132df0b3de2c706"
+    },
+    {
+      "path": "firebase/functions/scripts/lib/firebase-rest-admin.js",
+      "bytes": 5136,
+      "sha256": "1f0bb24a8f65e2cbf18f7735b55b069c57bf0eb2794dba10e357ddb96208d9ee"
+    },
+    {
+      "path": "firebase/functions/scripts/reset-activation-code.js",
+      "bytes": 3352,
+      "sha256": "d2a79f56afaf4f90133ee1ad5b3d8e4fae08480a0ec9abbb4362a08899d306e3"
+    },
+    {
+      "path": "firebase/functions/scripts/revoke-activation-code.js",
+      "bytes": 3572,
+      "sha256": "b1b4cf5fc649994224e80157f4092320309e47a58daa411cb45628c495e9db46"
+    },
+    {
+      "path": "gradle.properties",
+      "bytes": 1459,
+      "sha256": "3859c3abff69a07fd8adcbd0036769d8fe39d2edf56bd170f02c9094fe4d359a"
+    },
+    {
+      "path": "gradle/wrapper/gradle-wrapper.jar",
+      "bytes": 43504,
+      "sha256": "498495120a03b9a6ab5d155f5de3c8f0d986a449153702fb80fc80e134484f17"
+    },
+    {
+      "path": "gradle/wrapper/gradle-wrapper.properties",
+      "bytes": 345,
+      "sha256": "2cfe3d2d7fc405fd4143a7354337910252ac788f18c2b8e63c257cbd8f0c7d29"
+    },
+    {
+      "path": "gradlew",
+      "bytes": 9014,
+      "sha256": "1ce03a421a975125820e1e4b7230f6a151617255b39cf84758505c7e67b316fa"
+    },
+    {
+      "path": "gradlew.bat",
+      "bytes": 2966,
+      "sha256": "57931b17dd228e5c24dac90e815d0bf82477e831a4618dfab4136f5446b42a9f"
+    },
+    {
+      "path": "installer/build.gradle",
+      "bytes": 2624,
+      "sha256": "1d32adde3732f73c001527bd605de00341fc28cfc9db2bae04230b6b31fa8328"
+    },
+    {
+      "path": "installer/proguard-rules.pro",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "installer/src/main/AndroidManifest.xml",
+      "bytes": 1375,
+      "sha256": "954b1c0738c2a728b5bd9071b8d1bce486236bb9245a397fd64a0b6c074b9baa"
+    },
+    {
+      "path": "installer/src/main/java/io/github/phantom/gps/installer/GitHubRelease.kt",
+      "bytes": 706,
+      "sha256": "66f8b38d9f4c4a3d1d57608e1ae093d95c4fdc875c841a5e48b7af845f356e48"
+    },
+    {
+      "path": "installer/src/main/java/io/github/phantom/gps/installer/GitHubService.kt",
+      "bytes": 174,
+      "sha256": "2efa103c87be0399450b8c49a096956085e9bbc0eba84024559ee0e2b21147bc"
+    },
+    {
+      "path": "installer/src/main/java/io/github/phantom/gps/installer/InstallerViewModel.kt",
+      "bytes": 15868,
+      "sha256": "b7baed7885744db828ed0c11ee195c1777a86fe2a0cb35e9dd45df4033d3a9d0"
+    },
+    {
+      "path": "installer/src/main/java/io/github/phantom/gps/installer/MainActivity.kt",
+      "bytes": 12110,
+      "sha256": "2ff44abbbc52cd0c65903c40b915aa6904fba25ef456d15f46ac208f3ef0b10f"
+    },
+    {
+      "path": "installer/src/main/java/io/github/phantom/gps/installer/ReleaseAssetSelector.kt",
+      "bytes": 1524,
+      "sha256": "a9aebe19a2d27e03bdf1b2869f2450642ae5362af7f30b96581f861795c1ef2d"
+    },
+    {
+      "path": "installer/src/main/java/io/github/phantom/gps/installer/TemporaryActivationCodeService.kt",
+      "bytes": 561,
+      "sha256": "4e4db4f2c368e2586e3d7d3a7e6dd1919820d18280f1808ac6428bdaa332e174"
+    },
+    {
+      "path": "installer/src/main/res/drawable-nodpi/ic_launcher_foreground.png",
+      "bytes": 147039,
+      "sha256": "55cc00c7c6a4fe6f5893454b609e235923879aef027945ecd45849417829c75b"
+    },
+    {
+      "path": "installer/src/main/res/layout/activity_main.xml",
+      "bytes": 13270,
+      "sha256": "7fc2dd7d03bdc696b6174381011dc99e2dd29dae4537d216acc27a5bab1b5005"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "bytes": 273,
+      "sha256": "1eb8b3b86d82e54c86302b747dbc4c17fae8b36a1da801f311e0420621b2918c"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+      "bytes": 273,
+      "sha256": "1eb8b3b86d82e54c86302b747dbc4c17fae8b36a1da801f311e0420621b2918c"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "bytes": 11158,
+      "sha256": "e764dc9788aad7cf91bceff8cf840e117ceae840636c8710f20804b1ba6b9d27"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-hdpi/ic_launcher_round.png",
+      "bytes": 11286,
+      "sha256": "5947b1b8e6edcb516f6161ca1c82b796db1da20b6611526cbfcf7268b75d3ea6"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "bytes": 5438,
+      "sha256": "bb77ca23923e452e603cc6498d527d015fe328c9186c88633d68e945a77e93b1"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-mdpi/ic_launcher_round.png",
+      "bytes": 5666,
+      "sha256": "6701e1c6ce2b906e443e46ae7aefc2c8ee18891ea05f60ee8d15cb2341373d11"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "bytes": 18643,
+      "sha256": "430a02618dd8e48591ecad5279e9a8ebb6ff65f4e56ce0d22b025cfec3099b55"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
+      "bytes": 18396,
+      "sha256": "a02e6f9a269a620ef100325881f98346a4a316a0f0408e4b4cf75e840c35ff3f"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "bytes": 37769,
+      "sha256": "064d2ae618e9ed1f79bea351f930911691ea36ccc86002e4901542a464f02b2d"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
+      "bytes": 36500,
+      "sha256": "496b020703d30b4a4b1d7e4246f34b59ddf8dac44ef44a688d990d110cc89969"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "bytes": 61390,
+      "sha256": "c61cc9182596befcbef2d4b6889518b5ef08d17ef1b9c19e32dfb518d37334e9"
+    },
+    {
+      "path": "installer/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
+      "bytes": 58886,
+      "sha256": "c6b6ac588054371451e2374ae338f7c297d48d62236e4f5a565395082e1fa26c"
+    },
+    {
+      "path": "installer/src/main/res/values/colors.xml",
+      "bytes": 781,
+      "sha256": "f353ffe2186ca68af3d265ee6972bbbc42e7211b7e4f374615fd2418cdb9ed4a"
+    },
+    {
+      "path": "installer/src/main/res/values/strings.xml",
+      "bytes": 4740,
+      "sha256": "1d981a45eb5336777997d90d39684fae4c788c5ce3d9d7cd27ca391381cd2e2f"
+    },
+    {
+      "path": "installer/src/main/res/values/themes.xml",
+      "bytes": 947,
+      "sha256": "f1057c77c9c007bc9b33aa9bb047bf3488c56bde4d82f2eb53223fb756b7daa5"
+    },
+    {
+      "path": "installer/src/main/res/xml/provider_paths.xml",
+      "bytes": 113,
+      "sha256": "586228c40b2d0b116932979332fb913931906c57a7e8cf4f0ca5a1f9bdfc3a06"
+    },
+    {
+      "path": "patches/phantom-gps.patch",
+      "bytes": 739926,
+      "sha256": "ec24fc8c4a11c439da99266ef0780d474ba650b44163d88f0d5f8c27c63d1b14"
+    },
+    {
+      "path": "settings.gradle",
+      "bytes": 298,
+      "sha256": "4e1fc89847a256f038c1ab933dee6a4c8bf61fb1beb4a3de0e04931a5804f32f"
+    }
+  ]
+}

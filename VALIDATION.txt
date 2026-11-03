@@ -1,0 +1,2 @@
+Patch applied successfully to sanitized base 0577d8e8a3a0fea7d0e421509be8506c760080ba.
+All 121 tracked app/build/settings files match source 53e0b8d74a293126143400f92b834b72c52d6da9 after normalizing Windows line endings.
