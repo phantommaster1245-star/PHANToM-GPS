@@ -1,12 +1,12 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..03f00842833ebea194eca6258aaf8bf29a6fad30 100644
+index d211674657a4308ba7437287558c90117ce56c75..9da6f3e47d5b3c315fca8614b793e04fe9baadc4 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
 +    id 'com.google.gms.google-services'
 @@ -10 +11,26 @@ plugins {
 -def tagName = '0.0.6'
-+def tagName = '0.0.9'
++def tagName = '0.0.10'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -37,11 +37,13 @@ index d211674657a4308ba7437287558c90117ce56c75..03f00842833ebea194eca6258aaf8bf2
 +        applicationId "io.github.phantom.gps"
 @@ -18 +44 @@ android {
 -        versionCode 6
-+        versionCode 9
-@@ -21,0 +48,2 @@ android {
++        versionCode 10
+@@ -19,0 +46 @@ android {
++        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://phantom-gps.mysticsiren256.chatgpt.site/\""
+@@ -21,0 +49,2 @@ android {
 +        buildConfigField("String", "GITHUB_RELEASES_API_BASE", "\"https://api.github.com/repos/Phantomguy7845/PHANToM-GPS/\"")
 +        buildConfigField("String", "GITHUB_RELEASES_PAGE", "\"https://github.com/Phantomguy7845/PHANToM-GPS/releases\"")
-@@ -39,7 +67,11 @@ android {
+@@ -39,7 +68,11 @@ android {
 -            def keystoreProperties = new Properties()
 -            keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 -
@@ -60,7 +62,7 @@ index d211674657a4308ba7437287558c90117ce56c75..03f00842833ebea194eca6258aaf8bf2
 +                    storePassword keystoreProperties['storePassword']
 +                }
 +            }
-@@ -54 +86,6 @@ android {
+@@ -54 +87,6 @@ android {
 -            signingConfig signingConfigs.release
 +            def activeSigningConfig = signingConfigs.release.storeFile ? signingConfigs.release : signingConfigs.debug
 +            signingConfig activeSigningConfig
@@ -68,35 +70,36 @@ index d211674657a4308ba7437287558c90117ce56c75..03f00842833ebea194eca6258aaf8bf2
 +            def cert = certSha256FromSigningConfig(activeSigningConfig)
 +            if (!cert) cert = certSha256FromSigningConfig(signingConfigs.findByName("debug"))
 +            buildConfigField "String", "SIGNING_CERT_SHA256", "\"${cert}\""
-@@ -57,0 +95,3 @@ android {
+@@ -57,0 +96,3 @@ android {
 +            // Used for runtime anti-tamper checks (re-signing / repackaging will change this).
 +            def cert = certSha256FromSigningConfig(signingConfigs.findByName("debug"))
 +            buildConfigField "String", "SIGNING_CERT_SHA256", "\"${cert}\""
-@@ -74,5 +113,0 @@ android {
+@@ -74,5 +114,0 @@ android {
 -        foss {
 -            dimension "version"
 -            // versionNameSuffix "-foss"
 -            isDefault true
 -        }
-@@ -85 +120 @@ android {
+@@ -85 +121 @@ android {
 -    namespace 'io.github.jqssun.gpssetter'
 +    namespace 'io.github.phantom.gps'
-@@ -88,0 +124,5 @@ dependencies {
+@@ -88,0 +125,6 @@ dependencies {
++    testImplementation 'junit:junit:4.13.2'
 +    fullImplementation platform('com.google.firebase:firebase-bom:34.9.0')
 +    fullImplementation 'com.google.firebase:firebase-analytics'
 +    fullImplementation 'com.google.firebase:firebase-functions'
 +    fullImplementation 'com.google.firebase:firebase-functions-ktx:21.2.1'
 +    fullImplementation 'androidx.work:work-runtime-ktx:2.9.0'
-@@ -95,6 +134,0 @@ dependencies {
+@@ -95,6 +136,0 @@ dependencies {
 -    // use microg (apache 2.0) and maplibre (bsd 2-clause)
 -    fossImplementation 'org.microg.gms:play-services-location:0.3.6.244735'
 -    fossImplementation ('org.maplibre.gl:android-sdk:11.8.2') 
 -    /* {
 -        exclude group: 'com.google.android.gms'
 -    } */
-@@ -116,0 +151 @@ dependencies {
+@@ -116,0 +153 @@ dependencies {
 +    implementation "androidx.lifecycle:lifecycle-process:2.7.0"
-@@ -130 +165,2 @@ dependencies {
+@@ -130 +167,2 @@ dependencies {
 -}
 \ No newline at end of file
 +}
@@ -1516,6 +1519,96 @@ index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..85f00d5de5dba13c0b8975b2bb632c63
 -io.github.jqssun.gpssetter.xposed.HookEntry
 \ No newline at end of file
 +io.github.phantom.gps.xposed.HookEntry
+diff --git a/app/src/main/java/io/github/jqssun/gpssetter/update/UpdateChecker.kt b/app/src/main/java/io/github/jqssun/gpssetter/update/UpdateChecker.kt
+deleted file mode 100644
+index e9903e89521c96448774e378ee8b41cadc567275..0000000000000000000000000000000000000000
+--- a/app/src/main/java/io/github/jqssun/gpssetter/update/UpdateChecker.kt
++++ /dev/null
+@@ -1,84 +0,0 @@
+-package io.github.jqssun.gpssetter.update
+-
+-import android.content.Context
+-import android.os.Parcelable
+-import io.github.jqssun.gpssetter.BuildConfig
+-import io.github.jqssun.gpssetter.utils.PrefManager
+-import kotlinx.android.parcel.Parcelize
+-import kotlinx.coroutines.Dispatchers
+-import kotlinx.coroutines.channels.awaitClose
+-import kotlinx.coroutines.flow.callbackFlow
+-import kotlinx.coroutines.withContext
+-import java.io.File
+-import javax.inject.Inject
+-
+-
+-class UpdateChecker @Inject constructor(private val apiResponse : GitHubService) {
+-
+-
+-    fun getLatestRelease() = callbackFlow {
+-        withContext(Dispatchers.IO){
+-            getReleaseList()?.let { gitHubReleaseResponse ->
+-                val currentTag = gitHubReleaseResponse.tagName
+-
+-                if (currentTag != null && (currentTag != "v" + BuildConfig.TAG_NAME && PrefManager.isUpdateDisabled)) {
+-                    //New update available!
+-                    val asset =
+-                        gitHubReleaseResponse.assets?.firstOrNull { it.name?.endsWith(".apk") == true }
+-                    val releaseUrl =
+-                        asset?.browserDownloadUrl?.replace("/download/", "/tag/")?.apply {
+-                            substring(0, lastIndexOf("/"))
+-                        }
+-                    val name = gitHubReleaseResponse.name ?: run {
+-                        this@callbackFlow.trySend(null).isSuccess
+-                        return@let
+-                    }
+-                    val body = gitHubReleaseResponse.body ?: run {
+-                        this@callbackFlow.trySend(null).isSuccess
+-                        return@let
+-                    }
+-                    val publishedAt = gitHubReleaseResponse.publishedAt ?: run {
+-                        this@callbackFlow.trySend(null).isSuccess
+-                        return@let
+-                    }
+-                    this@callbackFlow.trySend(
+-                        Update(
+-                            name,
+-                            body,
+-                            publishedAt,
+-                            asset?.browserDownloadUrl
+-                                ?: "https://github.com/jqssun/android-gps-setter/releases",
+-                            asset?.name ?: "app-full-arm64-v8a-release.apk",
+-                            releaseUrl ?: "https://github.com/jqssun/android-gps-setter/releases"
+-                        )
+-                    ).isSuccess
+-                }
+-            } ?: run {
+-                this@callbackFlow.trySend(null).isSuccess
+-            }
+-        }
+-        awaitClose {  }
+-    }
+-
+-
+-    private fun getReleaseList(): GitHubRelease? {
+-
+-        runCatching {
+-            apiResponse.getReleases().execute().body()
+-        }.onSuccess {
+-            return it
+-        }.onFailure {
+-            return null
+-        }
+-        return null
+-    }
+-
+-    fun clearCachedDownloads(context: Context){
+-        File(context.externalCacheDir, "updates").deleteRecursively()
+-    }
+-
+-    @Parcelize
+-    data class Update(val name: String, val changelog: String, val timestamp: String, val assetUrl: String, val assetName: String, val releaseUrl: String):
+-        Parcelable
+-}
+-
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/NotificationsChannel.kt b/app/src/main/java/io/github/jqssun/gpssetter/utils/NotificationsChannel.kt
 deleted file mode 100644
 index 1b7c1f031fc01ed9b6f597f0874facae2f4d4ceb..0000000000000000000000000000000000000000
@@ -1888,10 +1981,10 @@ index 0000000000000000000000000000000000000000..2aad627e20e0a7db186fd92610202251
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-similarity index 74%
+similarity index 68%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-index 84f61ea4a62c3086df23447da30a593cddcd347a..f6ccfd89bb6a92a65d0553e6186e65faa79ad901 100644
+index 84f61ea4a62c3086df23447da30a593cddcd347a..638b86ebfff2fa948bfa4f577d63890331af6f65 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
 @@ -1 +1 @@
@@ -1929,6 +2022,9 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..f6ccfd89bb6a92a65d0553e6186e65fa
 +import io.github.phantom.gps.utils.PrefManager
 +import io.github.phantom.gps.utils.NotificationIntents
 +import io.github.phantom.gps.utils.ext.*
+@@ -68 +77 @@ abstract class BaseMapActivity: AppCompatActivity() {
+-    protected val update by lazy { viewModel.getAvailableUpdate() }
++    private var shownUpdateVersion: String? = null
 @@ -74,0 +84,42 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +    private val NOTIFICATION_PERMISSION_ID = 43
 +
@@ -2049,31 +2145,107 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..f6ccfd89bb6a92a65d0553e6186e65fa
 +        super.onPause()
 +    }
 +
-@@ -386 +510,5 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -291,46 +415,13 @@ abstract class BaseMapActivity: AppCompatActivity() {
+-    private fun checkUpdates(){
+-        lifecycleScope.launchWhenResumed {
+-            viewModel.update.collect{
+-                if (it!= null){
+-                    updateDialog()
+-                }
+-            }
+-        }
+-    }
+-
+-    private fun updateDialog(){
+-        alertDialog = MaterialAlertDialogBuilder(this)
+-        alertDialog.setTitle(R.string.update_available)
+-        alertDialog.setMessage(update?.changelog)
+-        alertDialog.setPositiveButton(getString(R.string.update_button)) { _, _ ->
+-            MaterialAlertDialogBuilder(this).apply {
+-                val view = layoutInflater.inflate(R.layout.update_dialog, null)
+-                val progress = view.findViewById<LinearProgressIndicator>(R.id.update_download_progress)
+-                val cancel = view.findViewById<AppCompatButton>(R.id.update_download_cancel)
+-                setView(view)
+-                cancel.setOnClickListener {
+-                    viewModel.cancelDownload(getActivityInstance())
+-                    dialog.dismiss()
+-                }
+-                lifecycleScope.launch {
+-                    viewModel.downloadState.collect {
+-                        when (it) {
+-                            is MainViewModel.State.Downloading -> {
+-                                if (it.progress > 0) {
+-                                    progress.isIndeterminate = false
+-                                    progress.progress = it.progress
+-                                }
+-                            }
+-                            is MainViewModel.State.Done -> {
+-                                viewModel.openPackageInstaller(getActivityInstance(), it.fileUri)
+-                                viewModel.clearUpdate()
+-                                dialog.dismiss()
+-                            }
+-                            is MainViewModel.State.Failed -> {
+-                                Toast.makeText(
+-                                    getActivityInstance(),
+-                                    R.string.bs_update_download_failed,
+-                                    Toast.LENGTH_LONG
+-                                ).show()
+-                                dialog.dismiss()
+-
++    private fun checkUpdates() {
++        lifecycleScope.launch {
++            repeatOnLifecycle(Lifecycle.State.RESUMED) {
++                viewModel.update.collect { update ->
++                    if (update != null && shownUpdateVersion != update.version) {
++                        shownUpdateVersion = update.version
++                        MaterialAlertDialogBuilder(this@BaseMapActivity)
++                            .setTitle(update.name)
++                            .setMessage(getString(R.string.update_website_message, update.changelog))
++                            .setPositiveButton(R.string.update_button) { _, _ ->
++                                runCatching {
++                                    startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(update.releaseUrl)))
++                                }.onFailure { Toast.makeText(this@BaseMapActivity, R.string.app_update_failed, Toast.LENGTH_LONG).show() }
+@@ -338,2 +429 @@ abstract class BaseMapActivity: AppCompatActivity() {
+-                            else -> {}
+-                        }
++                            .setNegativeButton(R.string.update_later, null).show()
+@@ -342,8 +431,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
+-                update?.let { it ->
+-                    viewModel.startDownload(getActivityInstance(), it)
+-                } ?: run {
+-                    dialog.dismiss()
+-                }
+-            }.run {
+-                dialog = create()
+-                dialog.show()
+@@ -352,2 +433,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
+-        dialog = alertDialog.create()
+-        dialog.show()
+@@ -386 +466,5 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        notificationsChannel.showNotification(this){
 +        notificationsChannel.showNotification(
 +            this,
 +            NotificationsChannel.NOTIFICATION_ID_LOCATION,
 +            NotificationsChannel.CHANNEL_ID_LOCATION
 +        ) {
-@@ -390 +518 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -390 +474 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -            it.setAutoCancel(true)
 +            it.setAutoCancel(false)
-@@ -392,0 +521,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -392,0 +477,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +            it.setOngoing(true)
 +            it.addAction(
 +                R.drawable.ic_stop,
 +                getString(R.string.action_stop),
 +                NotificationIntents.stopLocationPendingIntent(this)
 +            )
-@@ -397 +531,5 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -397 +487,5 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        notificationsChannel.cancelAllNotifications(this)
 +        notificationsChannel.cancelNotification(this, NotificationsChannel.NOTIFICATION_ID_LOCATION)
 +    }
 +
 +    protected open fun onLocationStopped() {
 +        // Subclasses can override to update map marker state when stopped externally.
-@@ -480,2 +618,8 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -480,2 +574,8 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
 -            getLastLocation()
 +        if (requestCode == PERMISSION_ID) {
@@ -2084,7 +2256,7 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..f6ccfd89bb6a92a65d0553e6186e65fa
 +            if (PrefManager.isClipboardMonitorEnabled) {
 +                ClipboardMonitorService.ensureRunning(this)
 +            }
-@@ -490,0 +635 @@ sealed class SearchProgress {
+@@ -490,0 +591 @@ sealed class SearchProgress {
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt
 new file mode 100644
@@ -2193,16 +2365,22 @@ index 0000000000000000000000000000000000000000..610e33609a6781da93f0f89994e8dadc
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/SettingsActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
-similarity index 74%
+similarity index 64%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/SettingsActivity.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
-index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..3d0cb8b85e83a2e0c89fb7757af0b678b3203fa3 100644
+index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..e3f5dd8c6a4129f2f7c38541078866d65d5ecd68 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/SettingsActivity.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
 @@ -1 +1 @@
 -package io.github.jqssun.gpssetter.ui
 +package io.github.phantom.gps.ui
-@@ -28,5 +28,8 @@ import androidx.preference.PreferenceFragmentCompat
+@@ -22,0 +23,5 @@ import androidx.appcompat.app.AppCompatDelegate
++import androidx.lifecycle.lifecycleScope
++import kotlinx.coroutines.launch
++import io.github.phantom.gps.update.UpdateChecker
++import com.google.android.material.dialog.MaterialAlertDialogBuilder
++import io.github.phantom.gps.BuildConfig
+@@ -28,5 +33,8 @@ import androidx.preference.PreferenceFragmentCompat
 -import io.github.jqssun.gpssetter.R
 -import io.github.jqssun.gpssetter.databinding.ActivitySettingsBinding
 -import io.github.jqssun.gpssetter.utils.JoystickService
@@ -2216,17 +2394,17 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..3d0cb8b85e83a2e0c89fb7757af0b678
 +import io.github.phantom.gps.utils.LicenseGuard
 +import io.github.phantom.gps.utils.PrefManager
 +import io.github.phantom.gps.utils.ext.showToast
-@@ -46,0 +50,2 @@ class ActivitySettings : AppCompatActivity() {
+@@ -46,0 +55,2 @@ class ActivitySettings : AppCompatActivity() {
 +                "clipboard_monitor_enabled" -> PrefManager.isClipboardMonitorEnabled
 +                "clipboard_monitor_auto_start" -> PrefManager.isClipboardAutoStart
-@@ -56,0 +62,2 @@ class ActivitySettings : AppCompatActivity() {
+@@ -56,0 +67,2 @@ class ActivitySettings : AppCompatActivity() {
 +                "clipboard_monitor_enabled" -> PrefManager.isClipboardMonitorEnabled = value
 +                "clipboard_monitor_auto_start" -> PrefManager.isClipboardAutoStart = value
-@@ -63,0 +71 @@ class ActivitySettings : AppCompatActivity() {
+@@ -63,0 +76 @@ class ActivitySettings : AppCompatActivity() {
 +                "random_radius_meters" -> PrefManager.randomRadiusMeters
-@@ -72,0 +81 @@ class ActivitySettings : AppCompatActivity() {
+@@ -72,0 +86 @@ class ActivitySettings : AppCompatActivity() {
 +                "random_radius_meters" -> PrefManager.randomRadiusMeters = value
-@@ -81,0 +91,8 @@ class ActivitySettings : AppCompatActivity() {
+@@ -81,0 +96,8 @@ class ActivitySettings : AppCompatActivity() {
 +        if (!AppIntegrity.isSelfValid(this)) {
 +            finish()
 +            return
@@ -2235,7 +2413,30 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..3d0cb8b85e83a2e0c89fb7757af0b678
 +            finish()
 +            return
 +        }
-@@ -143,0 +161,23 @@ class ActivitySettings : AppCompatActivity() {
+@@ -118,0 +141,22 @@ class ActivitySettings : AppCompatActivity() {
++            findPreference<Preference>("check_update_now")?.setOnPreferenceClickListener { preference ->
++                preference.isEnabled = false
++                lifecycleScope.launch {
++                    val result = runCatching { UpdateChecker().fetchLatest() }
++                    if (!isAdded) return@launch
++                    preference.isEnabled = true
++                    result.onSuccess { update ->
++                        if (update == null) {
++                            Toast.makeText(requireContext(), R.string.update_current, Toast.LENGTH_LONG).show()
++                        } else {
++                            MaterialAlertDialogBuilder(requireContext()).setTitle(update.name)
++                                .setMessage(getString(R.string.update_website_message, update.changelog))
++                                .setPositiveButton(R.string.update_button) { _, _ ->
++                                    runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PUBLIC_SITE_BASE_URL + "download.html"))) }
++                                        .onFailure { Toast.makeText(requireContext(), R.string.app_update_failed, Toast.LENGTH_LONG).show() }
++                                }.setNegativeButton(R.string.update_later, null).show()
++                        }
++                    }.onFailure { Toast.makeText(requireContext(), R.string.update_check_failed, Toast.LENGTH_LONG).show() }
++                }
++                true
++            }
++
+@@ -143,0 +188,23 @@ class ActivitySettings : AppCompatActivity() {
 +            findPreference<EditTextPreference>("random_radius_meters")?.let {
 +                it.summary = "${PrefManager.randomRadiusMeters} m"
 +                it.setOnBindEditTextListener { editText ->
@@ -2259,7 +2460,7 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..3d0cb8b85e83a2e0c89fb7757af0b678
 +                }
 +            }
 +
-@@ -168,0 +209,14 @@ class ActivitySettings : AppCompatActivity() {
+@@ -168,0 +236,14 @@ class ActivitySettings : AppCompatActivity() {
 +
 +            findPreference<Preference>("clipboard_monitor_enabled")?.let { pref ->
 +                pref.setOnPreferenceChangeListener { _, newValue ->
@@ -2274,10 +2475,10 @@ index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..3d0cb8b85e83a2e0c89fb7757af0b678
 +                    true
 +                }
 +            }
-@@ -175 +229 @@ class ActivitySettings : AppCompatActivity() {
+@@ -175 +256 @@ class ActivitySettings : AppCompatActivity() {
 -                if ("io.github.jqssun.gpssetter.utils.JoystickService" == service.service.className) {
 +                if ("io.github.phantom.gps.utils.JoystickService" == service.service.className) {
-@@ -221 +275,2 @@ class ActivitySettings : AppCompatActivity() {
+@@ -221 +302,2 @@ class ActivitySettings : AppCompatActivity() {
 -}
 \ No newline at end of file
 +}
@@ -2286,7 +2487,7 @@ diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/viewmodel/MainViewM
 similarity index 92%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/viewmodel/MainViewModel.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/viewmodel/MainViewModel.kt
-index 8bcaae6eb80464f7cc45d0783e17978ebcbff22b..a4290b5f14d64b8162076a8ff306340eb9c50fa5 100644
+index 8bcaae6eb80464f7cc45d0783e17978ebcbff22b..0143536d9f2331079ddc48849c839fa1537cd48b 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/viewmodel/MainViewModel.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/viewmodel/MainViewModel.kt
 @@ -1 +1 @@
@@ -2320,7 +2521,9 @@ index 8bcaae6eb80464f7cc45d0783e17978ebcbff22b..a4290b5f14d64b8162076a8ff306340e
 +    val getLng get() = prefManger.getLng
 +    val isStarted get() = prefManger.isStarted
 +    val mapType get() = prefManger.mapType
-@@ -257 +257 @@ class MainViewModel @Inject constructor(
+@@ -104,0 +105 @@ class MainViewModel @Inject constructor(
++                io.github.phantom.gps.update.UpdateNotifier.announce(context, it)
+@@ -257 +258 @@ class MainViewModel @Inject constructor(
 -}
 \ No newline at end of file
 +}
@@ -2355,59 +2558,156 @@ index 9dabcefd91fb4d98a39cc3ea55665aa44276f3e7..d2d87965b40c02fa248880c40251ceb9
 +package io.github.phantom.gps.update
 @@ -13,0 +14 @@ interface GitHubService {
 +
-diff --git a/app/src/main/java/io/github/jqssun/gpssetter/update/UpdateChecker.kt b/app/src/main/java/io/github/phantom/gps/update/UpdateChecker.kt
-similarity index 66%
-rename from app/src/main/java/io/github/jqssun/gpssetter/update/UpdateChecker.kt
-rename to app/src/main/java/io/github/phantom/gps/update/UpdateChecker.kt
-index e9903e89521c96448774e378ee8b41cadc567275..a15de0e06ba6c941ef31e953320efddb190a1be8 100644
---- a/app/src/main/java/io/github/jqssun/gpssetter/update/UpdateChecker.kt
-+++ b/app/src/main/java/io/github/phantom/gps/update/UpdateChecker.kt
-@@ -1 +1 @@
--package io.github.jqssun.gpssetter.update
+diff --git a/app/src/main/java/io/github/phantom/gps/update/PublicRelease.kt b/app/src/main/java/io/github/phantom/gps/update/PublicRelease.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..45e6db6270f92f863f70ad6c8e8c6c4950dce9f1
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/update/PublicRelease.kt
+@@ -0,0 +1,33 @@
 +package io.github.phantom.gps.update
-@@ -5,2 +5,2 @@ import android.os.Parcelable
--import io.github.jqssun.gpssetter.BuildConfig
--import io.github.jqssun.gpssetter.utils.PrefManager
-+import io.github.phantom.gps.BuildConfig
-+import io.github.phantom.gps.utils.PrefManager
-@@ -26,6 +26,2 @@ class UpdateChecker @Inject constructor(private val apiResponse : GitHubService)
--                    val asset =
--                        gitHubReleaseResponse.assets?.firstOrNull { it.name?.endsWith(".apk") == true }
--                    val releaseUrl =
--                        asset?.browserDownloadUrl?.replace("/download/", "/tag/")?.apply {
--                            substring(0, lastIndexOf("/"))
--                        }
-+                    val asset = selectPreferredAsset(gitHubReleaseResponse)
-+                    val releaseUrl = gitHubReleaseResponse.htmlUrl ?: BuildConfig.GITHUB_RELEASES_PAGE
-@@ -50,3 +46,3 @@ class UpdateChecker @Inject constructor(private val apiResponse : GitHubService)
--                                ?: "https://github.com/jqssun/android-gps-setter/releases",
--                            asset?.name ?: "app-full-arm64-v8a-release.apk",
--                            releaseUrl ?: "https://github.com/jqssun/android-gps-setter/releases"
-+                                ?: BuildConfig.GITHUB_RELEASES_PAGE,
-+                            asset?.name ?: "app-full-arm64-v8a-debug.apk",
-+                            releaseUrl
-@@ -79,0 +76,19 @@ class UpdateChecker @Inject constructor(private val apiResponse : GitHubService)
-+    private fun selectPreferredAsset(release: GitHubRelease): GitHubRelease.Asset? {
-+        return release.assets
-+            ?.asSequence()
-+            ?.filter { asset ->
-+                val name = asset.name?.lowercase() ?: return@filter false
-+                name.endsWith(".apk") && "full" in name && "foss" !in name
-+            }
-+            ?.maxByOrNull { asset ->
-+                val name = asset.name.orEmpty().lowercase()
-+                var score = 0
-+                if ("full" in name) score += 1000
-+                if ("release" in name) score += 200
-+                if ("arm64" in name) score += 100
-+                if ("universal" in name) score += 50
-+                if ("debug" in name) score += 10
-+                score
-+            }
++
++import androidx.annotation.Keep
++
++/** Shared website metadata contract. Download paths are derived from a trusted origin. */
++@Keep // Gson uses these field names in the minified release APK.
++data class PublicRelease(
++    val packageName: String = "", val version: String = "", val versionCode: Int = 0,
++    val filename: String = "", val sha256: String = "", val bytes: Long = 0,
++    val publishedAt: String = "", val changes: List<String> = emptyList()
++) {
++    fun isValid(): Boolean = runCatching {
++        packageName == "io.github.phantom.gps" && version.startsWith("v") && parts(version) != null && versionCode > 0 &&
++            filename == "PHANToM-GPS-$version.apk" && sha256.matches(Regex("[a-fA-F0-9]{64}")) &&
++            bytes in 1..(100L * 1024 * 1024) && java.time.Instant.parse(publishedAt) != null &&
++            changes.size <= 20 && changes.all { it.length <= 1000 }
++    }.getOrDefault(false)
++
++    fun isNewerThan(installedCode: Int, installedVersion: String): Boolean {
++        val remote = parts(version) ?: return false
++        val local = parts(installedVersion) ?: return false
++        if (versionCode <= installedCode) return false
++        for (i in 0..2) if (remote[i] != local[i]) return remote[i] > local[i]
++        return true
 +    }
 +
-@@ -84,0 +100 @@ class UpdateChecker @Inject constructor(private val apiResponse : GitHubService)
++    companion object {
++        private fun parts(value: String): List<Int>? {
++            if (!Regex("v?[0-9]{1,6}\\.[0-9]{1,6}\\.[0-9]{1,6}").matches(value)) return null
++            return value.removePrefix("v").split('.').map { it.toInt() }
++        }
++    }
++}
+diff --git a/app/src/main/java/io/github/phantom/gps/update/UpdateChecker.kt b/app/src/main/java/io/github/phantom/gps/update/UpdateChecker.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..5a8a93ef4e7ec7676e02eaf828ad680c737d1f9e
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/update/UpdateChecker.kt
+@@ -0,0 +1,65 @@
++package io.github.phantom.gps.update
 +
++import android.content.Context
++import android.os.Parcelable
++import com.google.gson.Gson
++import io.github.phantom.gps.BuildConfig
++import io.github.phantom.gps.utils.PrefManager
++import kotlinx.parcelize.Parcelize
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.delay
++import kotlinx.coroutines.flow.flow
++import kotlinx.coroutines.flow.flowOn
++import kotlinx.coroutines.withContext
++import java.io.File
++import java.net.HttpURLConnection
++import java.net.URL
++import javax.inject.Inject
++
++class UpdateChecker @Inject constructor() {
++    fun getLatestRelease() = flow {
++        while (true) {
++            if (PrefManager.isUpdateDisabled) emit(null)
++            else runCatching { fetchLatest() }.onSuccess { emit(it) }
++            delay(15 * 60 * 1000L)
++        }
++    }.flowOn(Dispatchers.IO)
++
++    suspend fun fetchLatest(): Update? = withContext(Dispatchers.IO) {
++        val connection = URL(BuildConfig.PUBLIC_SITE_BASE_URL + "downloads/version.json").openConnection() as HttpURLConnection
++        connection.connectTimeout = 5000
++        connection.readTimeout = 5000
++        connection.instanceFollowRedirects = false
++        connection.useCaches = false
++        connection.setRequestProperty("Accept", "application/json")
++        connection.setRequestProperty("Cache-Control", "no-cache")
++        try {
++            check(connection.responseCode == 200) { "Release metadata unavailable" }
++            val bytes = connection.inputStream.use { input ->
++                val output = java.io.ByteArrayOutputStream()
++                val buffer = ByteArray(1024)
++                while (true) {
++                    val count = input.read(buffer)
++                    if (count < 0) break
++                    check(output.size() + count <= 32 * 1024) { "Release metadata too large" }
++                    output.write(buffer, 0, count)
++                }
++                output.toByteArray()
++            }
++            val release = Gson().fromJson(bytes.toString(Charsets.UTF_8), PublicRelease::class.java)
++            require(release.isValid()) { "Invalid release metadata" }
++            if (!release.isNewerThan(BuildConfig.VERSION_CODE, BuildConfig.TAG_NAME)) return@withContext null
++            Update("PHANToM GPS ${release.version}", release.changes.joinToString("\n") { "• $it" },
++                release.publishedAt, BuildConfig.PUBLIC_SITE_BASE_URL + "downloads/" + release.filename,
++                release.filename, BuildConfig.PUBLIC_SITE_BASE_URL + "download.html", release.version)
++        } finally { connection.disconnect() }
++    }
++
++    fun clearCachedDownloads(context: Context) {
++        context.externalCacheDir?.let { File(it, "updates").deleteRecursively() }
++    }
++
++    @Parcelize
++    data class Update(val name: String, val changelog: String, val timestamp: String,
++        val assetUrl: String, val assetName: String, val releaseUrl: String, val version: String) : Parcelable
++}
+diff --git a/app/src/main/java/io/github/phantom/gps/update/UpdateNotifier.kt b/app/src/main/java/io/github/phantom/gps/update/UpdateNotifier.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..d6b5c7ce3297caccf42f6a56bc150e8c30946242
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/update/UpdateNotifier.kt
+@@ -0,0 +1,34 @@
++package io.github.phantom.gps.update
++
++import android.app.NotificationChannel
++import android.app.NotificationManager
++import android.app.PendingIntent
++import android.content.Context
++import android.content.Intent
++import android.net.Uri
++import androidx.core.app.NotificationCompat
++import io.github.phantom.gps.BuildConfig
++import io.github.phantom.gps.R
++
++object UpdateNotifier {
++    private const val ID = 410
++    private const val CHANNEL = "phantom_updates"
++    fun announce(context: Context, update: UpdateChecker.Update?) {
++        val manager = context.getSystemService(NotificationManager::class.java)
++        if (update == null) { manager.cancel(ID); return }
++        if (!manager.areNotificationsEnabled()) return
++        val prefs = context.getSharedPreferences("public_updates", Context.MODE_PRIVATE)
++        if (prefs.getString("announced", "") == update.version) return
++        manager.createNotificationChannel(NotificationChannel(CHANNEL, "อัปเดต PHANToM GPS", NotificationManager.IMPORTANCE_DEFAULT))
++        if (manager.getNotificationChannel(CHANNEL)?.importance == NotificationManager.IMPORTANCE_NONE) return
++        val intent = PendingIntent.getActivity(context, ID,
++            Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PUBLIC_SITE_BASE_URL + "download.html")),
++            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
++        runCatching {
++            manager.notify(ID, NotificationCompat.Builder(context, CHANNEL).setSmallIcon(R.drawable.ic_update)
++                .setContentTitle("PHANToM GPS มีอัปเดตใหม่").setContentText("${update.version} · แตะเพื่อดาวน์โหลด")
++                .setContentIntent(intent).setAutoCancel(true).addAction(R.drawable.ic_update, "ดาวน์โหลด", intent).build())
++            prefs.edit().putString("announced", update.version).apply()
++        }
++    }
++}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/AppIntegrity.kt b/app/src/main/java/io/github/phantom/gps/utils/AppIntegrity.kt
 new file mode 100644
 index 0000000000000000000000000000000000000000..7f5a1ac843a5e4d0c39399af58f2a40f4dcdfb0b
@@ -12784,7 +13084,7 @@ index 93e8e6d939a758aa333d2776ca2adb9912ee6757..b4344661f76c85c338c9b6787a18beef
 \ No newline at end of file
 +</resources>
 diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
-index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..4d7c0d86bfcdb99a7b59556f87946f2d84a84000 100644
+index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..049d7b29b0f088cb067d82a6a290fc5150ff1733 100644
 --- a/app/src/main/res/values/strings.xml
 +++ b/app/src/main/res/values/strings.xml
 @@ -4,2 +4,2 @@
@@ -12795,6 +13095,14 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..4d7c0d86bfcdb99a7b59556f87946f2d
 @@ -25 +25 @@
 -    <string name="about_info">Brought to you by \n@jqssun (2024-2025) \n@Android1500 (2022-2023) \n\nA GPS setter based on the Xposed framework.</string>
 +    <string name="about_info">Brought to you by \n@jqssun (2024-2025) \n@Android1500 (2022-2023) \n\nPHANToM GPS: a GPS setter based on the Xposed framework.</string>
+@@ -29 +29 @@
+-    <string name="update_button">Update</string>
++    <string name="update_button">ดาวน์โหลดอัปเดต</string>
+@@ -48,2 +48,2 @@
+-    <string name="check_update">Check for updates</string>
+-    <string name="check_update_summary">Automatically check the latest version from GitHub</string>
++    <string name="check_update">ปิดการแจ้งอัปเดตอัตโนมัติ</string>
++    <string name="check_update_summary">เมื่อปิดสวิตช์ แอปจะตรวจรุ่นใหม่จากเว็บไซต์ PHANToM GPS ทุก 15 นาทีขณะใช้งาน</string>
 @@ -55 +55,2 @@
 -    <string name="random_position_summary">Use a random location around the set location</string>
 +    <string name="random_position_summary">Use a random location around the set location within the configured radius</string>
@@ -12851,15 +13159,28 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..4d7c0d86bfcdb99a7b59556f87946f2d
 +    <string name="license_locked_reason_package_mismatch">This license does not match this app package.</string>
 +    <string name="license_locked_reason_missing">This license could not be found on the server.</string>
 +    <string name="license_locked_reason_generic">This device cannot use the app until the license is verified again.</string>
-@@ -61 +113 @@
+@@ -61 +113,7 @@
 -</resources>
 \ No newline at end of file
++    <string name="check_update_now">ตรวจสอบอัปเดตตอนนี้</string>
++    <string name="check_update_now_summary">ดูเวอร์ชันล่าสุดจากเว็บไซต์ PHANToM GPS</string>
++    <string name="update_current">คุณใช้ PHANToM GPS รุ่นล่าสุดแล้ว</string>
++    <string name="update_check_failed">ตรวจอัปเดตไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่</string>
++    <string name="update_later">ไว้ภายหลัง</string>
++    <string name="update_website_message">%1$s\n\nเปิดหน้าดาวน์โหลดเพื่อดูรายละเอียดและติดตั้งรุ่นใหม่ การตั้งค่าจะอยู่ครบเมื่อติดตั้งทับแอปเดิม</string>
 +</resources>
 diff --git a/app/src/main/res/xml/preferences.xml b/app/src/main/res/xml/preferences.xml
-index fabf1050343e8e29653fb416f06b5c06054115ed..0716270f856038e43c4af74803ebb8aba83b64d9 100644
+index fabf1050343e8e29653fb416f06b5c06054115ed..75ec03f5551c080d746701296ddf708e23b3edb2 100644
 --- a/app/src/main/res/xml/preferences.xml
 +++ b/app/src/main/res/xml/preferences.xml
-@@ -40,0 +41,16 @@
+@@ -25,0 +26,6 @@
++        <Preference
++            android:key="check_update_now"
++            android:title="@string/check_update_now"
++            android:summary="@string/check_update_now_summary"
++            android:icon="@drawable/ic_update" />
++
+@@ -40,0 +47,16 @@
 +        <SwitchPreferenceCompat
 +            android:title="@string/clipboard_monitor_toggle"
 +            android:summary="@string/clipboard_monitor_toggle_summary"
@@ -12876,7 +13197,7 @@ index fabf1050343e8e29653fb416f06b5c06054115ed..0716270f856038e43c4af74803ebb8ab
 +            android:defaultValue="true"
 +            android:widgetLayout="@layout/preference_switch_widget" />
 +
-@@ -68,0 +85,9 @@
+@@ -68,0 +91,9 @@
 +        <EditTextPreference
 +            android:defaultValue="10"
 +            android:digits="0123456789"
@@ -12886,7 +13207,7 @@ index fabf1050343e8e29653fb416f06b5c06054115ed..0716270f856038e43c4af74803ebb8ab
 +            android:dependency="random_position"
 +            android:summary="10 m" />
 +
-@@ -71 +96 @@
+@@ -71 +102 @@
 -</PreferenceScreen>
 \ No newline at end of file
 +</PreferenceScreen>
@@ -12898,6 +13219,51 @@ index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..85f00d5de5dba13c0b8975b2bb632c63
 -io.github.jqssun.gpssetter.xposed.HookEntry
 \ No newline at end of file
 +io.github.phantom.gps.xposed.HookEntry
+diff --git a/app/src/test/java/io/github/phantom/gps/update/PublicReleaseTest.kt b/app/src/test/java/io/github/phantom/gps/update/PublicReleaseTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..83476dfca217b02387f7a7efd685777dd42fcf84
+--- /dev/null
++++ b/app/src/test/java/io/github/phantom/gps/update/PublicReleaseTest.kt
+@@ -0,0 +1,39 @@
++package io.github.phantom.gps.update
++
++import org.junit.Assert.*
++import org.junit.Test
++
++class PublicReleaseTest {
++    private val valid = PublicRelease("io.github.phantom.gps", "v0.0.10", 10,
++        "PHANToM-GPS-v0.0.10.apk", "a".repeat(64), 4000000,
++        "2026-11-03T12:00:00Z", listOf("Public update page"))
++
++    @Test fun readsWebsiteJsonContract() {
++        val json = """{"packageName":"io.github.phantom.gps","version":"v0.0.10","versionCode":10,"filename":"PHANToM-GPS-v0.0.10.apk","sha256":"${"a".repeat(64)}","bytes":4000000,"publishedAt":"2026-11-03T12:00:00Z","changes":["Update"]}"""
++        val release = com.google.gson.Gson().fromJson(json, PublicRelease::class.java)
++        assertTrue(release.isValid())
++        assertTrue(release.isNewerThan(9, "0.0.9"))
++    }
++
++    @Test fun acceptsPublishedAppOnly() {
++        assertTrue(valid.isValid())
++        assertFalse(valid.copy(packageName = "io.github.phantom.gps.installer").isValid())
++        assertFalse(valid.copy(filename = "installer-release.apk").isValid())
++        assertFalse(valid.copy(filename = "../PHANToM-GPS-v0.0.10.apk").isValid())
++    }
++    @Test fun comparesNumericVersionsAndInstallCodes() {
++        assertTrue(valid.isNewerThan(9, "0.0.9"))
++        assertFalse(valid.isNewerThan(10, "0.0.10"))
++        assertFalse(valid.isNewerThan(11, "0.0.11"))
++        assertFalse(valid.copy(version = "v0.0.8", versionCode = 12).isNewerThan(10, "0.0.10"))
++        assertTrue(valid.copy(versionCode = 11).isNewerThan(10, "0.0.10"))
++        assertFalse(valid.copy(version = "v0.0.10-beta").isValid())
++    }
++    @Test fun rejectsCorruptOrUnboundedMetadata() {
++        assertFalse(valid.copy(sha256 = "bad").isValid())
++        assertFalse(valid.copy(bytes = 0).isValid())
++        assertFalse(valid.copy(bytes = 101L * 1024 * 1024).isValid())
++        assertFalse(valid.copy(publishedAt = "bad").isValid())
++        assertFalse(valid.copy(changes = List(21) { "extra" }).isValid())
++    }
++}
 diff --git a/build.gradle b/build.gradle
 index e9503906879469f850583d768d842d8b60820738..adecd63869bab5ac073dd1c10836a20513a86069 100644
 --- a/build.gradle

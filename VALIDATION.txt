@@ -1,2 +1,4 @@
 Patch applied successfully to sanitized base 0577d8e8a3a0fea7d0e421509be8506c760080ba.
-All 121 tracked app/build/settings files match source 53e0b8d74a293126143400f92b834b72c52d6da9 after normalizing Windows line endings.
+All 124 tracked app/build/settings/test files match source 4c63de488ea272c6a0d7d630134dc5386d158aa9 after normalizing Windows line endings.
+Android :app:testFullReleaseUnitTest (4 tests) and :app:assembleFullRelease passed. APK version 0.0.10-full, versionCode 10.
+Website tests: 4 passed; download size and SHA-256 matched the full release APK.

@@ -21,3 +21,12 @@ Use a separate checkout of the exact upstream base revision listed in PROVENANCE
 Copy installer/ and firebase/ from this repository into that checkout. Keep the base checkout's original README credits, LICENSE, Gradle wrapper, and other unmodified source files. Configure your own Firebase project, Android service configuration, and signing credentials locally before building or deploying.
 
 The root Gradle files in this repository build only the standalone Installer. The patch modifies the upstream Gradle files for the complete app; do not overwrite those patched files with this repository's Installer-only root files.
+
+## Public website and updates
+
+PHANToM GPS 0.0.10 adds website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
+
+Website: https://phantom-gps.mysticsiren256.chatgpt.site/
+Download: https://phantom-gps.mysticsiren256.chatgpt.site/download.html
+
+Install version 0.0.10 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.

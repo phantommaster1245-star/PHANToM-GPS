@@ -1,0 +1,14 @@
+import {readFile,writeFile,copyFile,mkdir,stat} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {resolve,dirname,join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {validateRelease} from '../dist/assets/release.mjs';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const [apkPath,metadataPath]=process.argv.slice(2);if(!apkPath||!metadataPath)throw Error('Usage: node tools/publish-apk.mjs APP_APK OUTPUT_METADATA_JSON');
+const meta=JSON.parse(await readFile(metadataPath,'utf8'));
+const element=meta.elements?.find(x=>x.outputFile===resolve(apkPath).split(/[\\/]/).pop());
+if(meta.applicationId!=='io.github.phantom.gps'||meta.variantName!=='fullRelease'||!element||!element.filters?.some(x=>x.filterType==='ABI'&&x.value==='arm64-v8a'))throw Error('Only the PHANToM GPS arm64 full release is supported');
+const version='v'+element.versionName.replace(/-full$/,'');const filename=`PHANToM-GPS-${version}.apk`;const bytes=await readFile(apkPath);
+if(bytes.length<4||bytes.readUInt32LE(0)!==0x04034b50)throw Error('Not an APK/ZIP file');
+const data=validateRelease({packageName:meta.applicationId,version,versionCode:element.versionCode,filename,sha256:createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length,publishedAt:new Date().toISOString(),changes:['เพิ่มหน้าดาวน์โหลด PHANToM GPS พร้อมรายละเอียดรุ่นและวิธีติดตั้ง','แจ้งเตือนรุ่นใหม่และเปิดหน้าดาวน์โหลดจากภายในแอป','เพิ่มปุ่มตรวจสอบอัปเดตเองในตั้งค่า และป้องกันการแจ้งอัปเดตเป็นรุ่นเก่า']});
+const dir=join(root,'dist','downloads');await mkdir(dir,{recursive:true});await copyFile(apkPath,join(dir,filename));await writeFile(join(dir,'version.json'),JSON.stringify(data,null,2)+'\n');console.log(`Published ${filename} (${bytes.length} bytes)`);

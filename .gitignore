@@ -7,3 +7,5 @@ local.properties
 .env
 node_modules/
 .idea/
+
+/website/
