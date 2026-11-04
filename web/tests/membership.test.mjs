@@ -3,7 +3,7 @@ const dist=resolve(dirname(fileURLToPath(import.meta.url)),'../dist');
 test('membership pages reference local assets and expose no activation-code flow',async()=>{
  for(const page of ['register.html','account.html']){
   const html=await readFile(resolve(dist,page),'utf8');
-  for(const m of html.matchAll(/(?:href|src)="([^"#]+)"/g)){if(!/^(https?:|mailto:|tel:)/.test(m[1]))await access(resolve(dist,m[1]));}
+  for(const m of html.matchAll(/(?:href|src)="([^"#]+)"/g)){if(!/^(https?:|mailto:|tel:)/.test(m[1]))await access(resolve(dist,m[1].split('?')[0]));}
   assert.match(html,/type="password"/);assert.match(html,/autocomplete="new-password"/);assert.match(html,/minlength="12"/);assert.doesNotMatch(html,/activationCode|issueTemporaryActivationCode/);
  }
 });
