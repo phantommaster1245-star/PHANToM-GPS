@@ -41,3 +41,11 @@ test('returning Google user with a linked password can finish signup without res
  const f=fixture(),flow=createRegistrationFlow(f.api);flow.useExistingPassword(f.user);
  assert.equal(await flow.start(f.user,'','returning_name'),'registered');assert.equal(f.writes,0);assert.deepEqual(f.registered,['returning_name']);
 });
+
+test('Google confirmation finishes signup only after the backend restores verification and the user is reloaded',async()=>{
+ const f=fixture();let serverVerified=false,confirmCalls=0;
+ f.api.setPassword=async()=>{serverVerified=false;};f.api.reload=async u=>{u.emailVerified=serverVerified;};
+ f.api.reauthenticate=async()=>{confirmCalls++;serverVerified=true;};
+ const flow=createRegistrationFlow(f.api);assert.equal(await flow.start(f.user,'fixture-only-password','verified_name'),'google-required');
+ assert.equal(await flow.confirm(f.user),'registered');assert.equal(confirmCalls,1);assert.equal(f.user.emailVerified,true);assert.deepEqual(f.registered,['verified_name']);
+});

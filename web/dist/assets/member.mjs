@@ -12,7 +12,13 @@ const registration=createRegistrationFlow({
  currentUid:()=>auth.currentUser?.uid,
  setPassword:async(user,password)=>{if(!user.providerData.some(p=>p.providerId==='password'))await linkWithCredential(user,EmailAuthProvider.credential(user.email,password));else await updatePassword(user,password);},
  reload,refreshToken:user=>getIdToken(user,true),register:data=>call('memberRegister',data),
- reauthenticate:user=>{const provider=new GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account',login_hint:user.email});return reauthenticateWithPopup(user,provider);}
+ reauthenticate:async user=>{
+  const provider=new GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account',login_hint:user.email});
+  const result=await reauthenticateWithPopup(user,provider);
+  const credential=GoogleAuthProvider.credentialFromResult(result);
+  if(!credential?.idToken)throw Object.assign(Error('GOOGLE_PROOF_REQUIRED'),{code:'GOOGLE_PROOF_REQUIRED'});
+  await call('memberConfirmGoogle',{googleIdToken:credential.idToken});
+ }
 });
 function requireGoogleConfirmation(){
  $('signup-form').hidden=true;$('google-verify').hidden=false;
@@ -28,7 +34,7 @@ $('google-verify').addEventListener('click',async()=>{
 });
 function message(text,error=false,target='member-message'){const el=$(target);el.textContent=text;el.classList.toggle('member-error',error);}
 function setBusy(value){busy=value;document.querySelectorAll('button').forEach(el=>el.disabled=value);$('admin-renew').disabled=value||!currentMember;}
-function errorText(e){const code=e?.details?.code||e?.code;return ({USERNAME_TAKEN:'ชื่อผู้ใช้นี้ถูกใช้แล้ว กรุณาเลือกชื่ออื่น',USERNAME_INVALID:'ชื่อผู้ใช้ต้องเป็นอักษรอังกฤษ ตัวเลข หรือ _ รวม 4–24 ตัว',GOOGLE_PASSWORD_REQUIRED:'กรุณายืนยัน Google และตั้งรหัสผ่านให้ครบ',ADMIN_REQUIRED:'บัญชีนี้ไม่มีสิทธิ์แอดมิน',MEMBER_NOT_FOUND:'ไม่พบสมาชิกที่ลงทะเบียนเสร็จแล้ว','auth/popup-blocked':'เบราว์เซอร์บล็อกหน้าต่าง Google กรุณาอนุญาตแล้วลองอีกครั้ง','auth/popup-closed-by-user':'ยังไม่ได้ลงชื่อเข้าใช้ Google','auth/unauthorized-domain':'โดเมนนี้ยังไม่ได้ตั้งค่า Google Sign-in','auth/operation-not-allowed':'ระบบ Google Sign-in ยังไม่ได้เปิดใช้งาน','auth/weak-password':'รหัสผ่านยังไม่ผ่านเงื่อนไขความปลอดภัย','auth/user-mismatch':'กรุณาเลือกบัญชี Google เดิมที่ใช้สมัคร','auth/requires-recent-login':'กรุณาออกจากระบบเว็บแล้วลงชื่อเข้าใช้ Google ใหม่','LOGIN_CHANGED':'บัญชีที่เข้าสู่ระบบเปลี่ยนไป กรุณาเริ่มใหม่'})[code]||'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';}
+function errorText(e){const code=e?.details?.code||e?.code;return ({USERNAME_TAKEN:'ชื่อผู้ใช้นี้ถูกใช้แล้ว กรุณาเลือกชื่ออื่น',USERNAME_INVALID:'ชื่อผู้ใช้ต้องเป็นอักษรอังกฤษ ตัวเลข หรือ _ รวม 4–24 ตัว',GOOGLE_PASSWORD_REQUIRED:'กรุณายืนยัน Google และตั้งรหัสผ่านให้ครบ',ADMIN_REQUIRED:'บัญชีนี้ไม่มีสิทธิ์แอดมิน',MEMBER_NOT_FOUND:'ไม่พบสมาชิกที่ลงทะเบียนเสร็จแล้ว','auth/popup-blocked':'เบราว์เซอร์บล็อกหน้าต่าง Google กรุณาอนุญาตแล้วลองอีกครั้ง','auth/popup-closed-by-user':'ยังไม่ได้ลงชื่อเข้าใช้ Google','auth/unauthorized-domain':'โดเมนนี้ยังไม่ได้ตั้งค่า Google Sign-in','auth/operation-not-allowed':'ระบบ Google Sign-in ยังไม่ได้เปิดใช้งาน','auth/weak-password':'รหัสผ่านยังไม่ผ่านเงื่อนไขความปลอดภัย','auth/user-mismatch':'กรุณาเลือกบัญชี Google เดิมที่ใช้สมัคร','auth/requires-recent-login':'กรุณาออกจากระบบเว็บแล้วลงชื่อเข้าใช้ Google ใหม่','LOGIN_CHANGED':'บัญชีที่เข้าสู่ระบบเปลี่ยนไป กรุณาเริ่มใหม่','GOOGLE_PROOF_REQUIRED':'Google ไม่ได้ส่งหลักฐานยืนยัน กรุณาเลือก Gmail เดิมแล้วลองอีกครั้ง','GOOGLE_PROOF_INVALID':'ตรวจหลักฐาน Google ไม่สำเร็จ กรุณาเลือก Gmail เดิมแล้วลองอีกครั้ง','TOO_MANY_REQUESTS':'ยืนยันบ่อยเกินไป กรุณารอ 1 นาทีแล้วลองใหม่'})[code]||'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';}
 $('google-login').addEventListener('click',async()=>{if(busy)return;setBusy(true);try{const p=new GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});await signInWithPopup(auth,p);}catch(e){message(errorText(e),true);}finally{setBusy(false);}});
 async function renderAccount(user){
  currentMember=null;pendingRenewal=null;$('admin-panel').hidden=true;$('profile').hidden=true;$('signup-form').hidden=true;$('logout').hidden=!user;
