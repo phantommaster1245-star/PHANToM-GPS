@@ -26,14 +26,14 @@ The root Gradle files in this repository build only the standalone Installer. Th
 
 PHANToM GPS 0.0.16 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
 
-Website: https://phantom-gps.vercel.app/
-Download: https://phantom-gps.vercel.app/download.html
+Website: https://geox-azure.vercel.app/
+Download: https://geox-azure.vercel.app/download.html
 
 Install version 0.0.15 once to enable the new update source; older installed versions cannot learn the new endpoint automatically.
 
 ## Deploy on Vercel
 
-Import this GitHub repository with Root Directory set to the repository root (`./`) and Framework Preset **Other**. The root vercel.json declares the build check and static output directory web/dist. No environment variables or dependencies are required for the website. Assign the production domain https://phantom-gps.vercel.app/ to match the Android update endpoint.
+Import this GitHub repository with Root Directory set to the repository root (`./`) and Framework Preset **Other**. The root vercel.json declares the build check and static output directory web/dist. No environment variables or dependencies are required for the website. Assign the production domain https://geox-azure.vercel.app/ to match the Android update endpoint.
 
 Only web/dist is published. Android source, Firebase code, Installer files, and repository metadata are outside the website output.
 
@@ -59,6 +59,8 @@ See [INTENT_LOCATION_BRIDGE.md](INTENT_LOCATION_BRIDGE.md) for the complete prot
 
 Version 0.0.16 adds authenticated root-relay sessions. See BINDER_LOCATION_BRIDGE.md for bootstrap, Parcel order, heartbeat/reconnection and callback statuses. Disable Clipboard monitor when using Full Lock; the sender should not copy coordinates after Intent/Binder submission. Physical device/HMA integration remains to be verified.
 
-## GeoX 0.0.17 testing release
+## GeoX 0.0.18 testing release
 
 The GitHub release is marked pre-release and does not replace latest. The website/download metadata and APK remain at 0.0.16. Source patch reconstruction is verified against the sanitized base; see VALIDATION.txt. Full Lock compatibility and remaining device checks are in GEOX_FULL_LOCK_HANDOFF.md. Package IDs, signing identity and IPC contracts are unchanged.
+
+Version 0.0.18 updates the Android website URL to geox-azure.vercel.app. Version 0.0.16 and the earlier 0.0.17 test build still embed phantom-gps.vercel.app; retain that old domain as a Vercel alias if those web links must keep working. This does not promote a new public APK update.

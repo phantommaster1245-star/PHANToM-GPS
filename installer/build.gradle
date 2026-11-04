@@ -11,16 +11,16 @@ android {
         applicationId "io.github.phantom.gps.installer"
         minSdk 27
         targetSdk 34
-        versionCode 3
-        versionName "2.0.0"
+        versionCode 4
+        versionName "2.0.1"
         testInstrumentationRunner "io.github.phantom.gps.installer.test.AdminTestRunner"
 
         buildConfigField "String", "FIREBASE_API_KEY", "\"AIzaSyDT0JdPIXR9LolsMQkpJ-t2t6sn4cmr4MY\""
         buildConfigField "String", "FIREBASE_APP_ID", "\"1:140329128209:android:c18d6cd02d0525449cbcb0\""
         buildConfigField "String", "FIREBASE_PROJECT_ID", "\"phantom-gps\""
         buildConfigField "String", "TARGET_APP_PACKAGE", "\"io.github.phantom.gps\""
-        buildConfigField "String", "GITHUB_RELEASES_API_BASE", "\"https://api.github.com/repos/Phantomguy7845/PHANToM-GPS/\""
-        buildConfigField "String", "GITHUB_RELEASES_PAGE", "\"https://github.com/Phantomguy7845/PHANToM-GPS/releases\""
+        buildConfigField "String", "GITHUB_RELEASES_API_BASE", "\"https://api.github.com/repos/phantommaster1245-star/PHANToM-GPS/\""
+        buildConfigField "String", "GITHUB_RELEASES_PAGE", "\"https://github.com/phantommaster1245-star/PHANToM-GPS/releases\""
         buildConfigField "String", "TEMP_ACTIVATION_API_BASE", "\"https://asia-southeast1-phantom-gps.cloudfunctions.net/\""
     }
 

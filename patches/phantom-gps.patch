@@ -1,12 +1,12 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..949f287e083bb40c5f7bd21461355591fe9385e4 100644
+index d211674657a4308ba7437287558c90117ce56c75..02e47284769841b06b6f5abc2edc3b029421d92d 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
 +    id 'com.google.gms.google-services'
 @@ -10 +11,26 @@ plugins {
 -def tagName = '0.0.6'
-+def tagName = '0.0.17'
++def tagName = '0.0.18'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -37,15 +37,15 @@ index d211674657a4308ba7437287558c90117ce56c75..949f287e083bb40c5f7bd21461355591
 +        applicationId "io.github.phantom.gps"
 @@ -18 +44 @@ android {
 -        versionCode 6
-+        versionCode 17
++        versionCode 18
 @@ -20 +46,3 @@ android {
 -        // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-+        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://phantom-gps.vercel.app/\""
++        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://geox-azure.vercel.app/\""
 +        buildConfigField "String", "MEMBERSHIP_PUBLIC_KEY", "\"MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAxhthf2a1Y4w5zsEGJ9WXRwX4ZgN2KQnXHQTf5UIPs2cu5QDdwHVkBkLNRDWHPSqggjB/uIsdav07K2NG841iq9gU7YQX5Gfxz1UrzgnF14JHSzNTWJhjA6Mo9Ta0OB1TzKWPp3PM2b308rJLNQEs/h0hSihzZmI8Y72s+/yJArkxvEW+IapcIk3Kt/uEskmg0PiOc6tLTl1SV/o+QGp46A9d/eRwKafG2av6onreSdXEM6wYWXcJ4mN3vT9FUg3MynO7aLydcGLsbwYQJJiFGbaTibGwVlNTaD00OQvmf3LoKFHdPbRlK7uDjyiiXrRX+Cg1XkiU/vLg/ywVedIHuMtWoy78FVj2wYq8hALuvt2GCWvHe6irk6/V44QMvtHaT0imAtHgWx9ybgJAfW0mClTWHLIIs5GXVLqB9FfQllUAXYuAFBlqmm0ki/kU6Vt2iuxfa5VOw90m2pHWe8pQD6FTy9YmmJ39dSwtEiGsRsMRpVl6nuofCQ7zPHQVj/HzAgMBAAE=\""
 +        testInstrumentationRunner "io.github.phantom.gps.test.MembershipTestRunner"
 @@ -21,0 +50,2 @@ android {
-+        buildConfigField("String", "GITHUB_RELEASES_API_BASE", "\"https://api.github.com/repos/Phantomguy7845/PHANToM-GPS/\"")
-+        buildConfigField("String", "GITHUB_RELEASES_PAGE", "\"https://github.com/Phantomguy7845/PHANToM-GPS/releases\"")
++        buildConfigField("String", "GITHUB_RELEASES_API_BASE", "\"https://api.github.com/repos/phantommaster1245-star/PHANToM-GPS/\"")
++        buildConfigField("String", "GITHUB_RELEASES_PAGE", "\"https://github.com/phantommaster1245-star/PHANToM-GPS/releases\"")
 @@ -39,7 +69,11 @@ android {
 -            def keystoreProperties = new Properties()
 -            keystoreProperties.load(new FileInputStream(keystorePropertiesFile))

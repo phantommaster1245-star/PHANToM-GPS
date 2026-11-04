@@ -1,9 +1,10 @@
-GeoX 0.0.17 pre-release validation (2026-11-04)
+GeoX 0.0.18 pre-release validation (2026-11-04)
 Base: 0577d8e8a3a0fea7d0e421509be8506c760080ba
 Sanitized base tree: 07fd6419747a00815f90dfb9240c3749d8c786f4
-Reconstructed current tree: fdc265fe66c1c81f08250b1b896885b42d4cba39
-Patch SHA256: 41ca7b9ef048acf549753d14eebe31ec9da813c268548059e372617e3b085c92
+Reconstructed current tree: 544e98f5e6c708fc7b4e7db79612749a211aeb09
+Patch SHA256: b7d1eacbb7bacb1933a951f9e9d06094339640b0800bd1faee2b66f3cfb9f4a6
 All 162 canonical app/build/settings/test files reconstruct exactly through git apply --cached --unidiff-zero. Root module mappings normalized for a separate upstream checkout. Mapbox legacy tokens redacted; original credits/license retained. No original history/private keys/local config exported.
 Android JVM: 40 passed. App/Admin release builds passed. Main APK signer unchanged: 2b3d3efff71526168656b137a2df5625c08bf488a0656ddacfbd54a0ff286a74.
 Device: Android 15 membership/admin emulator instrumentation, same-UID protection, release startup after reboot, unrelated Binder caller denial, encrypted remember/opt-out/tamper/missing-key, force-stop credential restore passed. Full Lock binding observed. Probe-to-root-to-GPS APPLIED/HOOK_LOADED under HMA, prolonged offline/lifecycle and two physical devices remain unverified.
 Website tests: 16 passed. Public website APK/version.json intentionally remain 0.0.16. GitHub pre-release must not replace latest. No Vercel/Sites deployment is triggered manually by this task; Git push may trigger the owner's connected Vercel integration.
+Domain update: APK 0.0.18 uses https://geox-azure.vercel.app/; Google sign-in authorized domain added while preserving existing domains. Old website alias requires owner Vercel configuration.

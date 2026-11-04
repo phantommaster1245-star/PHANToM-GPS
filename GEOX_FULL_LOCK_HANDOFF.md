@@ -27,7 +27,7 @@
 | Intent action | `io.github.phantom.gps.action.SET_LOCATION_DIRECT` |
 | API version | `1` |
 | Device-proof canonical prefix | `PHANTOM-DEVICE-PROOF` (ชื่อภายใน ไม่เปลี่ยน) |
-| เว็บไซต์ / project Firebase | `https://phantom-gps.vercel.app/` / `phantom-gps` |
+| เว็บไซต์ / project Firebase | `https://geox-azure.vercel.app/` / `phantom-gps` |
 
 คง Keystore aliases, preference keys, signed-lease audience, user IDs และ usernames เดิมด้วย ไฟล์ APK/download metadata ยังใช้ชื่อ `PHANToM-GPS-v<version>.apk` ตามสัญญาอัปเดตของ client เดิม; อย่าเดาชื่อไฟล์จากชื่อแบรนด์ใหม่
 
@@ -75,7 +75,7 @@ Full Lock source ปัจจุบันส่ง target_package ว่าง �
 ## สถานะที่ยืนยันแล้ว / ยังต้องทดสอบร่วมกัน
 ยืนยันบน vivo Android 15: release เปิดหลัง reboot ได้, Android แสดง Full Lock bind service ได้, Binder จากแอปคนละ UID ถูกปฏิเสธ OPEN จริง; บัญชี/lease/admin ผ่าน instrumentation กับ Emulator Suite; ทดสอบ encrypted remember/force-stop restore ผ่าน
 ยังไม่ถือว่าผ่าน end-to-end ทั้งเส้นทาง: Probe ใน Driver → root relay → APPLIED → HOOK_LOADED ภายใต้ HMA, lifecycle ระยะยาว, offline/heartbeat และสองเครื่องจริง ต้องทดสอบร่วมกับ Full Lock ต่อ
-การเผยแพร่ชุดนี้: เว็บใช้ชื่อ GeoX และ GitHub 0.0.17 เป็น pre-release สำหรับทดสอบ ไม่แทน latest; APK และ downloads/version.json สำหรับผู้ใช้ทั่วไปบนเว็บไซต์ยังคงเป็น 0.0.16
+การเผยแพร่ชุดนี้: เว็บใช้ชื่อ GeoX และ GitHub 0.0.18 เป็น pre-release สำหรับทดสอบ ไม่แทน latest; APK และ downloads/version.json สำหรับผู้ใช้ทั่วไปบนเว็บไซต์ยังคงเป็น 0.0.16
 
 ## Checklist ก่อนแจก
 - ติดตั้ง APK เซ็นเดิมทับของเดิม แล้วตรวจชื่อ GeoX / บัญชีและ settings ยังอยู่

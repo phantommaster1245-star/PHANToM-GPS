@@ -19,7 +19,7 @@ The coordinate preview is illustrative and does not change device location. Orig
 - Framework Preset: Other.
 - Build Command: `node --test web/tests/*.test.mjs`.
 - Output Directory: `web/dist`.
-- Production URL: https://phantom-gps.vercel.app/.
+- Production URL: https://geox-azure.vercel.app/.
 
 The repository-root vercel.json sets these build/output values and the APK/metadata response headers. It publishes only the public static directory. There is no Sites hosting configuration in this website source.
 
@@ -29,4 +29,6 @@ The 0.0.16 APK checks https://phantom-gps.vercel.app/downloads/version.json and 
 
 register.html and account.html provide Google-first Gmail registration, PHANToM username/password setup, member status, an aggregate member count, and server-authorized admin lookup/renewal. Website registration does not start the 7-day trial or replace an app session. The trial starts on first successful login in the new membership-capable app. This website-first release keeps the downloadable APK and version.json at 0.0.16, which still uses legacy activation.
 
-GeoX is the current public brand. Downloads remain at PHANToM GPS 0.0.16 while GeoX 0.0.17 is a GitHub pre-release for testing. Keep the legacy host, package and APK filename contracts.
+GeoX is the current public brand. Downloads remain at PHANToM GPS 0.0.16 while GeoX 0.0.18 is a GitHub pre-release for testing. Keep the legacy host, package and APK filename contracts.
+
+GeoX 0.0.18 uses geox-azure.vercel.app. The Google sign-in authorized domains include the new hostname. Keep phantom-gps.vercel.app as an alias for older clients if required; downloads/version.json stays at 0.0.16 on the new site too.

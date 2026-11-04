@@ -24,7 +24,7 @@ class MainActivity:AppCompatActivity() {
                 .setPositiveButton("ต่ออายุ"){_,_->model.renew()}.setNegativeButton("ยกเลิก",null).show()
         }
         findViewById<Button>(R.id.adminLogout).setOnClickListener{model.logout()}
-        findViewById<Button>(R.id.adminWebsite).setOnClickListener{startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://phantom-gps.vercel.app/")))}
+        findViewById<Button>(R.id.adminWebsite).setOnClickListener{startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://geox-azure.vercel.app/")))}
         model.state.observe(this){s->
             findViewById<View>(R.id.adminLoginForm).visibility=if(s.admin.isBlank())View.VISIBLE else View.GONE
             findViewById<View>(R.id.adminMemberForm).visibility=if(s.admin.isNotBlank())View.VISIBLE else View.GONE

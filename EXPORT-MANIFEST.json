@@ -1,8 +1,8 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "sourceTree": "fdc265fe66c1c81f08250b1b896885b42d4cba39",
+  "sourceTree": "544e98f5e6c708fc7b4e7db79612749a211aeb09",
   "brand": "GeoX",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "files": [
     {
       "path": ".gitattributes",
@@ -21,8 +21,8 @@
     },
     {
       "path": "GEOX_FULL_LOCK_HANDOFF.md",
-      "bytes": 12411,
-      "sha256": "8a51227e493f61bdcfd03902bdebd839fef3a1ceee4496cd00875d1905b0f13f"
+      "bytes": 12410,
+      "sha256": "82419b9504fd1515b8dc1727fb57923df59b8a5f675e59d73d8d6df07d15c76a"
     },
     {
       "path": "INTENT_LOCATION_BRIDGE.md",
@@ -42,17 +42,17 @@
     {
       "path": "PROVENANCE.md",
       "bytes": 2416,
-      "sha256": "2c0ba30a25a6c6926b3030da1249f9b709f3b175533fe38159bebbc8774fb930"
+      "sha256": "e74ae6ca81a188e7627abbc12ac7dcd87d753e191824485c1ee8f838ce15af9f"
     },
     {
       "path": "README.md",
-      "bytes": 5324,
-      "sha256": "5808d2f7f3c4bf8a25502177ea78197f5413c421bde397caa0337b97000d0a6c"
+      "bytes": 5606,
+      "sha256": "620691bd5d2714e81bcf3b93788c38e8927fa5eac0c2075e1cfb1da84e94234e"
     },
     {
       "path": "VALIDATION.txt",
-      "bytes": 1393,
-      "sha256": "cea6e9a22181191629625a52cf8406c264eae04d7db332e16b33b0dc26575c09"
+      "bytes": 1585,
+      "sha256": "952fc6cf2718b9f072ec2688b130ea556d8f343b31ae972f758ca803a99b8c2c"
     },
     {
       "path": "build.gradle",
@@ -136,8 +136,8 @@
     },
     {
       "path": "installer/build.gradle",
-      "bytes": 3411,
-      "sha256": "ab42142bf1d183f644f863ac038bb1d2463b1a2398b5e70b552c690a0430b386"
+      "bytes": 3427,
+      "sha256": "fd21ffec41465e9a385c394f18c3e9c0ebbad69205e6291551f78e4b627bb1be"
     },
     {
       "path": "installer/proguard-rules.pro",
@@ -161,8 +161,8 @@
     },
     {
       "path": "installer/src/main/java/io/github/phantom/gps/installer/MainActivity.kt",
-      "bytes": 3162,
-      "sha256": "2110b50b41153d3575464149849434f6a826f9bf20957ae6c1bfa3dca2c6e782"
+      "bytes": 3161,
+      "sha256": "a1a75fb23221b2a79063b0f4523bfaf5b087dfb59933d8a0dde71985a87d28b5"
     },
     {
       "path": "installer/src/main/res/drawable-nodpi/ic_launcher_foreground.png",
@@ -261,8 +261,8 @@
     },
     {
       "path": "patches/phantom-gps.patch",
-      "bytes": 874845,
-      "sha256": "41ca7b9ef048acf549753d14eebe31ec9da813c268548059e372617e3b085c92"
+      "bytes": 874860,
+      "sha256": "b7d1eacbb7bacb1933a951f9e9d06094339640b0800bd1faee2b66f3cfb9f4a6"
     },
     {
       "path": "settings.gradle",
@@ -281,8 +281,8 @@
     },
     {
       "path": "web/README.md",
-      "bytes": 2387,
-      "sha256": "0c88cd0bfe7f08d2cdab113fae3d369b17536f8cc63c9c55d8445619b37218a5"
+      "bytes": 2622,
+      "sha256": "ca7db6445a60716e298b5be656af2766a52ce75dd9a2eafd449023d4ba314771"
     },
     {
       "path": "web/dist/account.html",
