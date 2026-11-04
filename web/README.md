@@ -17,10 +17,14 @@ The coordinate preview is illustrative and does not change device location. Orig
 
 - Import the GitHub repository; keep Root Directory at `./` (repository root).
 - Framework Preset: Other.
-- Build Command: `node --test web/tests/release.test.mjs`.
+- Build Command: `node --test web/tests/*.test.mjs`.
 - Output Directory: `web/dist`.
 - Production URL: https://phantom-gps.vercel.app/.
 
 The repository-root vercel.json sets these build/output values and the APK/metadata response headers. It publishes only the public static directory. There is no Sites hosting configuration in this website source.
 
 The 0.0.16 APK checks https://phantom-gps.vercel.app/downloads/version.json and opens https://phantom-gps.vercel.app/download.html for updates. Deploy to that domain before distributing the APK. Older APKs that use a previous host require a one-time manual update.
+
+## Membership website
+
+register.html and account.html provide Google-first Gmail registration, PHANToM username/password setup, member status, an aggregate member count, and server-authorized admin lookup/renewal. Website registration does not start the 7-day trial or replace an app session. The trial starts on first successful login in the new membership-capable app. This website-first release keeps the downloadable APK and version.json at 0.0.16, which still uses legacy activation.
