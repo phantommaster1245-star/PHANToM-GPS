@@ -51,7 +51,7 @@ async function renderAccount(user){
   const savedPassword=user.providerData.some(p=>p.providerId==='password');
   if(savedPassword)registration.useExistingPassword(user);
   for(const id of ['new-password','confirm-password']){$(id).disabled=savedPassword;$(id).required=!savedPassword;$(id).value='';$(id).placeholder=savedPassword?'ตั้งรหัสผ่านไว้แล้ว':'';}
-  message(savedPassword?'รหัสผ่านที่ตั้งไว้ถูกบันทึกแล้ว กรอกชื่อผู้ใช้เพื่อสมัครต่อ และใช้รหัสผ่านเดิมเข้าสู่แอปได้เลย':'ยืนยัน Google แล้ว ตั้งบัญชี PHANToM ต่อได้เลย');
+  message(savedPassword?'รหัสผ่านที่ตั้งไว้ถูกบันทึกแล้ว กรอกชื่อผู้ใช้เพื่อสมัครต่อ และใช้รหัสผ่านเดิมเข้าสู่แอปได้เลย':'ยืนยัน Google แล้ว ตั้งบัญชี GeoX ต่อได้เลย');
  }else message(errorText(e),true);}
 }
 onAuthStateChanged(auth,renderAccount);

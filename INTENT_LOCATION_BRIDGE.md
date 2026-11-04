@@ -1,10 +1,10 @@
-# คู่มือเชื่อม Full Lock → PHANToM GPS ด้วย Intent
+# คู่มือเชื่อม Full Lock → GeoX ด้วย Intent
 
-API version **1** · PHANToM GPS **0.0.15 / versionCode 15 ขึ้นไป**
+API version **1** · GeoX **0.0.15 / versionCode 15 ขึ้นไป**
 
-เอกสารนี้สำหรับ agent ที่ดูแล Full Lock เปลี่ยนปุ่ม/ป้ายตำแหน่งต้นทางจากการคัดลอก lat,lng เป็นการส่งตัวเลขตรงมายัง PHANToM GPS แล้วแสดงผลตอบกลับ ไม่ต้องเรียก `su`, `am`, ADB, ไม่ต้องเขียนคลิปบอร์ด และไม่ต้องเปิด Clipboard monitor
+เอกสารนี้สำหรับ agent ที่ดูแล Full Lock เปลี่ยนปุ่ม/ป้ายตำแหน่งต้นทางจากการคัดลอก lat,lng เป็นการส่งตัวเลขตรงมายัง GeoX แล้วแสดงผลตอบกลับ ไม่ต้องเรียก `su`, `am`, ADB, ไม่ต้องเขียนคลิปบอร์ด และไม่ต้องเปิด Clipboard monitor
 
-งานรอบนี้เพิ่มฝั่ง PHANToM GPS แล้ว **ยังไม่ได้แก้ Full Lock** การทำ Hook ยังต้องติดตั้ง/เปิดโมดูลและตั้ง scope ให้แอปปลายทางตามปกติ หลังอัปเดตโมดูลควรรีบูตหนึ่งครั้ง
+งานรอบนี้เพิ่มฝั่ง GeoX แล้ว **ยังไม่ได้แก้ Full Lock** การทำ Hook ยังต้องติดตั้ง/เปิดโมดูลและตั้ง scope ให้แอปปลายทางตามปกติ หลังอัปเดตโมดูลควรรีบูตหนึ่งครั้ง
 
 ## เส้นทางการทำงาน
 
@@ -23,7 +23,7 @@ API version **1** · PHANToM GPS **0.0.15 / versionCode 15 ขึ้นไป**
 รับเฉพาะ Full Lock package `com.fulllock.app` โดยต้องแนบ `PendingIntent` ที่ Android ระบุว่าถูกสร้างโดย UID ของ Full Lock ที่ติดตั้งอยู่ ไม่ใช้ extra ข้อความชื่อ package เป็นหลักฐานตัวตน
 
 - ตัว token เป็น `PendingIntent` แบบ immutable ใช้พิสูจน์ตัวตนเท่านั้น PHANToM จะไม่เรียก `send()` บน token นี้
-- ไม่ต้องใช้ certificate เดียวกับ PHANToM GPS
+- ไม่ต้องใช้ certificate เดียวกับ GeoX
 - build ที่ใช้ applicationId `.qa` ยังไม่อยู่ในรายชื่อที่อนุญาต ห้ามเปลี่ยน extra เพื่อแอบอ้างชื่อ package; ใช้ build `com.fulllock.app` สำหรับการเชื่อมนี้
 - token เป็น capability ของ Full Lock อย่านำไปแชร์ให้แอปอื่น
 
@@ -46,7 +46,7 @@ Action:    io.github.phantom.gps.action.SET_LOCATION_DIRECT
 | `reply` | android.os.ResultReceiver | ใช่ | Binder callback ที่ parcel เป็น platform class แล้ว ดูตัวอย่างด้านล่าง |
 | `caller_identity` | android.app.PendingIntent | ใช่ | immutable token ที่สร้างใน Full Lock |
 | `label` | String | ไม่ | ชื่อจุด/ต้นทาง สูงสุด 160 ตัวอักษร |
-| `target_package` | String | ไม่ | package จริงของแอปปลายทางที่เปิด PHANToM ใน LSPosed scope; ใช้รับ `HOOK_LOADED` |
+| `target_package` | String | ไม่ | package จริงของแอปปลายทางที่เปิด GeoX ใน LSPosed scope; ใช้รับ `HOOK_LOADED` |
 
 ไม่ระบุ `target_package` จะได้เพียงผลเร็ว `APPLIED` การระบุ package นี้เลือกผู้ที่ต้องยืนยัน ไม่ได้จำกัดการใช้พิกัดใหม่เฉพาะ package นี้: Hook ใน scope อื่นยังรับพิกัดใหม่ตามกลไกปกติ
 
@@ -61,8 +61,8 @@ Action:    io.github.phantom.gps.action.SET_LOCATION_DIRECT
 | 400 | `INVALID_REQUEST` | version/ชนิดข้อมูล/ช่วงพิกัด/ID/label ไม่ถูกต้อง |
 | 400 | `REQUEST_ID_REUSED` | ใช้ ID เดิมกับ payload ที่เปลี่ยนไป |
 | 401 | `UNAUTHORIZED` | ไม่มี token ของ Full Lock ที่ถูกต้อง |
-| 402 | `LICENSE_REQUIRED` | PHANToM ยังไม่ Activate หรือไม่มีข้อมูลใบอนุญาตที่ใช้ได้ |
-| 403 | `LICENSE_LOCKED` | ใบอนุญาตถูกล็อก ให้ผู้ใช้เปิด PHANToM ตรวจสอบ |
+| 402 | `LICENSE_REQUIRED` | ต้องเข้าสู่ระบบสมาชิก/ต่อสิทธิ์ใน GeoX (รุ่นเก่าใช้ activation) |
+| 403 | `LICENSE_LOCKED` | ใบอนุญาตถูกล็อก ให้ผู้ใช้เปิด GeoX ตรวจสอบ |
 | 409 | `SUPERSEDED` | มีคำสั่งใหม่กว่า หรือพิกัดของ ID นี้ไม่ได้เป็นค่าปัจจุบันแล้ว |
 | 412 | `HOOK_NOT_READY` | บันทึกแล้ว แต่ Hook ของ target ยังไม่พร้อม เช่น ปิด System hook หรือระบบรุ่นนั้นไม่รองรับ |
 | 500 | `APPLY_FAILED` / `INTEGRITY_FAILED` | บันทึกไม่ได้หรือการตรวจตัวแอปไม่ผ่าน |
@@ -191,13 +191,13 @@ public final class PhantomGpsBridge {
 
 จุดที่ agent ฝั่ง Full Lock ต้องเชื่อม: ใน click listener ของป้ายพิกัดต้นทาง นำ double lat/lng ที่มีอยู่แล้วเรียก helper ด้านบน **แทน** การเขียนคลิปบอร์ด อย่า parse พิกัดกลับจากข้อความบนป้ายหากมี numeric model อยู่แล้ว
 
-- หากใช้ scope **Android Framework** ตามค่าแนะนำของ PHANToM ให้ใช้ `targetPackage = "android"` และเปิด System hook ใน PHANToM
+- หากใช้ scope **Android Framework** ตามค่าแนะนำของ PHANToM ให้ใช้ `targetPackage = "android"` และเปิด System hook ใน GeoX
 - หากใช้ scope แบบรายแอป ส่ง `targetPackage` จาก package จริงของแอปนั้น ไม่ใช้ package ของ Full Lock และไม่ hardcode ชื่อตัวอย่าง
 - หากต้องการเพียงผลเร็ว ไม่ต้องส่ง `target_package`; ใช้ `APPLIED` แสดงสำเร็จได้โดยระบุข้อความให้ตรงความหมาย
 - เก็บ request ID ล่าสุดต่อป้าย/การเลือก แล้วละทิ้งผลของ request เก่า เพื่อไม่ให้ผลตอบกลับช้ามาทับการแตะครั้งใหม่
 - ใน UI ให้สถานะ `HOOK_LOADED` มีลำดับสูงกว่า `APPLIED`; อย่าถอยสถานะเมื่อผลเก่ามาถึงทีหลัง
 - ไม่ block main thread และไม่รอด้วย sleep/polling ขณะส่ง
-- ตรวจว่าติดตั้ง PHANToM versionCode >=15 ก่อนส่ง ถ้าไม่ติดตั้ง/ถูก force-stop/ROM ไม่ส่ง Broadcast อาจไม่มี callback ให้ใช้ watchdog และให้ผู้ใช้เปิด PHANToM หนึ่งครั้ง
+- ตรวจว่าติดตั้ง PHANToM versionCode >=15 ก่อนส่ง ถ้าไม่ติดตั้ง/ถูก force-stop/ROM ไม่ส่ง Broadcast อาจไม่มี callback ให้ใช้ watchdog และให้ผู้ใช้เปิด GeoX หนึ่งครั้ง
 - หาก retry network/การส่ง ให้ retry ด้วย ID และ payload เดิม ห้ามใช้ ID เดิมกับพิกัดใหม่ ผลล่าสุดถูกจำไว้ใน process สูงสุด 64 รายการ ไม่ใช่ระบบ exactly-once แบบถาวรข้ามการปิด process
 - ไม่ต้องสร้างรหัส Activate ใหม่เมื่อเกิด timeout ของ IPC ให้แยกกรณี License ออกจากการส่งข้อมูลให้ชัดเจน
 
@@ -208,8 +208,14 @@ public final class PhantomGpsBridge {
 3. แตะป้ายใน Full Lock แล้วตรวจ `APPLIED`; ถ้าระบุ target ที่กำลังทำงานและโหลด Hook อยู่ ให้ตรวจ `HOOK_LOADED` ต่อ
 4. ตรวจว่า clipboard เดิมไม่เปลี่ยน และไม่มีหน้ากรอกรหัสเด้งจาก direct request
 5. แตะสองจุดติดกัน ตรวจว่าจุดล่าสุดเป็นค่าท้ายสุดและ UI ไม่รับผลของ ID เก่า
-6. ทดสอบพิกัดละเอียดหลายตำแหน่งทศนิยม และเปิด Random Position ใน PHANToM: direct ต้องใช้จุดตรงที่ส่งมา
+6. ทดสอบพิกัดละเอียดหลายตำแหน่งทศนิยม และเปิด Random Position ใน GeoX: direct ต้องใช้จุดตรงที่ส่งมา
 7. ทดสอบ NaN/Infinity/พิกัดเกินช่วง/ส่ง String แทน Double ต้องไม่เปลี่ยนพิกัด
 8. ทดสอบ target ไม่ทำงานหรือไม่มี Hook: `APPLIED` ยังเกิดได้ แต่ไม่ควรรายงาน `HOOK_LOADED` เท็จ
 
 ฝั่ง PHANToM มี unit tests และ release build สำหรับ contract/precision/validation แล้ว แต่ยังไม่มีอุปกรณ์ Android เชื่อมต่อสำหรับทดสอบ Intent ข้ามสองแอปจริงในรอบนี้
+
+## ระบบสมาชิกตั้งแต่ 0.0.17 (ซอร์สเตรียมเปิดใช้)
+
+การรับ Intent/Binder ไม่เรียก network เพื่อ login/ต่ออายุ แต่ตรวจ signed membership lease ในเครื่อง ต้องให้ผู้ใช้เข้าสู่ PHANToM และยังมีสิทธิ์อยู่ก่อนส่งคำขอ หากได้ 402/403 ให้เปิด GeoX เพื่อดูสถานะ/เข้าสู่ระบบหรือติดต่อแอดมิน ไม่ขอ activation code ใหม่ ระบบเก่าถูกแทนด้วยบัญชี 7 วันเมื่อเปิดใช้รุ่นนี้
+
+Lease อายุสูงสุด 10 นาที ต่ออายุเบื้องหลังทุก 2 นาที; เครื่องต้องต่ออินเทอร์เน็ตเป็นระยะและต้องต่อ lease ใหม่หลัง reboot ไม่ถือว่า bootstrap Binder 15 วินาทีเป็นสิทธิ์สมาชิกแทนกัน

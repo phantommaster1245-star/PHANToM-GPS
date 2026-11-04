@@ -1,6 +1,6 @@
-# PHANToM GPS website
+# GeoX website
 
-Public Thai landing and download pages, styled for PHANToM GPS. The static output is dist/. No Installer APK is distributed here.
+Public Thai landing and download pages, styled for GeoX. The static output is dist/. No Installer APK is distributed here.
 
 The Android application reads downloads/version.json from the production origin configured in app/build.gradle. The website and app require the same package, filename, version, versionCode, byte count, and SHA-256 contract.
 
@@ -28,3 +28,5 @@ The 0.0.16 APK checks https://phantom-gps.vercel.app/downloads/version.json and 
 ## Membership website
 
 register.html and account.html provide Google-first Gmail registration, PHANToM username/password setup, member status, an aggregate member count, and server-authorized admin lookup/renewal. Website registration does not start the 7-day trial or replace an app session. The trial starts on first successful login in the new membership-capable app. This website-first release keeps the downloadable APK and version.json at 0.0.16, which still uses legacy activation.
+
+GeoX is the current public brand. Downloads remain at PHANToM GPS 0.0.16 while GeoX 0.0.17 is a GitHub pre-release for testing. Keep the legacy host, package and APK filename contracts.

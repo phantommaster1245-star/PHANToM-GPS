@@ -1,6 +1,6 @@
-# PHANToM GPS additions and Installer
+# GeoX additions and GeoX Admin
 
-This repository contains the PHANToM Installer, Firebase additions, and a patch for PHANToM app changes. It does not contain the complete GPS Setter application tree or its Git history.
+GeoX (formerly PHANToM GPS) publishes its Admin module and a derivative patch for the Android application. The firebase/ directory retains legacy service additions; the hosted membership service is managed separately. It does not contain the complete GPS Setter application tree or its Git history.
 
 See PROVENANCE.md for source references, scope, and retained licensing information.
 
@@ -10,11 +10,11 @@ Requires JDK 17 and Android SDK 34. Set ANDROID_HOME or provide an untracked loc
 
 Windows: `gradlew.bat :installer:assembleDebug`
 
-The Installer retains the existing PHANToM release and activation endpoints in installer/build.gradle. This repository does not publish a complete GPS APK by itself.
+GeoX Admin uses the hosted membership APIs configured in installer/build.gradle; only server-authorized administrators can search or renew members. This repository does not publish a complete GPS APK by itself.
 
 ## Reconstruct the app locally
 
-Use a separate checkout of the exact upstream base revision listed in PROVENANCE.md. Replace any legacy Mapbox secret token matching `(?:sk|pk)\.[A-Za-z0-9_.-]+` in app/src/main/AndroidManifest.xml with REMOVED_LEGACY_SECRET, then apply:
+Use a separate checkout of the exact upstream base revision listed in PROVENANCE.md. Replace any legacy Mapbox secret token matching `(?<![A-Za-z0-9_])(?:sk|pk)\.[A-Za-z0-9_.-]{20,}` in app/src/main/AndroidManifest.xml with REMOVED_LEGACY_SECRET, then apply:
 
 `git apply --unidiff-zero /path/to/patches/phantom-gps.patch`
 
@@ -58,3 +58,7 @@ See [INTENT_LOCATION_BRIDGE.md](INTENT_LOCATION_BRIDGE.md) for the complete prot
 ## Full Lock Binder integration
 
 Version 0.0.16 adds authenticated root-relay sessions. See BINDER_LOCATION_BRIDGE.md for bootstrap, Parcel order, heartbeat/reconnection and callback statuses. Disable Clipboard monitor when using Full Lock; the sender should not copy coordinates after Intent/Binder submission. Physical device/HMA integration remains to be verified.
+
+## GeoX 0.0.17 testing release
+
+The GitHub release is marked pre-release and does not replace latest. The website/download metadata and APK remain at 0.0.16. Source patch reconstruction is verified against the sanitized base; see VALIDATION.txt. Full Lock compatibility and remaining device checks are in GEOX_FULL_LOCK_HANDOFF.md. Package IDs, signing identity and IPC contracts are unchanged.

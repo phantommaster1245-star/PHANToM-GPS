@@ -1,12 +1,12 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index 7efdbc2694196a9a3bdee8cb36c5ea3b73d9e63e..39507dcc5e723f478d4b8a3485b4acd34fe72aeb 100644
+index d211674657a4308ba7437287558c90117ce56c75..949f287e083bb40c5f7bd21461355591fe9385e4 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
 +    id 'com.google.gms.google-services'
 @@ -10 +11,26 @@ plugins {
 -def tagName = '0.0.6'
-+def tagName = '0.0.16'
++def tagName = '0.0.17'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -37,13 +37,16 @@ index 7efdbc2694196a9a3bdee8cb36c5ea3b73d9e63e..39507dcc5e723f478d4b8a3485b4acd3
 +        applicationId "io.github.phantom.gps"
 @@ -18 +44 @@ android {
 -        versionCode 6
-+        versionCode 16
-@@ -19,0 +46 @@ android {
++        versionCode 17
+@@ -20 +46,3 @@ android {
+-        // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 +        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://phantom-gps.vercel.app/\""
-@@ -21,0 +49,2 @@ android {
++        buildConfigField "String", "MEMBERSHIP_PUBLIC_KEY", "\"MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAxhthf2a1Y4w5zsEGJ9WXRwX4ZgN2KQnXHQTf5UIPs2cu5QDdwHVkBkLNRDWHPSqggjB/uIsdav07K2NG841iq9gU7YQX5Gfxz1UrzgnF14JHSzNTWJhjA6Mo9Ta0OB1TzKWPp3PM2b308rJLNQEs/h0hSihzZmI8Y72s+/yJArkxvEW+IapcIk3Kt/uEskmg0PiOc6tLTl1SV/o+QGp46A9d/eRwKafG2av6onreSdXEM6wYWXcJ4mN3vT9FUg3MynO7aLydcGLsbwYQJJiFGbaTibGwVlNTaD00OQvmf3LoKFHdPbRlK7uDjyiiXrRX+Cg1XkiU/vLg/ywVedIHuMtWoy78FVj2wYq8hALuvt2GCWvHe6irk6/V44QMvtHaT0imAtHgWx9ybgJAfW0mClTWHLIIs5GXVLqB9FfQllUAXYuAFBlqmm0ki/kU6Vt2iuxfa5VOw90m2pHWe8pQD6FTy9YmmJ39dSwtEiGsRsMRpVl6nuofCQ7zPHQVj/HzAgMBAAE=\""
++        testInstrumentationRunner "io.github.phantom.gps.test.MembershipTestRunner"
+@@ -21,0 +50,2 @@ android {
 +        buildConfigField("String", "GITHUB_RELEASES_API_BASE", "\"https://api.github.com/repos/Phantomguy7845/PHANToM-GPS/\"")
 +        buildConfigField("String", "GITHUB_RELEASES_PAGE", "\"https://github.com/Phantomguy7845/PHANToM-GPS/releases\"")
-@@ -39,7 +68,11 @@ android {
+@@ -39,7 +69,11 @@ android {
 -            def keystoreProperties = new Properties()
 -            keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 -
@@ -62,67 +65,247 @@ index 7efdbc2694196a9a3bdee8cb36c5ea3b73d9e63e..39507dcc5e723f478d4b8a3485b4acd3
 +                    storePassword keystoreProperties['storePassword']
 +                }
 +            }
-@@ -54 +87,6 @@ android {
+@@ -54 +88,6 @@ android {
 -            signingConfig signingConfigs.release
 +            def activeSigningConfig = signingConfigs.release.storeFile ? signingConfigs.release : signingConfigs.debug
 +            signingConfig activeSigningConfig
 +            // Used for runtime anti-tamper checks (re-signing / repackaging will change this).
 +            def cert = certSha256FromSigningConfig(activeSigningConfig)
-+            if (!cert) cert = certSha256FromSigningConfig(signingConfigs.findByName("debug"))
++            if (!cert) throw new GradleException("Release signing certificate is required for integrity checks")
 +            buildConfigField "String", "SIGNING_CERT_SHA256", "\"${cert}\""
-@@ -57,0 +96,3 @@ android {
+@@ -57,0 +97,3 @@ android {
 +            // Used for runtime anti-tamper checks (re-signing / repackaging will change this).
 +            def cert = certSha256FromSigningConfig(signingConfigs.findByName("debug"))
 +            buildConfigField "String", "SIGNING_CERT_SHA256", "\"${cert}\""
-@@ -74,5 +114,0 @@ android {
+@@ -74,5 +115,0 @@ android {
 -        foss {
 -            dimension "version"
 -            // versionNameSuffix "-foss"
 -            isDefault true
 -        }
-@@ -85 +121 @@ android {
+@@ -85 +122 @@ android {
 -    namespace 'io.github.jqssun.gpssetter'
 +    namespace 'io.github.phantom.gps'
-@@ -88,0 +125,6 @@ dependencies {
+@@ -88,0 +126,11 @@ dependencies {
 +    testImplementation 'junit:junit:4.13.2'
++    androidTestImplementation 'androidx.test:runner:1.6.2'
++    androidTestImplementation 'androidx.test:rules:1.6.1'
++    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
++    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 +    fullImplementation platform('com.google.firebase:firebase-bom:34.9.0')
 +    fullImplementation 'com.google.firebase:firebase-analytics'
++    fullImplementation 'com.google.firebase:firebase-auth'
 +    fullImplementation 'com.google.firebase:firebase-functions'
 +    fullImplementation 'com.google.firebase:firebase-functions-ktx:21.2.1'
 +    fullImplementation 'androidx.work:work-runtime-ktx:2.9.0'
-@@ -95,6 +136,0 @@ dependencies {
+@@ -95,6 +142,0 @@ dependencies {
 -    // use microg (apache 2.0) and maplibre (bsd 2-clause)
 -    fossImplementation 'org.microg.gms:play-services-location:0.3.6.244735'
 -    fossImplementation ('org.maplibre.gl:android-sdk:11.8.2') 
 -    /* {
 -        exclude group: 'com.google.android.gms'
 -    } */
-@@ -116,0 +153 @@ dependencies {
+@@ -116,0 +159 @@ dependencies {
 +    implementation "androidx.lifecycle:lifecycle-process:2.7.0"
-@@ -130 +167,2 @@ dependencies {
+@@ -130 +173,2 @@ dependencies {
 -}
 \ No newline at end of file
 +}
 +
 diff --git a/app/proguard-rules.pro b/app/proguard-rules.pro
-index 5e580ecb70723650a8d6b4b7420cfee8de1f981d..1581a8468a2d785903becc4f9c9abb5f04ad5a21 100644
+index c7b931c36891c015c13be3ae11a485a1cb21e625..598b03cace61b65845f4f606e377b618fb1d92fb 100644
 --- a/app/proguard-rules.pro
 +++ b/app/proguard-rules.pro
-@@ -23,2 +23,2 @@
+@@ -23,2 +23,4 @@
 --keep class io.github.jqssun.gpssetter.ui.viewmodel.MainViewModel{*;}
 --keepnames class io.github.jqssun.gpssetter.ui.viewmodel.MainViewModel.**
-+-keep class io.github.phantom.gps.ui.viewmodel.MainViewModel{*;}
-+-keepnames class io.github.phantom.gps.ui.viewmodel.MainViewModel.**
-@@ -26,2 +26,2 @@
++# The Xposed entry looks up precisely this class/method by name.
++-keep class io.github.phantom.gps.ui.viewmodel.MainViewModel {
++    public void updateXposedState();
++}
+@@ -26,2 +28 @@
 --keep class io.github.jqssun.gpssetter.xposed.Xshare{*;}
 --keep class io.github.jqssun.gpssetter.xposed.HookEntry{*;}
-+-keep class io.github.phantom.gps.xposed.Xshare{*;}
 +-keep class io.github.phantom.gps.xposed.HookEntry{*;}
-@@ -33,0 +34 @@
+@@ -33,0 +35,4 @@
 +
++
++# Replace original source file names while retaining line mappings for private crash retracing.
++-renamesourcefileattribute SourceFile
+diff --git a/app/src/androidTest/java/io/github/phantom/gps/test/MembershipDeviceTest.kt b/app/src/androidTest/java/io/github/phantom/gps/test/MembershipDeviceTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..fb36aadd89442a720f796da64bb67d84e4817c16
+--- /dev/null
++++ b/app/src/androidTest/java/io/github/phantom/gps/test/MembershipDeviceTest.kt
+@@ -0,0 +1,68 @@
++package io.github.phantom.gps.test
++
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.platform.app.InstrumentationRegistry
++import com.google.firebase.auth.FirebaseAuth
++import com.google.firebase.functions.FirebaseFunctions
++import com.google.android.gms.tasks.Tasks
++import io.github.phantom.gps.utils.*
++import kotlinx.coroutines.runBlocking
++import org.junit.Assert.*
++import org.junit.Test
++import org.junit.runner.RunWith
++import java.util.concurrent.TimeUnit
++import java.security.KeyFactory
++import java.security.Signature
++import java.security.spec.X509EncodedKeySpec
++import java.util.Base64
++
++@RunWith(AndroidJUnit4::class)
++class MembershipDeviceTest {
++ private val context get()=InstrumentationRegistry.getInstrumentation().targetContext
++ private fun emulatorExpiry(uid:String,expiry:Long) {
++  check(com.google.firebase.FirebaseApp.getInstance().options.projectId=="demo-phantom-gps")
++  val url=java.net.URL("http://127.0.0.1:8080/v1/projects/demo-phantom-gps/databases/(default)/documents/members/$uid?updateMask.fieldPaths=expiresAtMs")
++  val c=url.openConnection() as java.net.HttpURLConnection
++  c.requestMethod="PATCH";c.connectTimeout=5000;c.readTimeout=5000;c.doOutput=true
++  c.setRequestProperty("Authorization","Bearer owner");c.setRequestProperty("Content-Type","application/json")
++  c.outputStream.use { it.write("{\"fields\":{\"expiresAtMs\":{\"integerValue\":\"$expiry\"}}}".toByteArray()) }
++  check(c.responseCode==200);c.disconnect()
++ }
++ private fun call(name:String,data:Map<String,Any> = emptyMap()):Map<*,*> = Tasks.await(FirebaseFunctions.getInstance("asia-southeast1").getHttpsCallable(name).call(data),30,TimeUnit.SECONDS).data as Map<*,*>
++ @Test fun physicalKeystoreAndMembershipLifecycle() = runBlocking {
++  assertTrue(AppIntegrity.isSelfValid(context))
++  val key=KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode(DeviceIdProvider.publicKeyBase64())))
++  val text="physical-device-proof-fixture"
++  assertTrue(Signature.getInstance("SHA256withECDSA").run { initVerify(key);update(text.toByteArray());verify(Base64.getDecoder().decode(DeviceIdProvider.signChallenge(text))) })
++  MembershipAccount.login(context,"android_probe","LocalMemberPassword123!")
++  try {
++   assertTrue(MembershipAccount.isSignedIn(context));assertTrue(MembershipLease.valid(context))
++   val latitude=13.7563123456789
++   val longitude=100.5018123456789
++   assertTrue(LocationController.applyImmediately(context,latitude,longitude,"Local fixture"))
++   assertEquals(java.lang.Double.doubleToLongBits(latitude),java.lang.Double.doubleToLongBits(PrefManager.getLat))
++   assertEquals(java.lang.Double.doubleToLongBits(longitude),java.lang.Double.doubleToLongBits(PrefManager.getLng))
++   LocationController.stop(context)
++   val originalSession=MembershipAccount.sessionId(context)
++   val profile=call("memberProfile")
++   assertTrue((profile["expiresAtMs"] as Number).toLong()-(profile["firstLoginAtMs"] as Number).toLong()>=7L*86400000L)
++   MembershipAccount.renew(context)
++   assertEquals(originalSession,MembershipAccount.sessionId(context));assertTrue(MembershipLease.valid(context))
++   try { call("adminMemberIdentity");fail("Ordinary member obtained admin rights") } catch(e:java.util.concurrent.ExecutionException) { assertTrue(e.cause is com.google.firebase.functions.FirebaseFunctionsException) }
++   MembershipAccount.login(context,"android_probe","LocalMemberPassword123!")
++   assertNotEquals(originalSession,MembershipAccount.sessionId(context));assertTrue(MembershipLease.valid(context))
++   assertEquals(profile["expiresAtMs"],call("memberProfile")["expiresAtMs"])
++   val uid=FirebaseAuth.getInstance().currentUser!!.uid
++   val expiry=(profile["expiresAtMs"] as Number).toLong()
++   try {
++    emulatorExpiry(uid,System.currentTimeMillis()-1000)
++    LicenseGuard.performBackgroundCheck(context)
++    assertTrue(LicenseStore.isLocked(context));assertFalse(MembershipLease.valid(context))
++    assertFalse(LocationController.applyImmediately(context,latitude,longitude,"Expired fixture"))
++   } finally { emulatorExpiry(uid,expiry) }
++   LicenseGuard.performBackgroundCheck(context)
++   assertFalse(LicenseStore.isLocked(context));assertTrue(MembershipLease.valid(context))
++  } finally { MembershipAccount.logout(context) }
++  assertFalse(MembershipAccount.isSignedIn(context));assertFalse(MembershipLease.valid(context))
++ }
++}
+diff --git a/app/src/androidTest/java/io/github/phantom/gps/test/MembershipTestRunner.java b/app/src/androidTest/java/io/github/phantom/gps/test/MembershipTestRunner.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..0129a80d70f8d51e404915f85c0f4d5b32e02555
+--- /dev/null
++++ b/app/src/androidTest/java/io/github/phantom/gps/test/MembershipTestRunner.java
+@@ -0,0 +1,23 @@
++package io.github.phantom.gps.test;
++import android.app.Application;
++import androidx.test.runner.AndroidJUnitRunner;
++import com.google.firebase.*;
++import com.google.firebase.auth.FirebaseAuth;
++import com.google.firebase.functions.FirebaseFunctions;
++import com.google.firebase.analytics.FirebaseAnalytics;
++/** Local Emulator Suite only. Never compiled into a public APK. */
++public final class MembershipTestRunner extends AndroidJUnitRunner {
++ @Override public void callApplicationOnCreate(Application app){
++  if("true".equals(androidx.test.platform.app.InstrumentationRegistry.getArguments().getString("credentialsOnly"))){
++   String target=androidx.test.platform.app.InstrumentationRegistry.getArguments().getString("class","");
++   if(!target.equals("io.github.phantom.gps.test.RememberedLoginStoreDeviceTest")&&!target.startsWith("io.github.phantom.gps.test.RememberedLoginStoreDeviceTest#"))throw new IllegalArgumentException("Credentials-only tests required");
++   super.callApplicationOnCreate(app);return;
++  }
++  try { FirebaseApp.getInstance().delete(); } catch(IllegalStateException ignored) { }
++  FirebaseApp.initializeApp(app,new FirebaseOptions.Builder().setApiKey("AIza00000000000000000000000000000000000").setApplicationId("1:123456789:android:0123456789abcdef012345").setProjectId("demo-phantom-gps").build());
++  FirebaseAuth.getInstance().useEmulator("127.0.0.1",9099);
++  FirebaseFunctions.getInstance("asia-southeast1").useEmulator("127.0.0.1",5001);
++  FirebaseAnalytics.getInstance(app).setAnalyticsCollectionEnabled(false);
++  super.callApplicationOnCreate(app);
++ }
++}
+diff --git a/app/src/androidTest/java/io/github/phantom/gps/test/RememberedLoginStoreDeviceTest.kt b/app/src/androidTest/java/io/github/phantom/gps/test/RememberedLoginStoreDeviceTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..d6a10231bde266f615a19c31da348e0aac694174
+--- /dev/null
++++ b/app/src/androidTest/java/io/github/phantom/gps/test/RememberedLoginStoreDeviceTest.kt
+@@ -0,0 +1,55 @@
++package io.github.phantom.gps.test
++
++import android.content.Context
++import android.util.Base64
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.platform.app.InstrumentationRegistry
++import io.github.phantom.gps.utils.RememberedLoginStore
++import org.junit.Assert.*
++import org.junit.Test
++import org.junit.runner.RunWith
++import java.security.KeyStore
++
++@RunWith(AndroidJUnit4::class)
++class RememberedLoginStoreDeviceTest {
++ private val context get()=InstrumentationRegistry.getInstrumentation().targetContext
++ private val namespace="phantom_remembered_login_fixture"
++ private val username="remember_fixture_user"
++ private val password="FixtureOnlyPassword123!"
++ private val prefs get()=context.getSharedPreferences(namespace,Context.MODE_PRIVATE)
++ private fun cleanup(){prefs.edit().clear().commit();KeyStore.getInstance("AndroidKeyStore").apply{load(null);deleteEntry("$namespace.key.v1")}}
++ @Test fun encryptedPersistenceOptOutAndTamper() {
++  cleanup()
++  try {
++   val store=RememberedLoginStore(context,namespace);store.save(username,password,true)
++   assertEquals(username,RememberedLoginStore(context,namespace).read()!!.username)
++   assertEquals(password,RememberedLoginStore(context,namespace).read()!!.password)
++   val saved=prefs.getString("encrypted",null)!!
++   assertFalse(prefs.all.values.any{it.toString().contains(username)||it.toString().contains(password)})
++   assertFalse(String(Base64.decode(saved,Base64.NO_WRAP)).contains(password))
++   store.save(username,password,true);assertNotEquals(saved,prefs.getString("encrypted",null))
++   val corrupted=Base64.decode(prefs.getString("encrypted",null),Base64.NO_WRAP);corrupted[corrupted.lastIndex]=(corrupted.last().toInt() xor 1).toByte()
++   prefs.edit().putString("encrypted",Base64.encodeToString(corrupted,Base64.NO_WRAP)).commit()
++   assertNull(store.read());assertFalse(prefs.contains("encrypted"))
++   store.save(username,password,true);store.setEnabled(false)
++   assertFalse(store.isEnabled());assertNull(store.read());assertFalse(prefs.contains("encrypted"))
++  }finally{cleanup()}
++ }
++ @Test fun missingKeyDoesNotFallBackToPlaintextAndCanSaveAgain() {
++  cleanup()
++  try {
++   val store=RememberedLoginStore(context,namespace);store.save(username,password,true)
++   KeyStore.getInstance("AndroidKeyStore").apply{load(null);deleteEntry("$namespace.key.v1")}
++   assertNull(store.read());assertFalse(prefs.contains("encrypted"))
++   store.save(username,password,true);assertEquals(password,store.read()!!.password)
++   store.forget();assertNull(store.read());assertFalse(store.isEnabled())
++  }finally{cleanup()}
++ }
++ @Test fun persistenceAcrossProcessRestart() {
++  when(InstrumentationRegistry.getArguments().getString("rememberPhase")){
++   "write"->{cleanup();RememberedLoginStore(context,namespace).save(username,password,true);assertTrue(prefs.contains("encrypted"))}
++   "read"->try{val saved=RememberedLoginStore(context,namespace).read();assertNotNull(saved);assertEquals(username,saved!!.username);assertEquals(password,saved.password)}finally{cleanup()}
++   else->org.junit.Assume.assumeTrue("Host runs this test in separate write/read processes",false)
++  }
++ }
++}
+diff --git a/app/src/debug/AndroidManifest.xml b/app/src/debug/AndroidManifest.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..2bbad050cf000f66b550288782af51e0df8ef4f3
+--- /dev/null
++++ b/app/src/debug/AndroidManifest.xml
+@@ -0,0 +1 @@
++<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"><application android:usesCleartextTraffic="true" tools:replace="android:usesCleartextTraffic" /></manifest>
 diff --git a/app/src/foss/java/io/github/jqssun/gpssetter/ui/MapActivity.kt b/app/src/foss/java/io/github/jqssun/gpssetter/ui/MapActivity.kt
 deleted file mode 100644
-index 1c6179330600a244c2ac2977637d6221d0b6a34a..0000000000000000000000000000000000000000
+index 578bfcbf9e0c6f9250b0fc09dfa9de3f31112cbb..0000000000000000000000000000000000000000
 --- a/app/src/foss/java/io/github/jqssun/gpssetter/ui/MapActivity.kt
 +++ /dev/null
 @@ -1,213 +0,0 @@
@@ -340,10 +523,10 @@ index 1c6179330600a244c2ac2977637d6221d0b6a34a..00000000000000000000000000000000
 -    }
 -}
 diff --git a/app/src/full/java/io/github/jqssun/gpssetter/ui/MapActivity.kt b/app/src/full/java/io/github/phantom/gps/ui/MapActivity.kt
-similarity index 78%
+similarity index 80%
 rename from app/src/full/java/io/github/jqssun/gpssetter/ui/MapActivity.kt
 rename to app/src/full/java/io/github/phantom/gps/ui/MapActivity.kt
-index af361e101c6098c870642e6e30d5a19829930e81..1612297e0315f89de8a8085ddcc453d0c6fb520c 100644
+index fd5073389c761425ed5f24818508150f22d01e0d..57b6807709f292b9e66972fdb5cb9491d9504bf9 100644
 --- a/app/src/full/java/io/github/jqssun/gpssetter/ui/MapActivity.kt
 +++ b/app/src/full/java/io/github/phantom/gps/ui/MapActivity.kt
 @@ -1 +1 @@
@@ -407,16 +590,19 @@ index af361e101c6098c870642e6e30d5a19829930e81..1612297e0315f89de8a8085ddcc453d0
 +
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/DeviceIdProvider.kt b/app/src/full/java/io/github/phantom/gps/utils/DeviceIdProvider.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..12252df4053813d59dae8aeda2d2e2a12a480a0e
+index 0000000000000000000000000000000000000000..b331bffc8610aaedb96c1cd2ae7837a408799ed0
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/DeviceIdProvider.kt
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,66 @@
 +package io.github.phantom.gps.utils
 +
 +import android.security.keystore.KeyGenParameterSpec
 +import android.security.keystore.KeyProperties
 +import java.security.KeyPairGenerator
 +import java.security.KeyStore
++import java.security.Signature
++import java.security.PrivateKey
++import java.util.Base64
 +import java.security.MessageDigest
 +import java.security.spec.ECGenParameterSpec
 +import java.util.Locale
@@ -425,7 +611,9 @@ index 0000000000000000000000000000000000000000..12252df4053813d59dae8aeda2d2e2a1
 +    private const val KEYSTORE = "AndroidKeyStore"
 +    private const val KEY_ALIAS = "phantom_gps_session_device_key_v1"
 +
-+    fun getDeviceId(): String {
++    @Volatile private var cachedId: String? = null
++    @Synchronized fun getDeviceId(): String {
++        cachedId?.let { return it }
 +        val keyStore = KeyStore.getInstance(KEYSTORE).apply { load(null) }
 +        val publicKeyBytes = if (keyStore.containsAlias(KEY_ALIAS)) {
 +            keyStore.getCertificate(KEY_ALIAS).publicKey.encoded
@@ -446,7 +634,21 @@ index 0000000000000000000000000000000000000000..12252df4053813d59dae8aeda2d2e2a1
 +            generator.generateKeyPair().public.encoded
 +        }
 +
-+        return sha256Hex(publicKeyBytes)
++        return sha256Hex(publicKeyBytes).also { cachedId = it }
++    }
++
++    @Synchronized fun publicKeyBase64():String {
++        getDeviceId()
++        val store=KeyStore.getInstance(KEYSTORE).apply { load(null) }
++        return Base64.getEncoder().encodeToString(store.getCertificate(KEY_ALIAS).publicKey.encoded)
++    }
++
++    @Synchronized fun signChallenge(message:String):String {
++        getDeviceId()
++        val store=KeyStore.getInstance(KEYSTORE).apply { load(null) }
++        val key=store.getKey(KEY_ALIAS,null) as PrivateKey
++        val signer=Signature.getInstance("SHA256withECDSA").apply { initSign(key);update(message.toByteArray(Charsets.UTF_8)) }
++        return Base64.getEncoder().encodeToString(signer.sign())
 +    }
 +
 +    private fun sha256Hex(data: ByteArray): String {
@@ -460,7 +662,7 @@ index 0000000000000000000000000000000000000000..12252df4053813d59dae8aeda2d2e2a1
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/FirebaseLogin.kt b/app/src/full/java/io/github/phantom/gps/utils/FirebaseLogin.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..07899b286e11efc9e548c840bcbfc84308644c89
+index 0000000000000000000000000000000000000000..35cabee369e9200ef2def92b44800ef35f2f03fc
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/FirebaseLogin.kt
 @@ -0,0 +1,14 @@
@@ -480,7 +682,7 @@ index 0000000000000000000000000000000000000000..07899b286e11efc9e548c840bcbfc843
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseApi.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseApi.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..0610a61cca6b8f23f1f3e18f6a05427440a3306e
+index 0000000000000000000000000000000000000000..da7be081b163f43910bca9519a254f852a42f231
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseApi.kt
 @@ -0,0 +1,127 @@
@@ -613,7 +815,7 @@ index 0000000000000000000000000000000000000000..0610a61cca6b8f23f1f3e18f6a054274
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseCheckWorker.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseCheckWorker.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..b967e6215735cde022916ad9f846efb4fad9ae0d
+index 0000000000000000000000000000000000000000..13d6c5a695ebd5445ab90bc8a1b1c6589c164a29
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseCheckWorker.kt
 @@ -0,0 +1,19 @@
@@ -638,342 +840,83 @@ index 0000000000000000000000000000000000000000..b967e6215735cde022916ad9f846efb4
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..7e86b41b6e8feb7f664e14b2129c4f0d620ad67a
+index 0000000000000000000000000000000000000000..ed0260d083e37515ca04c5e69469fb433eeb43a2
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
-@@ -0,0 +1,329 @@
+@@ -0,0 +1,70 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Activity
 +import android.content.Context
 +import android.content.Intent
++import androidx.core.content.ContextCompat
 +import androidx.lifecycle.Lifecycle
 +import androidx.lifecycle.ProcessLifecycleOwner
-+import io.github.phantom.gps.BuildConfig
-+import io.github.phantom.gps.R
 +import io.github.phantom.gps.ui.ActivationActivity
 +import io.github.phantom.gps.ui.LockedActivity
-+import kotlinx.coroutines.CoroutineScope
-+import kotlinx.coroutines.Dispatchers
-+import kotlinx.coroutines.SupervisorJob
-+import kotlinx.coroutines.launch
++import kotlinx.coroutines.*
 +import kotlinx.coroutines.sync.Mutex
 +import kotlinx.coroutines.sync.withLock
 +
++/** Account membership replaces activation codes. Server-signed leases gate all critical work. */
 +object LicenseGuard {
-+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-+    private val mutex = Mutex()
-+    private val licenseApi by lazy { LicenseApi() }
-+
-+    fun activate(
-+        context: Context,
-+        activationCode: String,
-+        onResult: (ActivationResult) -> Unit
-+    ) {
-+        val appContext = context.applicationContext
-+        scope.launch {
-+            val result = mutex.withLock {
-+                performActivation(appContext, activationCode)
-+            }
-+            onResult(result)
-+        }
-+    }
-+
++    private val scope=CoroutineScope(SupervisorJob()+Dispatchers.Main.immediate)
++    private val mutex=Mutex()
++    @Deprecated("Register/login with the membership account")
++    fun activate(context: Context, activationCode: String, onResult: (ActivationResult)->Unit) { onResult(ActivationResult(false,"กรุณาเข้าสู่ระบบด้วยบัญชีสมาชิก")) }
 +    fun onAppForeground(context: Context) {
-+        val appContext = context.applicationContext
-+        if (!LicenseStore.isActivated(appContext)) {
-+            LicenseWorkScheduler.cancel(appContext)
-+            return
-+        }
-+        if (!LicenseStore.hasLicenseData(appContext)) {
-+            clearLicenseAndDeactivate(appContext)
-+            if (isAppInForeground()) {
-+                routeToRequiredScreen(appContext)
-+            }
-+            return
-+        }
-+        if (LicenseStore.isLocked(appContext)) {
-+            launchLockedScreen(appContext)
-+            return
-+        }
-+
-+        LicenseWorkScheduler.schedule(appContext, LicenseStore.getNextCheckSeconds(appContext))
-+        verifyNowForeground(appContext)
++        if(!MembershipAccount.isSignedIn(context)) return
++        startHeartbeat(context)
++        verifyNowForeground(context)
 +    }
-+
-+    fun onAppBackground() = Unit
-+
-+    fun verifyNowForeground(context: Context, onResult: ((Boolean) -> Unit)? = null) {
-+        verify(context, launchUiOnFailure = true, onResult = onResult)
-+    }
-+
-+    fun verifyNowForRetry(context: Context, onResult: ((Boolean) -> Unit)? = null) {
-+        verify(context, launchUiOnFailure = true, onResult = onResult)
-+    }
-+
-+    suspend fun performBackgroundCheck(context: Context): Boolean {
-+        val appContext = context.applicationContext
-+        if (!LicenseStore.isActivated(appContext) || !LicenseStore.hasLicenseData(appContext)) {
-+            return true
-+        }
-+        val outcome = mutex.withLock { performLicenseCheck(appContext) }
-+        applyOutcome(appContext, outcome, launchUiOnFailure = false)
-+        return true
-+    }
-+
-+    fun runCriticalActionIfAllowed(context: Context, action: () -> Unit): Boolean {
-+        return if (isLocallyAllowedForCriticalAction(context)) {
-+            action()
-+            true
-+        } else {
-+            if (canLaunchUi(context)) {
-+                routeToRequiredScreen(context.applicationContext)
-+            }
-+            false
++    fun startHeartbeat(context: Context) { runCatching { ContextCompat.startForegroundService(context,Intent(context,MembershipHeartbeatService::class.java)) } }
++    fun onAppBackground()=Unit
++    fun verifyNowForeground(context: Context,onResult:((Boolean)->Unit)?=null) { scope.launch { val result=check(context,true);onResult?.invoke(result) } }
++    fun verifyNowForRetry(context: Context,onResult:((Boolean)->Unit)?=null)=verifyNowForeground(context,onResult)
++    suspend fun performBackgroundCheck(context: Context):Boolean { check(context,false);return true }
++    private suspend fun check(context: Context,launchUi: Boolean):Boolean = mutex.withLock {
++        if(!MembershipAccount.isSignedIn(context)) return@withLock false
++        try { MembershipAccount.renew(context);unlock(context);true }
++        catch(e:Exception) {
++            if(e is CancellationException)throw e
++            val permanent=MembershipAccount.errorCode(e) in setOf("SESSION_REPLACED","MEMBERSHIP_EXPIRED","MEMBER_DISABLED","MEMBER_NOT_FOUND","LOGIN_REQUIRED","UNAUTHENTICATED")
++            if(!permanent && MembershipLease.valid(context))return@withLock true
++            PrefManager.membershipLease=""
++            lock(context,MembershipAccount.errorCode(e),!permanent,launchUi);false
 +        }
 +    }
-+
-+    fun isLocallyAllowedForCriticalAction(context: Context): Boolean {
-+        val appContext = context.applicationContext
-+        return LicenseStore.isActivated(appContext) &&
-+            !LicenseStore.isLocked(appContext) &&
-+            LicenseStore.hasLicenseData(appContext)
++    fun isLocallyAllowedForCriticalAction(context: Context):Boolean = AppIntegrity.isSelfValid(context) && MembershipAccount.isSignedIn(context) && !LicenseStore.isLocked(context) && MembershipLease.valid(context)
++    fun runCriticalActionIfAllowed(context: Context,action:()->Unit):Boolean {
++        if(isLocallyAllowedForCriticalAction(context)){action();return true}
++        if(context is Activity || isForeground())routeToRequiredScreen(context)
++        return false
 +    }
-+
-+    fun routeToRequiredScreen(context: Context): Boolean {
-+        val appContext = context.applicationContext
-+        return when {
-+            LicenseStore.isLocked(appContext) -> {
-+                launchLockedScreen(appContext)
-+                true
-+            }
-+
-+            !LicenseStore.isActivated(appContext) || !LicenseStore.hasLicenseData(appContext) -> {
-+                launchActivationScreen(appContext)
-+                true
-+            }
-+
-+            else -> false
-+        }
++    fun routeToRequiredScreen(context: Context):Boolean {
++        val activity=if(!MembershipAccount.isSignedIn(context))ActivationActivity::class.java else if(!isLocallyAllowedForCriticalAction(context))LockedActivity::class.java else return false
++        runCatching { context.startActivity(Intent(context,activity).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)) };return true
 +    }
-+
-+    fun clearLicenseAndDeactivate(context: Context) {
-+        val appContext = context.applicationContext
-+        LicenseWorkScheduler.cancel(appContext)
-+        LicenseStore.clearLicense(appContext)
++    fun clearLicenseAndDeactivate(context: Context) { LicenseWorkScheduler.cancel(context);MembershipAccount.logout(context) }
++    fun unlock(context: Context) { LicenseStore.setLocked(context,false,"",false) }
++    fun lockRetryable(context: Context,reason:String,launchUi:Boolean=true)=lock(context,reason,true,launchUi)
++    fun lockPermanent(context: Context,reason:String,launchUi:Boolean=true)=lock(context,reason,false,launchUi)
++    private fun lock(context: Context,reason:String,retryable:Boolean,launchUi:Boolean) {
++        LicenseStore.setLocked(context,true,reason,retryable)
++        runCatching{LocationController.stop(context)}
++        runCatching{context.stopService(Intent(context,ClipboardMonitorService::class.java))}
++        if(launchUi&&isForeground())routeToRequiredScreen(context)
 +    }
-+
-+    fun unlock(context: Context) {
-+        LicenseStore.setLocked(context.applicationContext, locked = false, reason = "", retryable = false)
++    fun getUserFacingReason(context: Context,reason:String):String = when(reason) {
++        "MEMBERSHIP_EXPIRED"->"สิทธิ์ 7 วันหมดอายุ กรุณาติดต่อแอดมินเพื่อต่ออายุ"
++        "SESSION_REPLACED"->"บัญชีนี้ถูกใช้งานบนเครื่องอื่นแล้ว"
++        "MEMBER_DISABLED"->"บัญชีถูกระงับ กรุณาติดต่อแอดมิน"
++        else->"กรุณาเชื่อมต่ออินเทอร์เน็ตและตรวจสิทธิ์อีกครั้ง"
 +    }
-+
-+    fun lockRetryable(context: Context, reason: String, launchUi: Boolean = true) {
-+        lock(context.applicationContext, reason, retryable = true, launchUi = launchUi)
-+    }
-+
-+    fun lockPermanent(context: Context, reason: String, launchUi: Boolean = true) {
-+        lock(context.applicationContext, reason, retryable = false, launchUi = launchUi)
-+    }
-+
-+    fun getUserFacingReason(context: Context, rawReason: String): String {
-+        return when (rawReason) {
-+            "NETWORK_UNAVAILABLE",
-+            "UNAVAILABLE",
-+            "DEADLINE_EXCEEDED",
-+            "INTERNAL",
-+            "CANCELLED",
-+            "UNKNOWN" -> context.getString(R.string.license_locked_reason_retryable)
-+            "LICENSE_REVOKED" -> context.getString(R.string.license_locked_reason_revoked)
-+            "DEVICE_MISMATCH" -> context.getString(R.string.license_locked_reason_device_mismatch)
-+            "INVALID_LICENSE" -> context.getString(R.string.license_locked_reason_invalid)
-+            "PACKAGE_MISMATCH" -> context.getString(R.string.license_locked_reason_package_mismatch)
-+            "LICENSE_NOT_FOUND" -> context.getString(R.string.license_locked_reason_missing)
-+            else -> rawReason.ifBlank { context.getString(R.string.license_locked_reason_generic) }
-+        }
-+    }
-+
-+    private fun verify(
-+        context: Context,
-+        launchUiOnFailure: Boolean,
-+        onResult: ((Boolean) -> Unit)? = null
-+    ) {
-+        val appContext = context.applicationContext
-+        if (!LicenseStore.isActivated(appContext) || !LicenseStore.hasLicenseData(appContext)) {
-+            onResult?.invoke(false)
-+            return
-+        }
-+        scope.launch {
-+            val outcome = mutex.withLock { performLicenseCheck(appContext) }
-+            applyOutcome(appContext, outcome, launchUiOnFailure)
-+            onResult?.invoke(outcome.ok)
-+        }
-+    }
-+
-+    private suspend fun performActivation(
-+        context: Context,
-+        activationCode: String
-+    ): ActivationResult {
-+        val normalizedCode = activationCode.trim()
-+        if (normalizedCode.isBlank()) {
-+            return ActivationResult(false, "Please enter an activation code")
-+        }
-+
-+        return try {
-+            val deviceId = DeviceIdProvider.getDeviceId()
-+            val response = licenseApi.activateDevice(
-+                activationCode = normalizedCode,
-+                deviceId = deviceId,
-+                appVersion = BuildConfig.VERSION_NAME,
-+                packageName = BuildConfig.APPLICATION_ID
-+            )
-+            LicenseStore.saveActivatedLicense(
-+                context = context,
-+                licenseId = response.licenseId,
-+                licenseSecret = response.licenseSecret,
-+                deviceId = deviceId,
-+                nextCheckSeconds = LicensePrefs.normalizeNextCheckSeconds(response.nextCheckSeconds)
-+            )
-+            LicenseWorkScheduler.schedule(context, response.nextCheckSeconds)
-+            ActivationResult(true, null)
-+        } catch (error: LicenseApi.LicenseApiException) {
-+            ActivationResult(false, activationErrorMessage(context, error.code))
-+        } catch (_: Exception) {
-+            ActivationResult(false, context.getString(R.string.activation_error_generic))
-+        }
-+    }
-+
-+    private suspend fun performLicenseCheck(context: Context): LicenseCheckOutcome {
-+        val licenseId = LicenseStore.getLicenseId(context)
-+        val licenseSecret = LicenseStore.getLicenseSecret(context)
-+        val storedDeviceId = LicenseStore.getDeviceId(context)
-+        if (licenseId.isBlank() || licenseSecret.isBlank() || storedDeviceId.isBlank()) {
-+            return LicenseCheckOutcome(
-+                ok = false,
-+                reason = "INVALID_LICENSE",
-+                retryable = false
-+            )
-+        }
-+
-+        return try {
-+            val response = licenseApi.checkLicense(
-+                licenseId = licenseId,
-+                licenseSecret = licenseSecret,
-+                deviceId = storedDeviceId,
-+                appVersion = BuildConfig.VERSION_NAME,
-+                packageName = BuildConfig.APPLICATION_ID
-+            )
-+            LicenseCheckOutcome(
-+                ok = true,
-+                reason = "",
-+                retryable = false,
-+                nextCheckSeconds = LicensePrefs.normalizeNextCheckSeconds(response.nextCheckSeconds)
-+            )
-+        } catch (error: LicenseApi.LicenseApiException) {
-+            val code = error.code.ifBlank { "UNKNOWN" }
-+            LicenseCheckOutcome(
-+                ok = false,
-+                reason = code,
-+                retryable = !isPermanentFailure(code)
-+            )
-+        } catch (_: Exception) {
-+            LicenseCheckOutcome(
-+                ok = false,
-+                reason = "NETWORK_UNAVAILABLE",
-+                retryable = true
-+            )
-+        }
-+    }
-+
-+    private fun applyOutcome(
-+        context: Context,
-+        outcome: LicenseCheckOutcome,
-+        launchUiOnFailure: Boolean
-+    ) {
-+        if (outcome.ok) {
-+            LicenseStore.updateLastSuccessfulCheck(context, outcome.nextCheckSeconds)
-+            unlock(context)
-+            LicenseWorkScheduler.schedule(context, outcome.nextCheckSeconds)
-+            return
-+        }
-+
-+        if (outcome.retryable) {
-+            lockRetryable(context, outcome.reason, launchUiOnFailure)
-+        } else {
-+            lockPermanent(context, outcome.reason, launchUiOnFailure)
-+        }
-+    }
-+
-+    private fun lock(context: Context, reason: String, retryable: Boolean, launchUi: Boolean) {
-+        LicenseStore.setLocked(context, locked = true, reason = reason, retryable = retryable)
-+        LicenseWorkScheduler.cancel(context)
-+        runCatching { context.stopService(Intent(context, ClipboardMonitorService::class.java)) }
-+        runCatching { LocationController.stop(context) }
-+        if (launchUi && isAppInForeground()) {
-+            launchLockedScreen(context)
-+        }
-+    }
-+
-+    private fun launchActivationScreen(context: Context) {
-+        val intent = Intent(context, ActivationActivity::class.java).apply {
-+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-+        }
-+        runCatching { context.startActivity(intent) }
-+    }
-+
-+    private fun launchLockedScreen(context: Context) {
-+        val intent = Intent(context, LockedActivity::class.java).apply {
-+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-+        }
-+        runCatching { context.startActivity(intent) }
-+    }
-+
-+    private fun activationErrorMessage(context: Context, code: String): String {
-+        return when (code) {
-+            "ACTIVATION_CODE_NOT_FOUND" -> context.getString(R.string.activation_error_not_found)
-+            "ACTIVATION_CODE_EXPIRED" -> context.getString(R.string.activation_error_expired)
-+            "ACTIVATION_CODE_REVOKED" -> context.getString(R.string.activation_error_revoked)
-+            "CODE_ALREADY_USED" -> context.getString(R.string.activation_error_used)
-+            "NETWORK_UNAVAILABLE", "UNAVAILABLE", "DEADLINE_EXCEEDED", "INTERNAL", "UNKNOWN" ->
-+                context.getString(R.string.activation_error_network)
-+            else -> context.getString(R.string.activation_error_generic)
-+        }
-+    }
-+
-+    private fun isPermanentFailure(code: String): Boolean {
-+        return code in setOf(
-+            "LICENSE_NOT_FOUND",
-+            "LICENSE_REVOKED",
-+            "DEVICE_MISMATCH",
-+            "INVALID_LICENSE",
-+            "PACKAGE_MISMATCH"
-+        )
-+    }
-+
-+    private fun canLaunchUi(context: Context): Boolean {
-+        return context is Activity || isAppInForeground()
-+    }
-+
-+    private fun isAppInForeground(): Boolean {
-+        return ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
-+    }
-+
-+    data class ActivationResult(
-+        val success: Boolean,
-+        val errorMessage: String?
-+    )
-+
-+    private data class LicenseCheckOutcome(
-+        val ok: Boolean,
-+        val reason: String,
-+        val retryable: Boolean,
-+        val nextCheckSeconds: Long = LicensePrefs.DEFAULT_NEXT_CHECK_SECONDS
-+    )
++    private fun isForeground()=ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
++    data class ActivationResult(val success:Boolean,val errorMessage:String?)
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicensePrefs.kt b/app/src/full/java/io/github/phantom/gps/utils/LicensePrefs.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..06cc70151a68feb2f9e84c25e2447c5b43072f11
+index 0000000000000000000000000000000000000000..792c02a5d8833d064d0fec2e4ed012f76e5afc70
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicensePrefs.kt
 @@ -0,0 +1,136 @@
@@ -1115,7 +1058,7 @@ index 0000000000000000000000000000000000000000..06cc70151a68feb2f9e84c25e2447c5b
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseSecretCipher.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseSecretCipher.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..cd9a739e178219134b162ccd2f971ee0bf928ce1
+index 0000000000000000000000000000000000000000..0290c06bee32b8747347dd554dc518f264ad2c73
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseSecretCipher.kt
 @@ -0,0 +1,70 @@
@@ -1191,10 +1134,10 @@ index 0000000000000000000000000000000000000000..cd9a739e178219134b162ccd2f971ee0
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseStore.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseStore.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..3043c08592bd0c1519859284c2fae71e14e42e00
+index 0000000000000000000000000000000000000000..e2714a58c7b752ce2554c218219b490ee694164a
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseStore.kt
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,63 @@
 +package io.github.phantom.gps.utils
 +
 +import android.content.Context
@@ -1217,7 +1160,7 @@ index 0000000000000000000000000000000000000000..3043c08592bd0c1519859284c2fae71e
 +        )
 +    }
 +
-+    fun isActivated(context: Context): Boolean = prefs(context).isActivated()
++    fun isActivated(context: Context): Boolean = MembershipAccount.isSignedIn(context)
 +
 +    fun getLicenseId(context: Context): String = prefs(context).getLicenseId()
 +
@@ -1233,11 +1176,7 @@ index 0000000000000000000000000000000000000000..3043c08592bd0c1519859284c2fae71e
 +        prefs(context).updateLastSuccessfulCheck(nextCheckSeconds)
 +    }
 +
-+    fun hasLicenseData(context: Context): Boolean {
-+        return getLicenseId(context).isNotBlank() &&
-+            getLicenseSecret(context).isNotBlank() &&
-+            getDeviceId(context).isNotBlank()
-+    }
++    fun hasLicenseData(context: Context): Boolean = MembershipAccount.isSignedIn(context)
 +
 +    fun isLocked(context: Context): Boolean = prefs(context).isLocked()
 +
@@ -1264,7 +1203,7 @@ index 0000000000000000000000000000000000000000..3043c08592bd0c1519859284c2fae71e
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseWorkScheduler.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseWorkScheduler.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..b8f25c5f0fc74d352bdca5f0fd841a697e63e27d
+index 0000000000000000000000000000000000000000..cf57d652a4f1108adeb40f631e0a8e1df95a18a4
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseWorkScheduler.kt
 @@ -0,0 +1,33 @@
@@ -1301,9 +1240,139 @@ index 0000000000000000000000000000000000000000..b8f25c5f0fc74d352bdca5f0fd841a69
 +        WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
 +    }
 +}
+diff --git a/app/src/full/java/io/github/phantom/gps/utils/MembershipAccount.kt b/app/src/full/java/io/github/phantom/gps/utils/MembershipAccount.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..c4664b31689a79725ff3bb89569d6e81f27da5c4
+--- /dev/null
++++ b/app/src/full/java/io/github/phantom/gps/utils/MembershipAccount.kt
+@@ -0,0 +1,87 @@
++package io.github.phantom.gps.utils
++
++import android.content.Context
++import android.os.SystemClock
++import com.google.android.gms.tasks.Task
++import com.google.firebase.auth.FirebaseAuth
++import com.google.firebase.functions.FirebaseFunctions
++import com.google.firebase.functions.FirebaseFunctionsException
++import io.github.phantom.gps.BuildConfig
++import kotlinx.coroutines.suspendCancellableCoroutine
++import kotlin.coroutines.resume
++import kotlin.coroutines.resumeWithException
++
++object MembershipAccount {
++    private val auth get() = FirebaseAuth.getInstance()
++    private val functions get() = FirebaseFunctions.getInstance("asia-southeast1")
++    private fun prefs(c: Context) = c.getSharedPreferences("phantom_member_account", Context.MODE_PRIVATE)
++    fun sessionId(c: Context) = prefs(c).getString("session", "").orEmpty()
++    fun isSignedIn(c: Context) = auth.currentUser != null && sessionId(c).isNotEmpty()
++    fun username(c: Context) = prefs(c).getString("username", "").orEmpty()
++    fun expiresAt(c: Context) = prefs(c).getLong("expires", 0)
++    private fun input(c: Context): MutableMap<String, Any> = mutableMapOf("deviceId" to DeviceIdProvider.getDeviceId(),
++        "bootCount" to MembershipLease.bootCount(c), "elapsedMs" to SystemClock.elapsedRealtime(), "packageName" to BuildConfig.APPLICATION_ID)
++    suspend fun login(c: Context, username: String, password: String) {
++        check(AppIntegrity.isSelfValid(c))
++        val result = call("memberLogin", mapOf("username" to username.trim(), "password" to password))
++        auth.signInWithEmailAndPassword(result["email"] as? String ?: error("INVALID_RESPONSE"),password).waitFor()
++        try { val opened = call("memberOpenSession", provedInput(c,"open")); save(c, opened)
++            prefs(c).edit().putString("username", username.trim()).commit()
++        } catch (e: Exception) { logout(c); throw e }
++    }
++    suspend fun renew(c: Context) {
++        if (!isSignedIn(c)) throw IllegalStateException("LOGIN_REQUIRED")
++        save(c,call("memberRenewLease",provedInput(c,"renew")))
++    }
++    private suspend fun provedInput(c:Context,operation:String):Map<String,Any> {
++        val data=input(c)
++        val session=if(operation=="renew")sessionId(c) else ""
++        if(operation=="renew")data["sessionId"]=session
++        val challenge=call("memberDeviceChallenge",data+mapOf("operation" to operation,"publicKey" to DeviceIdProvider.publicKeyBase64()))
++        val challengeId=challenge["challengeId"] as? String ?: error("INVALID_RESPONSE")
++        val nonce=challenge["nonce"] as? String ?: error("INVALID_RESPONSE")
++        val message=DeviceProof.message(auth.currentUser?.uid ?: error("LOGIN_REQUIRED"),operation,challengeId,nonce,
++            data["deviceId"] as String,data["bootCount"] as Int,data["elapsedMs"] as Long,session)
++        data["challengeId"]=challengeId
++        data["deviceSignature"]=DeviceIdProvider.signChallenge(message)
++        return data
++    }
++
++    private fun save(c: Context, data: Map<*, *>) {
++        val token=data["lease"] as? String ?: error("INVALID_RESPONSE")
++        val verifier=MembershipLease.verifier
++        require(verifier.isValid(token,System.currentTimeMillis(),SystemClock.elapsedRealtime(),MembershipLease.bootCount(c),DeviceIdProvider.getDeviceId())) { "LEASE_INVALID" }
++        val parsed=verifier.inspect(token) ?: error("LEASE_INVALID")
++        require(parsed.uid==auth.currentUser?.uid && parsed.session==data["sessionId"]) { "LEASE_INVALID" }
++        prefs(c).edit().putString("session",parsed.session).putLong("expires",parsed.membershipExpiresAt).commit()
++        PrefManager.membershipLease=token
++        LicensePrefs(c).setLockState(false,"",false)
++        LocationRefresh.send(c)
++    }
++    fun logout(c: Context) {
++        PrefManager.membershipLease=""
++        prefs(c).edit().clear().commit()
++        auth.signOut()
++        runCatching { LocationController.stop(c) }
++        c.stopService(android.content.Intent(c, MembershipHeartbeatService::class.java))
++        LicensePrefs(c).clearLicense()
++    }
++    fun errorCode(error: Throwable): String = if(error is FirebaseFunctionsException) (error.details as? Map<*, *>)?.get("code")?.toString() ?: error.code.name else error.message.orEmpty()
++    fun message(error: Throwable): String = when(errorCode(error)) {
++        "LOGIN_FAILED", "USERNAME_INVALID" -> "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"
++        "TOO_MANY_REQUESTS" -> "ลองเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่"
++        "MEMBER_NOT_FOUND", "GOOGLE_PASSWORD_REQUIRED" -> "กรุณาสมัครสมาชิกผ่านเว็บไซต์ก่อน"
++        "MEMBERSHIP_EXPIRED" -> "สิทธิ์ใช้งานหมดอายุ กรุณาติดต่อแอดมินเพื่อต่ออายุ"
++        "SESSION_REPLACED" -> "บัญชีนี้เข้าสู่ระบบบนเครื่องอื่นแล้ว"
++        "MEMBER_DISABLED" -> "บัญชีถูกระงับ กรุณาติดต่อแอดมิน"
++        "DEVICE_PROOF_INVALID" -> "ยืนยันเครื่องไม่สำเร็จ กรุณาเข้าสู่ระบบใหม่"
++        "LEASE_INVALID" -> "ตรวจสิทธิ์ไม่สำเร็จ กรุณาตรวจวันเวลาอัตโนมัติของเครื่อง"
++        else -> "เชื่อมต่อระบบสมาชิกไม่สำเร็จ กรุณาลองใหม่"
++    }
++    private suspend fun call(name: String, data: Map<String, Any>): Map<*, *> = functions.getHttpsCallable(name).call(data).waitFor().data as? Map<*, *> ?: error("INVALID_RESPONSE")
++    private suspend fun <T> Task<T>.waitFor(): T = suspendCancellableCoroutine { cont ->
++        addOnSuccessListener { if(cont.isActive) cont.resume(it) }
++        addOnFailureListener { if(cont.isActive) cont.resumeWithException(it) }
++        addOnCanceledListener { cont.cancel() }
++    }
++}
+diff --git a/app/src/full/java/io/github/phantom/gps/utils/MembershipHeartbeatService.kt b/app/src/full/java/io/github/phantom/gps/utils/MembershipHeartbeatService.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..b889d517824975900aaa94e8112d2b2bc4a5d48d
+--- /dev/null
++++ b/app/src/full/java/io/github/phantom/gps/utils/MembershipHeartbeatService.kt
+@@ -0,0 +1,31 @@
++package io.github.phantom.gps.utils
++
++import android.app.*
++import android.content.Intent
++import android.os.IBinder
++import androidx.core.app.NotificationCompat
++import io.github.phantom.gps.R
++import kotlinx.coroutines.*
++
++class MembershipHeartbeatService:Service() {
++    private val scope=CoroutineScope(SupervisorJob()+Dispatchers.Main.immediate)
++    private var job:Job?=null
++    override fun onStartCommand(intent:Intent?,flags:Int,startId:Int):Int {
++        if(!AppIntegrity.isSelfValid(this)||!MembershipAccount.isSignedIn(this)){stopSelf();return START_NOT_STICKY}
++        val manager=getSystemService(NotificationManager::class.java)
++        manager.createNotificationChannel(NotificationChannel("membership_session","สิทธิ์สมาชิก GeoX",NotificationManager.IMPORTANCE_LOW))
++        val open=PendingIntent.getActivity(this,141,Intent(this,io.github.phantom.gps.ui.ActivationActivity::class.java),PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
++        startForeground(141,NotificationCompat.Builder(this,"membership_session").setSmallIcon(R.drawable.ic_stop).setContentTitle("GeoX")
++            .setContentText("ดูแลสิทธิ์สมาชิกและการใช้งานเครื่องล่าสุด").setContentIntent(open).setOngoing(true).build())
++        if(job?.isActive!=true)job=scope.launch {
++            while(isActive&&MembershipAccount.isSignedIn(this@MembershipHeartbeatService)){
++                LicenseGuard.performBackgroundCheck(this@MembershipHeartbeatService)
++                delay(120000)
++            }
++            stopSelf()
++        }
++        return START_STICKY
++    }
++    override fun onBind(intent:Intent?):IBinder?=null
++    override fun onDestroy(){scope.cancel();super.onDestroy()}
++}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/SessionApi.kt b/app/src/full/java/io/github/phantom/gps/utils/SessionApi.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..bf0a6c55deffb7ecd517dd982924eb5b7be5fd95
+index 0000000000000000000000000000000000000000..ee9b292ffba397bd2337531e95effe1c2add7dad
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/SessionApi.kt
 @@ -0,0 +1,4 @@
@@ -1313,7 +1382,7 @@ index 0000000000000000000000000000000000000000..bf0a6c55deffb7ecd517dd982924eb5b
 +class SessionApi
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/SessionCheckWorker.kt b/app/src/full/java/io/github/phantom/gps/utils/SessionCheckWorker.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..dc545c3b2401b7f16d72f5c2b22750c8489734df
+index 0000000000000000000000000000000000000000..293139647ca743b5ef81a24e9e63852320f61a74
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/SessionCheckWorker.kt
 @@ -0,0 +1,17 @@
@@ -1336,7 +1405,7 @@ index 0000000000000000000000000000000000000000..dc545c3b2401b7f16d72f5c2b22750c8
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/SessionGuard.kt b/app/src/full/java/io/github/phantom/gps/utils/SessionGuard.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..3bfa0866e1d960e81e0c832f0d42b2d2e560ede1
+index 0000000000000000000000000000000000000000..3c82466b8c29eda34e5416990985a88ac98bc975
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/SessionGuard.kt
 @@ -0,0 +1,34 @@
@@ -1376,7 +1445,7 @@ index 0000000000000000000000000000000000000000..3bfa0866e1d960e81e0c832f0d42b2d2
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/SessionPrefs.kt b/app/src/full/java/io/github/phantom/gps/utils/SessionPrefs.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..9451eb84b2d6567ee14df05cb1a897992cc016e8
+index 0000000000000000000000000000000000000000..29529c849459d0b94b02fea4042feffb9dff2990
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/SessionPrefs.kt
 @@ -0,0 +1,6 @@
@@ -1388,7 +1457,7 @@ index 0000000000000000000000000000000000000000..9451eb84b2d6567ee14df05cb1a89799
 +class SessionPrefs(ctx: Context)
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/SessionStore.kt b/app/src/full/java/io/github/phantom/gps/utils/SessionStore.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..300d49825599de419966661f4ae194aed17949ad
+index 0000000000000000000000000000000000000000..ea82c442b484e0bddd4a9630ea2709005bb5e69f
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/SessionStore.kt
 @@ -0,0 +1,28 @@
@@ -1422,7 +1491,7 @@ index 0000000000000000000000000000000000000000..300d49825599de419966661f4ae194ae
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/SessionWorkScheduler.kt b/app/src/full/java/io/github/phantom/gps/utils/SessionWorkScheduler.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..ebab429ffbade825b15427b59e0408deb6a0e5b6
+index 0000000000000000000000000000000000000000..06926a9e615e52931cc2cc034a817f883ad7305a
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/SessionWorkScheduler.kt
 @@ -0,0 +1,14 @@
@@ -1441,7 +1510,7 @@ index 0000000000000000000000000000000000000000..ebab429ffbade825b15427b59e0408de
 +    }
 +}
 diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
-index bf6e0e09582fa362723cb2a8895f10478b3f37ff..9be716982bd3fe7f12fa95f353857eea87e44476 100644
+index 4e1cc601709afa5183eb5d6e01c3fd30f981f23b..8174178adcc4ec0b793244190664579e0a25a645 100644
 --- a/app/src/main/AndroidManifest.xml
 +++ b/app/src/main/AndroidManifest.xml
 @@ -12,0 +13,13 @@
@@ -1458,13 +1527,19 @@ index bf6e0e09582fa362723cb2a8895f10478b3f37ff..9be716982bd3fe7f12fa95f353857eea
 +    <queries>
 +        <package android:name="com.fulllock.app" />
 +    </queries>
-@@ -19 +32 @@
+@@ -16 +29,4 @@
+-        android:allowBackup="true"
++        android:allowBackup="false"
++        android:fullBackupContent="false"
++        android:dataExtractionRules="@xml/data_extraction_rules"
++        android:usesCleartextTraffic="false"
+@@ -19 +35 @@
 -        android:roundIcon="@mipmap/ic_launcher"
 +        android:roundIcon="@mipmap/ic_launcher_round"
-@@ -30 +43 @@
+@@ -30 +46 @@
 -            android:name=".ui.MapActivity"
 +            android:name=".ui.ActivationActivity"
-@@ -37,0 +51,12 @@
+@@ -37,0 +54,13 @@
 +        <activity
 +            android:name=".ui.LoginActivity"
 +            android:exported="false" />
@@ -1475,9 +1550,10 @@ index bf6e0e09582fa362723cb2a8895f10478b3f37ff..9be716982bd3fe7f12fa95f353857eea
 +            android:name=".ui.LockedActivity"
 +            android:exported="false" />
 +
++        <service android:name=".utils.MembershipHeartbeatService" android:exported="false" android:foregroundServiceType="dataSync" />
 +        <!-- Binder transactions authenticate Full Lock; session capability is root-relay only. -->
 +        <service android:name=".utils.FullLockRelayService" android:exported="true" />
-@@ -42,0 +68,45 @@
+@@ -42,0 +72,45 @@
 +        <service
 +            android:name=".utils.ClipboardMonitorService"
 +            android:exported="false"
@@ -1523,25 +1599,63 @@ index bf6e0e09582fa362723cb2a8895f10478b3f37ff..9be716982bd3fe7f12fa95f353857eea
 +            </intent-filter>
 +        </receiver>
 +
-@@ -47,3 +116,0 @@
+@@ -47,3 +120,0 @@
 -        <meta-data
 -            android:name="com.maplibre.AccessToken"
 -            android:value="REMOVED_LEGACY_SECRET" />
-@@ -79 +146 @@
+@@ -79 +150 @@
 -</manifest>
 \ No newline at end of file
 +</manifest>
 diff --git a/app/src/main/assets/xposed_init b/app/src/main/assets/xposed_init
-index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..7a5a3f669b384065e8a5a00551d3e9b8ff411bc4 100644
+index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..85f00d5de5dba13c0b8975b2bb632c63c454a177 100644
 --- a/app/src/main/assets/xposed_init
 +++ b/app/src/main/assets/xposed_init
 @@ -1 +1 @@
 -io.github.jqssun.gpssetter.xposed.HookEntry
 \ No newline at end of file
 +io.github.phantom.gps.xposed.HookEntry
+diff --git a/app/src/main/java/io/github/jqssun/gpssetter/App.kt b/app/src/main/java/io/github/jqssun/gpssetter/App.kt
+deleted file mode 100644
+index 56ed3081fd2f37b4ade79d0fee2db27a06912728..0000000000000000000000000000000000000000
+--- a/app/src/main/java/io/github/jqssun/gpssetter/App.kt
++++ /dev/null
+@@ -1,31 +0,0 @@
+-package io.github.jqssun.gpssetter
+-
+-import androidx.appcompat.app.AppCompatDelegate
+-import android.app.Application
+-import dagger.hilt.android.HiltAndroidApp
+-import io.github.jqssun.gpssetter.utils.PrefManager
+-import kotlinx.coroutines.CoroutineScope
+-import kotlinx.coroutines.Dispatchers
+-import timber.log.Timber
+-
+-lateinit var gsApp: App
+-
+-@HiltAndroidApp
+-class App : Application() {
+-    val globalScope = CoroutineScope(Dispatchers.Default)
+-
+-    companion object {
+-        fun commonInit() {
+-            if (BuildConfig.DEBUG) {
+-                Timber.plant(Timber.DebugTree())
+-            }
+-        }
+-    }
+-
+-    override fun onCreate() {
+-        super.onCreate()
+-        gsApp = this
+-        commonInit()
+-        AppCompatDelegate.setDefaultNightMode(PrefManager.darkTheme)
+-    }
+-}
+\ No newline at end of file
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/update/UpdateChecker.kt b/app/src/main/java/io/github/jqssun/gpssetter/update/UpdateChecker.kt
 deleted file mode 100644
-index 9abada7fce60c4e22c72073f1a5555feb057de03..0000000000000000000000000000000000000000
+index e9903e89521c96448774e378ee8b41cadc567275..0000000000000000000000000000000000000000
 --- a/app/src/main/java/io/github/jqssun/gpssetter/update/UpdateChecker.kt
 +++ /dev/null
 @@ -1,84 +0,0 @@
@@ -1631,7 +1745,7 @@ index 9abada7fce60c4e22c72073f1a5555feb057de03..00000000000000000000000000000000
 -
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/NotificationsChannel.kt b/app/src/main/java/io/github/jqssun/gpssetter/utils/NotificationsChannel.kt
 deleted file mode 100644
-index 6399b9e4472bdb6d6437fe9244b09888b5ed38e1..0000000000000000000000000000000000000000
+index 1b7c1f031fc01ed9b6f597f0874facae2f4d4ceb..0000000000000000000000000000000000000000
 --- a/app/src/main/java/io/github/jqssun/gpssetter/utils/NotificationsChannel.kt
 +++ /dev/null
 @@ -1,37 +0,0 @@
@@ -1673,9 +1787,148 @@ index 6399b9e4472bdb6d6437fe9244b09888b5ed38e1..00000000000000000000000000000000
 -    }
 -}
 \ No newline at end of file
+diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt b/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
+deleted file mode 100644
+index 0e30240e630883a8096962540b38794108dfcf41..0000000000000000000000000000000000000000
+--- a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
++++ /dev/null
+@@ -1,103 +0,0 @@
+-package io.github.jqssun.gpssetter.utils
+-
+-import android.annotation.SuppressLint
+-import android.content.Context
+-import android.content.SharedPreferences
+-import androidx.appcompat.app.AppCompatDelegate
+-import io.github.jqssun.gpssetter.BuildConfig
+-import io.github.jqssun.gpssetter.gsApp
+-import kotlinx.coroutines.DelicateCoroutinesApi
+-import kotlinx.coroutines.Dispatchers
+-import kotlinx.coroutines.GlobalScope
+-import kotlinx.coroutines.launch
+-
+-
+-@SuppressLint("WorldReadableFiles")
+-object PrefManager   {
+-
+-    private const val START = "start"
+-    private const val LATITUDE = "latitude"
+-    private const val LONGITUDE = "longitude"
+-    private const val HOOKED_SYSTEM = "system_hooked"
+-    private const val RANDOM_POSITION = "random_position"
+-    private const val ACCURACY_SETTING = "accuracy_level"
+-    private const val MAP_TYPE = "map_type"
+-    private const val DARK_THEME = "dark_theme"
+-    private const val DISABLE_UPDATE = "update_disabled"
+-    private const val ENABLE_JOYSTICK = "joystick_enabled"
+-
+-
+-    private val pref: SharedPreferences by lazy {
+-        try {
+-            val prefsFile = "${BuildConfig.APPLICATION_ID}_prefs"
+-            gsApp.getSharedPreferences(
+-                prefsFile,
+-                Context.MODE_WORLD_READABLE
+-            )
+-        }catch (e:SecurityException){
+-            val prefsFile = "${BuildConfig.APPLICATION_ID}_prefs"
+-            gsApp.getSharedPreferences(
+-                prefsFile,
+-                Context.MODE_PRIVATE
+-            )
+-        }
+-
+-    }
+-
+-
+-    val isStarted : Boolean
+-        get() = pref.getBoolean(START, false)
+-
+-    val getLat : Double
+-        get() = pref.getFloat(LATITUDE, 40.7128F).toDouble()
+-
+-    val getLng : Double
+-        get() = pref.getFloat(LONGITUDE, -74.0060F).toDouble()
+-
+-    var isSystemHooked : Boolean
+-        get() = pref.getBoolean(HOOKED_SYSTEM, false)
+-        set(value) { pref.edit().putBoolean(HOOKED_SYSTEM,value).apply() }
+-
+-    var isRandomPosition :Boolean
+-        get() = pref.getBoolean(RANDOM_POSITION, false)
+-        set(value) { pref.edit().putBoolean(RANDOM_POSITION, value).apply() }
+-
+-    var accuracy : String?
+-        get() = pref.getString(ACCURACY_SETTING,"10")
+-        set(value) { pref.edit().putString(ACCURACY_SETTING,value).apply()}
+-
+-    var mapType : Int
+-        get() = pref.getInt(MAP_TYPE,1)
+-        set(value) { pref.edit().putInt(MAP_TYPE,value).apply()}
+-
+-    var darkTheme: Int
+-        get() = pref.getInt(DARK_THEME, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+-        set(value) = pref.edit().putInt(DARK_THEME, value).apply()
+-
+-    var isUpdateDisabled: Boolean
+-        get() = pref.getBoolean(DISABLE_UPDATE, false)
+-        set(value) = pref.edit().putBoolean(DISABLE_UPDATE, value).apply()
+-
+-    var isJoystickEnabled: Boolean
+-        get() = pref.getBoolean(ENABLE_JOYSTICK, false)
+-        set(value) = pref.edit().putBoolean(ENABLE_JOYSTICK, value).apply()
+-
+-    fun update(start:Boolean, la: Double, ln: Double) {
+-        runInBackground {
+-            val prefEditor = pref.edit()
+-            prefEditor.putFloat(LATITUDE, la.toFloat())
+-            prefEditor.putFloat(LONGITUDE, ln.toFloat())
+-            prefEditor.putBoolean(START, start)
+-            prefEditor.apply()
+-        }
+-
+-    }
+-
+-    @OptIn(DelicateCoroutinesApi::class)
+-    private fun runInBackground(method: suspend () -> Unit){
+-        GlobalScope.launch(Dispatchers.IO) {
+-            method.invoke()
+-        }
+-    }
+-
+-}
+\ No newline at end of file
+diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/HookEntry.kt b/app/src/main/java/io/github/jqssun/gpssetter/xposed/HookEntry.kt
+deleted file mode 100644
+index 6448079dcaf9a1e37d3eea479d7b90534a404241..0000000000000000000000000000000000000000
+--- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/HookEntry.kt
++++ /dev/null
+@@ -1,22 +0,0 @@
+-package io.github.jqssun.gpssetter.xposed
+-
+-import de.robv.android.xposed.IXposedHookLoadPackage
+-import de.robv.android.xposed.XC_MethodHook
+-import de.robv.android.xposed.XposedBridge
+-import de.robv.android.xposed.XposedHelpers
+-import de.robv.android.xposed.callbacks.XC_LoadPackage
+-import io.github.jqssun.gpssetter.BuildConfig
+-
+-class HookEntry : IXposedHookLoadPackage {
+-
+-    override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
+-        if (lpparam.packageName == BuildConfig.APPLICATION_ID) {
+-            XposedHelpers.findAndHookMethod("io.github.jqssun.gpssetter.ui.viewmodel.MainViewModel", lpparam.classLoader, "updateXposedState", object : XC_MethodHook() {
+-                override fun beforeHookedMethod(param: MethodHookParam) {
+-                    param.result = null
+-                }
+-            })
+-        }
+-        LocationHook.initHooks(lpparam)
+-    }
+-}
+\ No newline at end of file
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt b/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt
 deleted file mode 100644
-index e55ff264f78f3f2fe98f7f0ff264b3afcbdf1cc9..0000000000000000000000000000000000000000
+index c49507362245160560adc43d64d9f59889f18b75..0000000000000000000000000000000000000000
 --- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/Xshare.kt
 +++ /dev/null
 @@ -1,50 +0,0 @@
@@ -1730,34 +1983,50 @@ index e55ff264f78f3f2fe98f7f0ff264b3afcbdf1cc9..00000000000000000000000000000000
 -
 -}
 \ No newline at end of file
-diff --git a/app/src/main/java/io/github/jqssun/gpssetter/App.kt b/app/src/main/java/io/github/phantom/gps/App.kt
-similarity index 23%
-rename from app/src/main/java/io/github/jqssun/gpssetter/App.kt
-rename to app/src/main/java/io/github/phantom/gps/App.kt
-index d294f101d466f25ed88c308d01aa8155bb49050c..ae6fd695577275025971071472a371bd58bb2fdb 100644
---- a/app/src/main/java/io/github/jqssun/gpssetter/App.kt
+diff --git a/app/src/main/java/io/github/phantom/gps/App.kt b/app/src/main/java/io/github/phantom/gps/App.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..81ba251b39bcbdccd2c42100da05c425b89b67fa
+--- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/App.kt
-@@ -1 +1 @@
--package io.github.jqssun.gpssetter
+@@ -0,0 +1,83 @@
 +package io.github.phantom.gps
-@@ -3,0 +4 @@ import androidx.appcompat.app.AppCompatDelegate
++
++import androidx.appcompat.app.AppCompatDelegate
 +import android.app.Activity
-@@ -4,0 +6,4 @@ import android.app.Application
++import android.app.Application
 +import android.os.Bundle
 +import androidx.lifecycle.DefaultLifecycleObserver
 +import androidx.lifecycle.LifecycleOwner
 +import androidx.lifecycle.ProcessLifecycleOwner
-@@ -6 +11,5 @@ import dagger.hilt.android.HiltAndroidApp
--import io.github.jqssun.gpssetter.utils.PrefManager
++import dagger.hilt.android.HiltAndroidApp
 +import io.github.phantom.gps.ui.LockedActivity
 +import io.github.phantom.gps.utils.AppIntegrity
 +import io.github.phantom.gps.utils.LicenseGuard
 +import io.github.phantom.gps.utils.LicenseStore
 +import io.github.phantom.gps.utils.PrefManager
-@@ -15,0 +25,2 @@ class App : Application() {
++import kotlinx.coroutines.CoroutineScope
++import kotlinx.coroutines.Dispatchers
++import timber.log.Timber
++
++lateinit var gsApp: App
++
++@HiltAndroidApp
++class App : Application() {
++    val globalScope = CoroutineScope(Dispatchers.Default)
 +    @Volatile
 +    private var currentActivity: Activity? = null
-@@ -27,0 +39,7 @@ class App : Application() {
++
++    companion object {
++        fun commonInit() {
++            if (BuildConfig.DEBUG) {
++                Timber.plant(Timber.DebugTree())
++            }
++        }
++    }
++
++    override fun onCreate() {
++        super.onCreate()
++        gsApp = this
 +
 +        // Basic anti-tamper: prevent repackaging/re-signing from working out of the box.
 +        if (!AppIntegrity.isSelfValid(this)) {
@@ -1765,7 +2034,8 @@ index d294f101d466f25ed88c308d01aa8155bb49050c..ae6fd695577275025971071472a371bd
 +            return
 +        }
 +
-@@ -29,0 +48,34 @@ class App : Application() {
++        commonInit()
++        AppCompatDelegate.setDefaultNightMode(PrefManager.darkTheme)
 +
 +        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
 +            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
@@ -1800,15 +2070,13 @@ index d294f101d466f25ed88c308d01aa8155bb49050c..ae6fd695577275025971071472a371bd
 +                LicenseGuard.onAppBackground()
 +            }
 +        })
-@@ -31 +83 @@ class App : Application() {
--}
-\ No newline at end of file
++    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/adapter/FavListAdapter.kt b/app/src/main/java/io/github/phantom/gps/adapter/FavListAdapter.kt
-similarity index 90%
+similarity index 93%
 rename from app/src/main/java/io/github/jqssun/gpssetter/adapter/FavListAdapter.kt
 rename to app/src/main/java/io/github/phantom/gps/adapter/FavListAdapter.kt
-index 6ed18914e2ef7929e89ece0e1ad832c1f4ecae88..57cdf865e732d79a2e75211ea36c9bdba2f9a314 100644
+index 1851614a8685de6a20ab36ffe57cb0399cb8256c..2e77b354c11afd37ef054fe4a05a664473b9f9cd 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/adapter/FavListAdapter.kt
 +++ b/app/src/main/java/io/github/phantom/gps/adapter/FavListAdapter.kt
 @@ -1 +1 @@
@@ -1824,10 +2092,10 @@ index 6ed18914e2ef7929e89ece0e1ad832c1f4ecae88..57cdf865e732d79a2e75211ea36c9bdb
 \ No newline at end of file
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/module/AppModule.kt b/app/src/main/java/io/github/phantom/gps/module/AppModule.kt
-similarity index 78%
+similarity index 81%
 rename from app/src/main/java/io/github/jqssun/gpssetter/module/AppModule.kt
 rename to app/src/main/java/io/github/phantom/gps/module/AppModule.kt
-index 494e1ef44c1a4ed5268c80fdba16b5cfbc257734..a8f6e101bd84bed5cd390d1e8d94a801546b2aea 100644
+index 130afc23460f09cc98fbff4e74758954a667f804..809c87380b8050d1dcdd97f8662efa73680f21bd 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/module/AppModule.kt
 +++ b/app/src/main/java/io/github/phantom/gps/module/AppModule.kt
 @@ -1 +1 @@
@@ -1851,10 +2119,10 @@ index 494e1ef44c1a4ed5268c80fdba16b5cfbc257734..a8f6e101bd84bed5cd390d1e8d94a801
 @@ -70,0 +72 @@ object AppModule{
 +
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/module/util/ScopeQualifiers.kt b/app/src/main/java/io/github/phantom/gps/module/util/ScopeQualifiers.kt
-similarity index 68%
+similarity index 71%
 rename from app/src/main/java/io/github/jqssun/gpssetter/module/util/ScopeQualifiers.kt
 rename to app/src/main/java/io/github/phantom/gps/module/util/ScopeQualifiers.kt
-index 034f9cd5587de04b454cd9e6ea0685f47c67ad2c..829bfdc2f913c46d5bc23362c969b78064e454f8 100644
+index c83a54ddf1817367d7d9f663450cac70f68185b1..90ed45fa64a5a08b818dba7b5da1271db1a8c324 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/module/util/ScopeQualifiers.kt
 +++ b/app/src/main/java/io/github/phantom/gps/module/util/ScopeQualifiers.kt
 @@ -1 +1 @@
@@ -1863,10 +2131,10 @@ index 034f9cd5587de04b454cd9e6ea0685f47c67ad2c..829bfdc2f913c46d5bc23362c969b780
 @@ -7,0 +8 @@ annotation class ApplicationScope
 +
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/repository/FavoriteRepository.kt b/app/src/main/java/io/github/phantom/gps/repository/FavoriteRepository.kt
-similarity index 80%
+similarity index 83%
 rename from app/src/main/java/io/github/jqssun/gpssetter/repository/FavoriteRepository.kt
 rename to app/src/main/java/io/github/phantom/gps/repository/FavoriteRepository.kt
-index 1d5434ff04e423a3efb187efdb7994f0ce60bd34..e4b5f34110472b536c878a76f10ae0718eeba1b8 100644
+index 01a774974d7ff290566d8d2378ba6b38a2d31fbe..9713c158dbdd5293323ce9440d35d7469b3819c2 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/repository/FavoriteRepository.kt
 +++ b/app/src/main/java/io/github/phantom/gps/repository/FavoriteRepository.kt
 @@ -1 +1 @@
@@ -1882,10 +2150,10 @@ index 1d5434ff04e423a3efb187efdb7994f0ce60bd34..e4b5f34110472b536c878a76f10ae071
 \ No newline at end of file
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/room/AppDatabase.kt b/app/src/main/java/io/github/phantom/gps/room/AppDatabase.kt
-similarity index 84%
+similarity index 86%
 rename from app/src/main/java/io/github/jqssun/gpssetter/room/AppDatabase.kt
 rename to app/src/main/java/io/github/phantom/gps/room/AppDatabase.kt
-index 2545186d3a2392d3472ea3e708a0a74e21ac4536..2069814a9c2c9d45624124f90b7d7d888ea8168a 100644
+index a61b7d364f5e96614b157fb3c47132c59fa51f07..06ad1e91524423b2a5e919b68f0cf1adc47a2e53 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/room/AppDatabase.kt
 +++ b/app/src/main/java/io/github/phantom/gps/room/AppDatabase.kt
 @@ -1 +1 @@
@@ -1899,10 +2167,10 @@ index 2545186d3a2392d3472ea3e708a0a74e21ac4536..2069814a9c2c9d45624124f90b7d7d88
 \ No newline at end of file
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/room/Favorite.kt b/app/src/main/java/io/github/phantom/gps/room/Favorite.kt
-similarity index 80%
+similarity index 84%
 rename from app/src/main/java/io/github/jqssun/gpssetter/room/Favorite.kt
 rename to app/src/main/java/io/github/phantom/gps/room/Favorite.kt
-index e86494d9d6a206ccded6767bd9eaec43af379a95..41fb1852106450242f5c316779634ee2291dbf1e 100644
+index 0a38c40b0de578d452b26f9d86bae833db8dd40a..a3a168a85633a505ba605b6a0b2729689cb4f24c 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/room/Favorite.kt
 +++ b/app/src/main/java/io/github/phantom/gps/room/Favorite.kt
 @@ -1 +1 @@
@@ -1913,10 +2181,10 @@ index e86494d9d6a206ccded6767bd9eaec43af379a95..41fb1852106450242f5c316779634ee2
 \ No newline at end of file
 +)
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/room/FavoriteDao.kt b/app/src/main/java/io/github/phantom/gps/room/FavoriteDao.kt
-similarity index 92%
+similarity index 95%
 rename from app/src/main/java/io/github/jqssun/gpssetter/room/FavoriteDao.kt
 rename to app/src/main/java/io/github/phantom/gps/room/FavoriteDao.kt
-index c16770ce7e17801977212f42727098a09b8ae126..8dbb037b48e59cc44c70052f70e69e725cd0a44f 100644
+index ccd4d0ba21f278802fd8009f7ddde16ab501efd0..618da30537d0fc9f0035945c65e6fdae1d048b1b 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/room/FavoriteDao.kt
 +++ b/app/src/main/java/io/github/phantom/gps/room/FavoriteDao.kt
 @@ -1 +1 @@
@@ -1928,116 +2196,85 @@ index c16770ce7e17801977212f42727098a09b8ae126..8dbb037b48e59cc44c70052f70e69e72
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..6006c1752a51692274e5640f618600b7a0bc5c35
+index 0000000000000000000000000000000000000000..6594a978eb0fa80c0d0d4ac139dca4865cd9643f
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,72 @@
 +package io.github.phantom.gps.ui
 +
 +import android.content.Intent
++import android.net.Uri
 +import android.os.Bundle
 +import android.view.View
-+import android.widget.Button
-+import android.widget.EditText
-+import android.widget.ProgressBar
-+import android.widget.TextView
-+import androidx.activity.OnBackPressedCallback
++import android.widget.*
 +import androidx.activity.viewModels
 +import androidx.appcompat.app.AppCompatActivity
++import io.github.phantom.gps.BuildConfig
 +import io.github.phantom.gps.R
-+import io.github.phantom.gps.utils.AppIntegrity
++import io.github.phantom.gps.utils.*
++import java.text.SimpleDateFormat
++import java.util.*
 +
-+class ActivationActivity : AppCompatActivity() {
-+    private lateinit var activationInput: EditText
-+    private lateinit var activateButton: Button
-+    private lateinit var progressBar: ProgressBar
-+    private lateinit var errorText: TextView
-+    private val model: ActivationViewModel by viewModels()
-+    private lateinit var statusText: TextView
-+    private lateinit var retryButton: Button
-+
-+    override fun onCreate(savedInstanceState: Bundle?) {
++/** Membership sign-in; no activation code input or legacy code submission. */
++class ActivationActivity:AppCompatActivity() {
++    private val model:MembershipLoginViewModel by viewModels()
++    override fun onCreate(savedInstanceState:Bundle?) {
 +        super.onCreate(savedInstanceState)
-+        if (!AppIntegrity.isSelfValid(this)) {
-+            finish()
-+            return
++        if(!AppIntegrity.isSelfValid(this)){finish();return}
++        setContentView(R.layout.activity_member_login)
++        val username=findViewById<EditText>(R.id.memberUsername)
++        val password=findViewById<EditText>(R.id.memberPassword)
++        val login=findViewById<Button>(R.id.memberLogin)
++        val progress=findViewById<ProgressBar>(R.id.memberProgress)
++        val error=findViewById<TextView>(R.id.memberError)
++        val status=findViewById<TextView>(R.id.memberStatus)
++        val logout=findViewById<Button>(R.id.memberLogout)
++        val rememberedStore=RememberedLoginStore(this)
++        val remember=findViewById<CheckBox>(R.id.memberRemember)
++        val forget=findViewById<Button>(R.id.memberForget)
++        remember.isChecked=rememberedStore.isEnabled()
++        val remembered=rememberedStore.read()
++        if(savedInstanceState==null){
++            username.setText(remembered?.username?:MembershipAccount.username(this))
++            if(remembered!=null)password.setText(remembered.password)
 +        }
-+
-+        setContentView(R.layout.activity_activation)
-+        activationInput = findViewById(R.id.activationCodeInput)
-+        activateButton = findViewById(R.id.activateButton)
-+        progressBar = findViewById(R.id.activationProgress)
-+        errorText = findViewById(R.id.activationError)
-+        statusText = findViewById(R.id.activationStatus)
-+        retryButton = findViewById(R.id.retryVerificationButton)
-+        prefillActivationCodeFromIntent()
-+
-+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-+            override fun handleOnBackPressed() {
-+                finishAffinity()
-+            }
-+        })
-+
-+        activateButton.setOnClickListener {
-+            model.submit(activationInput.text?.toString().orEmpty())
++        forget.visibility=if(remembered!=null)View.VISIBLE else View.GONE
++        remember.setOnCheckedChangeListener {_,checked->
++            runCatching{rememberedStore.setEnabled(checked)}.onFailure{Toast.makeText(this,"บันทึกตัวเลือกไม่สำเร็จ กรุณาลองใหม่",Toast.LENGTH_LONG).show()}
++            if(!checked)forget.visibility=View.GONE
 +        }
-+        retryButton.setOnClickListener { model.retryVerification() }
-+        model.uiState.observe(this) { state ->
-+            render(state)
-+            when (state.mode) {
-+                ActivationMode.OPEN_MAIN -> openMainAndFinish()
-+                ActivationMode.OPEN_LOCKED -> openLockedAndFinish()
-+                else -> Unit
-+            }
++        forget.setOnClickListener {
++            runCatching{rememberedStore.forget()}.onSuccess{remember.isChecked=false;username.text?.clear();password.text?.clear();forget.visibility=View.GONE}
++                .onFailure{Toast.makeText(this,"ลืมบัญชีไม่สำเร็จ กรุณาลองใหม่",Toast.LENGTH_LONG).show()}
 +        }
-+    }
-+
-+    private fun render(state: ActivationUiState) {
-+        activationInput.visibility = if (state.showForm) View.VISIBLE else View.GONE
-+        findViewById<View>(R.id.activationSubtitle).visibility = if (state.showForm) View.VISIBLE else View.GONE
-+        activationInput.isEnabled = state.canSubmit
-+        activateButton.visibility = if (state.canSubmit) View.VISIBLE else View.GONE
-+        activateButton.isEnabled = state.canSubmit
-+        progressBar.visibility = if (state.isBusy) View.VISIBLE else View.GONE
-+        retryButton.visibility = if (state.canRetryVerification) View.VISIBLE else View.GONE
-+        retryButton.isEnabled = state.canRetryVerification
-+        statusText.visibility = if (state.isBusy) View.VISIBLE else View.GONE
-+        statusText.setText(if (state.mode == ActivationMode.SUBMITTING) R.string.activation_submitting else R.string.activation_checking)
-+        errorText.text = state.error.orEmpty()
-+        errorText.visibility = if (state.error.isNullOrBlank()) View.GONE else View.VISIBLE
-+    }
-+
-+    private fun openMainAndFinish() {
-+        startActivity(
-+            Intent(this, MapActivity::class.java).apply {
-+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-+            }
-+        )
-+        finish()
-+    }
-+
-+    private fun openLockedAndFinish() {
-+        startActivity(Intent(this, LockedActivity::class.java))
-+        finish()
-+    }
-+
-+    private fun prefillActivationCodeFromIntent() {
-+        val providedCode = intent?.getStringExtra(EXTRA_ACTIVATION_CODE)?.trim().orEmpty()
-+        if (providedCode.isBlank()) {
-+            return
++        val showAccount=intent.getBooleanExtra("show_account",false)
++        if(MembershipAccount.isSignedIn(this)) {
++            val expiry=SimpleDateFormat("d MMM yyyy HH:mm",Locale("th","TH")).format(Date(MembershipAccount.expiresAt(this)))
++            status.text="บัญชี ${MembershipAccount.username(this)}\nใช้ได้ถึง $expiry"
++            logout.visibility=View.VISIBLE
 +        }
-+        activationInput.setText(providedCode)
-+        activationInput.setSelection(providedCode.length)
++        logout.setOnClickListener {
++            if(runCatching{rememberedStore.forget()}.isFailure){Toast.makeText(this,"ลืมบัญชีไม่สำเร็จ กรุณาลองใหม่",Toast.LENGTH_LONG).show();return@setOnClickListener}
++            LicenseGuard.clearLicenseAndDeactivate(this);recreate()
++        }
++        findViewById<Button>(R.id.memberRegister).setOnClickListener {
++            runCatching{startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(BuildConfig.PUBLIC_SITE_BASE_URL+"register.html")))}
++        }
++        login.setOnClickListener {model.login(username.text.toString(),password.text.toString(),remember.isChecked)}
++        model.uiState.observe(this){s->
++            progress.visibility=if(s.busy)View.VISIBLE else View.GONE
++            login.visibility=if(s.busy)View.GONE else View.VISIBLE
++            username.isEnabled=!s.busy;password.isEnabled=!s.busy;logout.isEnabled=!s.busy;remember.isEnabled=!s.busy;forget.isEnabled=!s.busy
++            error.text=s.error;error.visibility=if(s.error.isEmpty())View.GONE else View.VISIBLE
++            if(s.success){password.text?.clear();if(s.notice.isNotBlank())Toast.makeText(this,s.notice,Toast.LENGTH_LONG).show();startActivity(Intent(this,MapActivity::class.java));finish()}
++        }
++        if(!showAccount)model.checkExisting()
 +    }
-+
-+    companion object {
-+        const val EXTRA_ACTIVATION_CODE = "io.github.phantom.gps.extra.ACTIVATION_CODE"
-+    }
++    companion object {const val EXTRA_ACTIVATION_CODE="io.github.phantom.gps.extra.ACTIVATION_CODE"}
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationUiState.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationUiState.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..179580301505bbe5a60c6ea9038677056a7b09dd
+index 0000000000000000000000000000000000000000..923a2e32dd8e5d073d2d6cbabde23b3b6379783f
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/ActivationUiState.kt
 @@ -0,0 +1,10 @@
@@ -2053,7 +2290,7 @@ index 0000000000000000000000000000000000000000..179580301505bbe5a60c6ea903867705
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationViewModel.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationViewModel.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..e2615b43b5bc4b313ec52347eca11455ab5bcd3b
+index 0000000000000000000000000000000000000000..93a7599c72678d96d94be268647e3dc762fcac30
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/ActivationViewModel.kt
 @@ -0,0 +1,52 @@
@@ -2110,10 +2347,10 @@ index 0000000000000000000000000000000000000000..e2615b43b5bc4b313ec52347eca11455
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-similarity index 66%
+similarity index 68%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-index 577a2ff924611c8e7921f06062a9208f111424e5..3dc215bdce749e5e35c05391ec398a72251a2046 100644
+index 84f61ea4a62c3086df23447da30a593cddcd347a..638b86ebfff2fa948bfa4f577d63890331af6f65 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
 @@ -1 +1 @@
@@ -2389,10 +2626,10 @@ index 577a2ff924611c8e7921f06062a9208f111424e5..3dc215bdce749e5e35c05391ec398a72
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..824965e1a16f3105839fe4304f87745fc34695c7
+index 0000000000000000000000000000000000000000..3ac4755c3fedfb79a43c4ee788e0d9b10057685a
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,77 @@
 +package io.github.phantom.gps.ui
 +
 +import android.content.Intent
@@ -2421,6 +2658,7 @@ index 0000000000000000000000000000000000000000..824965e1a16f3105839fe4304f87745f
 +        retryButton = findViewById(R.id.lockedRetryButton)
 +        reactivateButton = findViewById(R.id.lockedReactivateButton)
 +        progressBar = findViewById(R.id.lockedProgress)
++        reactivateButton.text = "เข้าสู่ระบบใหม่"
 +        bindState()
 +
 +        retryButton.setOnClickListener {
@@ -2460,7 +2698,7 @@ index 0000000000000000000000000000000000000000..824965e1a16f3105839fe4304f87745f
 +                append(LicenseGuard.getUserFacingReason(this@LockedActivity, reason))
 +            }
 +        }
-+        retryButton.visibility = if (LicenseStore.isLockRetryable(this)) View.VISIBLE else View.GONE
++        retryButton.visibility = View.VISIBLE
 +    }
 +
 +    private fun setLoading(loading: Boolean) {
@@ -2471,7 +2709,7 @@ index 0000000000000000000000000000000000000000..824965e1a16f3105839fe4304f87745f
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/LoginActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/LoginActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..bc35831b0a24a70ef37a936bb9814a4a12195b01
+index 0000000000000000000000000000000000000000..610e33609a6781da93f0f89994e8dadcd98cfff0
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/LoginActivity.kt
 @@ -0,0 +1,18 @@
@@ -2493,11 +2731,50 @@ index 0000000000000000000000000000000000000000..bc35831b0a24a70ef37a936bb9814a4a
 +        const val EXTRA_ALLOW_LOCKED_LOGIN = "allow_locked_login"
 +    }
 +}
+diff --git a/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt b/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..2be9abb9b4d4c2f798163c10b4a60c7c0ab26c9d
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt
+@@ -0,0 +1,33 @@
++package io.github.phantom.gps.ui
++
++import android.app.Application
++import androidx.lifecycle.*
++import io.github.phantom.gps.utils.*
++import kotlinx.coroutines.launch
++
++class MembershipLoginViewModel(app:Application):AndroidViewModel(app) {
++    data class State(val busy:Boolean=false,val success:Boolean=false,val error:String="",val notice:String="")
++    private val state=MutableLiveData(State())
++    val uiState:LiveData<State> = state
++    private var checked=false
++    fun checkExisting() {
++        if(checked)return;checked=true
++        if(!MembershipAccount.isSignedIn(getApplication()))return
++        state.value=State(busy=true)
++        LicenseGuard.verifyNowForeground(getApplication()){ok->state.value=State(success=ok,error=if(ok)"" else "ตรวจสิทธิ์ไม่สำเร็จ กรุณาลองใหม่หรือเข้าสู่ระบบอีกครั้ง")}
++    }
++    fun login(username:String,password:String,remember:Boolean) {
++        if(state.value?.busy==true)return
++        if(username.isBlank()||password.isBlank()){state.value=State(error="กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");return}
++        state.value=State(busy=true)
++        viewModelScope.launch {
++            try{
++                MembershipAccount.login(getApplication(),username,password)
++                val remembered=runCatching{RememberedLoginStore(getApplication()).save(username,password,remember)}.isSuccess
++                LicenseGuard.startHeartbeat(getApplication())
++                state.value=State(success=true,notice=if(remembered)"" else "เข้าสู่ระบบสำเร็จ แต่จดจำบัญชีไม่สำเร็จ กรุณาลองเปิดตัวเลือกนี้ใหม่ภายหลัง")
++            }
++            catch(e:Exception){if(e is kotlinx.coroutines.CancellationException)throw e;state.value=State(error=MembershipAccount.message(e))}
++        }
++    }
++}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/SettingsActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
 similarity index 54%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/SettingsActivity.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
-index ef5cc1142f6836d8dc10a94c295f4096e32b8856..69dba88d08b9744b5f944fa5bb21b35787caebc5 100644
+index a3978b5aeb563f95777555c8be9cdb73dfaef0fa..f78bc519a5232a83d272f475f1e95bbf254e43af 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/SettingsActivity.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
 @@ -1 +1 @@
@@ -2603,7 +2880,12 @@ index ef5cc1142f6836d8dc10a94c295f4096e32b8856..69dba88d08b9744b5f944fa5bb21b357
 +                true
 +            }
 +
-@@ -143,0 +223,23 @@ class ActivitySettings : AppCompatActivity() {
+@@ -143,0 +223,28 @@ class ActivitySettings : AppCompatActivity() {
++            findPreference<Preference>("membership_account")?.setOnPreferenceClickListener {
++                startActivity(Intent(requireContext(), ActivationActivity::class.java).putExtra("show_account", true))
++                true
++            }
++
 +            findPreference<EditTextPreference>("random_radius_meters")?.let {
 +                it.summary = "${PrefManager.randomRadiusMeters} m"
 +                it.setOnBindEditTextListener { editText ->
@@ -2627,7 +2909,7 @@ index ef5cc1142f6836d8dc10a94c295f4096e32b8856..69dba88d08b9744b5f944fa5bb21b357
 +                }
 +            }
 +
-@@ -168,0 +271,14 @@ class ActivitySettings : AppCompatActivity() {
+@@ -168,0 +276,14 @@ class ActivitySettings : AppCompatActivity() {
 +
 +            findPreference<Preference>("clipboard_monitor_enabled")?.let { pref ->
 +                pref.setOnPreferenceChangeListener { _, newValue ->
@@ -2642,19 +2924,19 @@ index ef5cc1142f6836d8dc10a94c295f4096e32b8856..69dba88d08b9744b5f944fa5bb21b357
 +                    true
 +                }
 +            }
-@@ -175 +291 @@ class ActivitySettings : AppCompatActivity() {
+@@ -175 +296 @@ class ActivitySettings : AppCompatActivity() {
 -                if ("io.github.jqssun.gpssetter.utils.JoystickService" == service.service.className) {
 +                if ("io.github.phantom.gps.utils.JoystickService" == service.service.className) {
-@@ -221 +337,2 @@ class ActivitySettings : AppCompatActivity() {
+@@ -221 +342,2 @@ class ActivitySettings : AppCompatActivity() {
 -}
 \ No newline at end of file
 +}
 +
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/viewmodel/MainViewModel.kt b/app/src/main/java/io/github/phantom/gps/ui/viewmodel/MainViewModel.kt
-similarity index 89%
+similarity index 92%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/viewmodel/MainViewModel.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/viewmodel/MainViewModel.kt
-index 28452396b9bc3c2da3e71d71bb03cb3b7929cddb..9418f7f2c9ac5674da11a6cdf06a5e604bcb3e85 100644
+index 8bcaae6eb80464f7cc45d0783e17978ebcbff22b..0143536d9f2331079ddc48849c839fa1537cd48b 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/viewmodel/MainViewModel.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/viewmodel/MainViewModel.kt
 @@ -1 +1 @@
@@ -2695,10 +2977,10 @@ index 28452396b9bc3c2da3e71d71bb03cb3b7929cddb..9418f7f2c9ac5674da11a6cdf06a5e60
 \ No newline at end of file
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/update/GitHubRelease.kt b/app/src/main/java/io/github/phantom/gps/update/GitHubRelease.kt
-similarity index 83%
+similarity index 88%
 rename from app/src/main/java/io/github/jqssun/gpssetter/update/GitHubRelease.kt
 rename to app/src/main/java/io/github/phantom/gps/update/GitHubRelease.kt
-index 9e1ffd4fbf86be29eaab21803d92aa47c9d76bb2..da3479d9ad79900140ee6006ab788ebf549099d3 100644
+index b0fcbc22a45f599f97f13978569f858e09e8650f..8b24efdca00671af3e4d9659f1a3c93b75046121 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/update/GitHubRelease.kt
 +++ b/app/src/main/java/io/github/phantom/gps/update/GitHubRelease.kt
 @@ -1 +1 @@
@@ -2714,10 +2996,10 @@ index 9e1ffd4fbf86be29eaab21803d92aa47c9d76bb2..da3479d9ad79900140ee6006ab788ebf
 \ No newline at end of file
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/update/GitHubService.kt b/app/src/main/java/io/github/phantom/gps/update/GitHubService.kt
-similarity index 73%
+similarity index 78%
 rename from app/src/main/java/io/github/jqssun/gpssetter/update/GitHubService.kt
 rename to app/src/main/java/io/github/phantom/gps/update/GitHubService.kt
-index e4e1cbaee6ca7025c51784d094f9f66106c67225..67be9e81736086179d7c1f8e5e1eaa9772bbac32 100644
+index 9dabcefd91fb4d98a39cc3ea55665aa44276f3e7..d2d87965b40c02fa248880c40251ceb9e91951c2 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/update/GitHubService.kt
 +++ b/app/src/main/java/io/github/phantom/gps/update/GitHubService.kt
 @@ -1 +1 @@
@@ -2727,7 +3009,7 @@ index e4e1cbaee6ca7025c51784d094f9f66106c67225..67be9e81736086179d7c1f8e5e1eaa97
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/update/PublicRelease.kt b/app/src/main/java/io/github/phantom/gps/update/PublicRelease.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..8ce12bfc7bcb15ed2411bfd6b31d51dc39e4e575
+index 0000000000000000000000000000000000000000..45e6db6270f92f863f70ad6c8e8c6c4950dce9f1
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/update/PublicRelease.kt
 @@ -0,0 +1,33 @@
@@ -2766,7 +3048,7 @@ index 0000000000000000000000000000000000000000..8ce12bfc7bcb15ed2411bfd6b31d51dc
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/update/UpdateChecker.kt b/app/src/main/java/io/github/phantom/gps/update/UpdateChecker.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..2298499b52c165db7122e0a3b681183d66572eb6
+index 0000000000000000000000000000000000000000..60504e7ca380522c2a39bb2a686e2520bc5a070d
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/update/UpdateChecker.kt
 @@ -0,0 +1,65 @@
@@ -2821,7 +3103,7 @@ index 0000000000000000000000000000000000000000..2298499b52c165db7122e0a3b681183d
 +            val release = Gson().fromJson(bytes.toString(Charsets.UTF_8), PublicRelease::class.java)
 +            require(release.isValid()) { "Invalid release metadata" }
 +            if (!release.isNewerThan(BuildConfig.VERSION_CODE, BuildConfig.TAG_NAME)) return@withContext null
-+            Update("PHANToM GPS ${release.version}", release.changes.joinToString("\n") { "• $it" },
++            Update("GeoX ${release.version}", release.changes.joinToString("\n") { "• $it" },
 +                release.publishedAt, BuildConfig.PUBLIC_SITE_BASE_URL + "downloads/" + release.filename,
 +                release.filename, BuildConfig.PUBLIC_SITE_BASE_URL + "download.html", release.version)
 +        } finally { connection.disconnect() }
@@ -2837,7 +3119,7 @@ index 0000000000000000000000000000000000000000..2298499b52c165db7122e0a3b681183d
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/update/UpdateNotifier.kt b/app/src/main/java/io/github/phantom/gps/update/UpdateNotifier.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..bc1b5f40d25c61d70b17365a010105510d0fb29d
+index 0000000000000000000000000000000000000000..387976e64b073343e702d14db85f8fd888643a74
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/update/UpdateNotifier.kt
 @@ -0,0 +1,34 @@
@@ -2862,14 +3144,14 @@ index 0000000000000000000000000000000000000000..bc1b5f40d25c61d70b17365a01010551
 +        if (!manager.areNotificationsEnabled()) return
 +        val prefs = context.getSharedPreferences("public_updates", Context.MODE_PRIVATE)
 +        if (prefs.getString("announced", "") == update.version) return
-+        manager.createNotificationChannel(NotificationChannel(CHANNEL, "อัปเดต PHANToM GPS", NotificationManager.IMPORTANCE_DEFAULT))
++        manager.createNotificationChannel(NotificationChannel(CHANNEL, "อัปเดต GeoX", NotificationManager.IMPORTANCE_DEFAULT))
 +        if (manager.getNotificationChannel(CHANNEL)?.importance == NotificationManager.IMPORTANCE_NONE) return
 +        val intent = PendingIntent.getActivity(context, ID,
 +            Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PUBLIC_SITE_BASE_URL + "download.html")),
 +            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 +        runCatching {
 +            manager.notify(ID, NotificationCompat.Builder(context, CHANNEL).setSmallIcon(R.drawable.ic_update)
-+                .setContentTitle("PHANToM GPS มีอัปเดตใหม่").setContentText("${update.version} · แตะเพื่อดาวน์โหลด")
++                .setContentTitle("GeoX มีอัปเดตใหม่").setContentText("${update.version} · แตะเพื่อดาวน์โหลด")
 +                .setContentIntent(intent).setAutoCancel(true).addAction(R.drawable.ic_update, "ดาวน์โหลด", intent).build())
 +            prefs.edit().putString("announced", update.version).apply()
 +        }
@@ -2877,15 +3159,17 @@ index 0000000000000000000000000000000000000000..bc1b5f40d25c61d70b17365a01010551
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/AppIntegrity.kt b/app/src/main/java/io/github/phantom/gps/utils/AppIntegrity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..cfa565a06ce2d75bae970b23a1ab3992e2c6e3fd
+index 0000000000000000000000000000000000000000..b3b5a40e9a7c5ff2c73457b4e4339701abab98d9
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/AppIntegrity.kt
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,113 @@
 +package io.github.phantom.gps.utils
 +
 +import android.content.Context
++import android.content.pm.ApplicationInfo
 +import android.content.pm.PackageManager
 +import android.os.Build
++import android.os.SystemClock
 +import io.github.phantom.gps.BuildConfig
 +import java.security.MessageDigest
 +import java.util.Locale
@@ -2894,6 +3178,7 @@ index 0000000000000000000000000000000000000000..cfa565a06ce2d75bae970b23a1ab3992
 +
 +    @Volatile
 +    private var cachedModuleValid: Boolean? = null
++    @Volatile private var selfVerifiedAt = -15000L
 +
 +    /**
 +     * Validates that the installed module APK is signed with the expected certificate (BuildConfig).
@@ -2926,18 +3211,25 @@ index 0000000000000000000000000000000000000000..cfa565a06ce2d75bae970b23a1ab3992
 +        val pkg = context.packageName
 +        val appPkg = runCatching { context.applicationContext.packageName }.getOrNull()
 +        if (pkg != BuildConfig.APPLICATION_ID && appPkg != BuildConfig.APPLICATION_ID) return false
-+        return isModuleApkValid(context)
++        if (!BuildConfig.DEBUG && context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) return false
++        val now = SystemClock.elapsedRealtime()
++        if (now - selfVerifiedAt in 0 until 15000) return true
++        // The app can inspect its own package: uncertainty must not authorize critical actions.
++        val valid = runCatching {
++            verifyInstalledPackageSignature(context.applicationContext, BuildConfig.APPLICATION_ID) == true
++        }.getOrDefault(false)
++        if (valid) selfVerifiedAt = now
++        return valid
 +    }
 +
 +    private fun verifyInstalledPackageSignature(context: Context, packageName: String): Boolean? {
 +        val expected = normalizeHex(BuildConfig.SIGNING_CERT_SHA256)
 +        if (expected.isBlank()) {
-+            // No configured cert (e.g., no signing config available). Don't brick the app.
-+            return true
++            return false
 +        }
 +        val actual = getPackageCertSha256s(context, packageName)
 +        if (actual.isEmpty()) return null // unknown
-+        return actual.any { normalizeHex(it) == expected }
++        return SigningPolicy.matches(expected, actual)
 +    }
 +
 +    private fun getPackageCertSha256s(context: Context, packageName: String): Set<String> {
@@ -2952,11 +3244,7 @@ index 0000000000000000000000000000000000000000..cfa565a06ce2d75bae970b23a1ab3992
 +
 +        val signatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
 +            val signingInfo = info.signingInfo ?: return emptySet()
-+            if (signingInfo.hasMultipleSigners()) {
-+                signingInfo.apkContentsSigners
-+            } else {
-+                signingInfo.signingCertificateHistory
-+            }
++            signingInfo.apkContentsSigners
 +        } else {
 +            @Suppress("DEPRECATION")
 +            info.signatures
@@ -2990,7 +3278,7 @@ index 0000000000000000000000000000000000000000..cfa565a06ce2d75bae970b23a1ab3992
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/BootReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/BootReceiver.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..e586e510a414f462e60734a267b3547997ed0f76
+index 0000000000000000000000000000000000000000..15b52f72a353df4d709b60a4c43ea362b40ebe1b
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/BootReceiver.kt
 @@ -0,0 +1,22 @@
@@ -3018,7 +3306,7 @@ index 0000000000000000000000000000000000000000..e586e510a414f462e60734a267b35479
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardEventGate.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardEventGate.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..4eafeb4e76181833e6b857eda0b971a6c9b865c1
+index 0000000000000000000000000000000000000000..9470fbc8f8b659462d5c7c7707c8a4a67eb59380
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardEventGate.kt
 @@ -0,0 +1,13 @@
@@ -3037,7 +3325,7 @@ index 0000000000000000000000000000000000000000..4eafeb4e76181833e6b857eda0b971a6
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardFormats.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardFormats.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..8e0c3f2bf3284fe5c4415f052a8137574e283d95
+index 0000000000000000000000000000000000000000..766793b659dfbc0dc421a79a6a181e512f0f2b64
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardFormats.kt
 @@ -0,0 +1,34 @@
@@ -3077,7 +3365,7 @@ index 0000000000000000000000000000000000000000..8e0c3f2bf3284fe5c4415f052a813757
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardLocationReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardLocationReceiver.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..b6fd2f41faef6d2ba6a8b1447805e30829ca967b
+index 0000000000000000000000000000000000000000..b36b24ba80240d7ef707363b996091e944056a03
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardLocationReceiver.kt
 @@ -0,0 +1,695 @@
@@ -3778,7 +4066,7 @@ index 0000000000000000000000000000000000000000..b6fd2f41faef6d2ba6a8b1447805e308
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardMonitorService.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardMonitorService.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..3dbd821da667d177e60cee10a4eac3a03fb3ce4c
+index 0000000000000000000000000000000000000000..b7eb5b1b482237fad40bda0c6f5fddf89682807c
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardMonitorService.kt
 @@ -0,0 +1,107 @@
@@ -3891,7 +4179,7 @@ index 0000000000000000000000000000000000000000..3dbd821da667d177e60cee10a4eac3a0
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ClipboardTrace.kt b/app/src/main/java/io/github/phantom/gps/utils/ClipboardTrace.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..3e79a0b471c85b2566acd1d0111984c789e0af5d
+index 0000000000000000000000000000000000000000..fec8135e6c6b811f18718daf525ad7ba107951a9
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ClipboardTrace.kt
 @@ -0,0 +1,20 @@
@@ -3915,9 +4203,28 @@ index 0000000000000000000000000000000000000000..3e79a0b471c85b2566acd1d0111984c7
 +        }
 +    }
 +}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/DeviceProof.kt b/app/src/main/java/io/github/phantom/gps/utils/DeviceProof.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..e05709d616ab341f17e90c12e1f4ee30dba62357
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/DeviceProof.kt
+@@ -0,0 +1,13 @@
++package io.github.phantom.gps.utils
++
++/** Canonical P-256 challenge text, bound to account, action, session and timing. */
++object DeviceProof {
++    fun message(uid:String,operation:String,challengeId:String,nonce:String,deviceId:String,boot:Int,elapsed:Long,session:String):String {
++        require(uid.isNotEmpty() && uid.length<=128 && !uid.contains('\n') && !uid.contains('\r'))
++        require(operation=="open" || operation=="renew")
++        require(challengeId.matches(Regex("[a-f0-9]{32}")) && nonce.matches(Regex("[A-Za-z0-9_-]{43}")))
++        require(deviceId.matches(Regex("[a-f0-9]{64}")) && boot>=0 && elapsed>=0)
++        require(session.length<=128 && !session.contains('\n') && !session.contains('\r'))
++        return listOf("PHANTOM-DEVICE-PROOF","1",uid,operation,challengeId,nonce,deviceId,boot.toString(),elapsed.toString(),session,"io.github.phantom.gps").joinToString("\n")
++    }
++}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/DirectLocationEngine.kt b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationEngine.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..ce171505201c7a32af90579da0bb3c3b38f903ba
+index 0000000000000000000000000000000000000000..fbd8c1d5f3d69455077b0806ebee99b426125946
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationEngine.kt
 @@ -0,0 +1,107 @@
@@ -3953,7 +4260,7 @@ index 0000000000000000000000000000000000000000..ce171505201c7a32af90579da0bb3c3b
 +                if (!allowed() || !isLatest()) { result.send(DirectLocationProtocol.SUPERSEDED, "SUPERSEDED"); return@execute }
 +                if (!AppIntegrity.isSelfValid(app)) { result.send(DirectLocationProtocol.APPLY_FAILED, "INTEGRITY_FAILED"); return@execute }
 +                if (LicenseStore.isLocked(app)) { result.send(DirectLocationProtocol.LICENSE_LOCKED, "LICENSE_LOCKED"); return@execute }
-+                if (!LicenseStore.isActivated(app)) { result.send(DirectLocationProtocol.LICENSE_REQUIRED, "LICENSE_REQUIRED"); return@execute }
++                if (!LicenseGuard.isLocallyAllowedForCriticalAction(app)) { result.send(DirectLocationProtocol.LICENSE_REQUIRED, "LICENSE_REQUIRED"); return@execute }
 +                val old = history.find(id)
 +                if (old != null && old != request) { result.send(DirectLocationProtocol.INVALID_REQUEST, "REQUEST_ID_REUSED"); return@execute }
 +                if (old == request) {
@@ -4030,7 +4337,7 @@ index 0000000000000000000000000000000000000000..ce171505201c7a32af90579da0bb3c3b
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/DirectLocationProtocol.kt b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationProtocol.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..99990593afae9ad92c73a9265b8e3c989e325fec
+index 0000000000000000000000000000000000000000..151f66490356412525cf3f0b4b57a111f5fb9ae9
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationProtocol.kt
 @@ -0,0 +1,39 @@
@@ -4075,7 +4382,7 @@ index 0000000000000000000000000000000000000000..99990593afae9ad92c73a9265b8e3c98
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/DirectLocationReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationReceiver.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..baf4e1eb53f01c446e99c815debe6b7f1212a875
+index 0000000000000000000000000000000000000000..5e1a67f673e6a4b3ff5dbd2fe9b0f64c9175e5e5
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/DirectLocationReceiver.kt
 @@ -0,0 +1,24 @@
@@ -4105,7 +4412,7 @@ index 0000000000000000000000000000000000000000..baf4e1eb53f01c446e99c815debe6b7f
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/DirectRequestQueue.kt b/app/src/main/java/io/github/phantom/gps/utils/DirectRequestQueue.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..2fdc9fe6f00653c8d510a842f53183525d8a7e5b
+index 0000000000000000000000000000000000000000..0fe19b4e5b2bfae0f819c4fa9344f6e378bcd926
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/DirectRequestQueue.kt
 @@ -0,0 +1,22 @@
@@ -4133,7 +4440,7 @@ index 0000000000000000000000000000000000000000..2fdc9fe6f00653c8d510a842f5318352
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/FullLockRelayService.kt b/app/src/main/java/io/github/phantom/gps/utils/FullLockRelayService.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..46da9407e150d64cef686db11ccea1292f233751
+index 0000000000000000000000000000000000000000..42ce859b0e1eea7e93ba5dfd077e41edc1c73584
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/FullLockRelayService.kt
 @@ -0,0 +1,96 @@
@@ -4235,7 +4542,7 @@ index 0000000000000000000000000000000000000000..46da9407e150d64cef686db11ccea129
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/HookLocationSnapshot.kt b/app/src/main/java/io/github/phantom/gps/utils/HookLocationSnapshot.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..8f4b300c19a9cef942a3fcd1628d4025f96dc439
+index 0000000000000000000000000000000000000000..c0fcf9cb72d803a3be64e3c0222b0134228a0484
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/HookLocationSnapshot.kt
 @@ -0,0 +1,24 @@
@@ -4264,10 +4571,10 @@ index 0000000000000000000000000000000000000000..8f4b300c19a9cef942a3fcd1628d4025
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/JoystickService.kt b/app/src/main/java/io/github/phantom/gps/utils/JoystickService.kt
-similarity index 95%
+similarity index 97%
 rename from app/src/main/java/io/github/jqssun/gpssetter/utils/JoystickService.kt
 rename to app/src/main/java/io/github/phantom/gps/utils/JoystickService.kt
-index 5c510b33fd52021a2a1e5cfa4954251430ccfabc..59505676b1fdb3cf667fcc26c37217d4fc04f6a2 100644
+index 3469a535a96c92ce50ff87e204c37c00f1b7d603..35ca3e5067b50eb185632733af6a8db1d7b5f6f3 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/utils/JoystickService.kt
 +++ b/app/src/main/java/io/github/phantom/gps/utils/JoystickService.kt
 @@ -1 +1 @@
@@ -4282,7 +4589,7 @@ index 5c510b33fd52021a2a1e5cfa4954251430ccfabc..59505676b1fdb3cf667fcc26c37217d4
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/LocationActions.kt b/app/src/main/java/io/github/phantom/gps/utils/LocationActions.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..e7354df3e942d2233e4deb3ba4a7ccd8d15e3f40
+index 0000000000000000000000000000000000000000..9b8ee376ca5a8a19d53be2273822b69a0a2ee897
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/LocationActions.kt
 @@ -0,0 +1,21 @@
@@ -4309,7 +4616,7 @@ index 0000000000000000000000000000000000000000..e7354df3e942d2233e4deb3ba4a7ccd8
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt b/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..37446518a3cd35738cc7e33f558c81b87ed23c0a
+index 0000000000000000000000000000000000000000..2cf7844f0024d2e3c20fbefbe7018ab5e67d1c64
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt
 @@ -0,0 +1,75 @@
@@ -4390,7 +4697,7 @@ index 0000000000000000000000000000000000000000..37446518a3cd35738cc7e33f558c81b8
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/LocationRefresh.kt b/app/src/main/java/io/github/phantom/gps/utils/LocationRefresh.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..b838cbacb2ffa507e512543adf8a67619121cf09
+index 0000000000000000000000000000000000000000..42bffaca9e487e7485b15d0a62ab926f1374303b
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/LocationRefresh.kt
 @@ -0,0 +1,38 @@
@@ -4432,9 +4739,79 @@ index 0000000000000000000000000000000000000000..b838cbacb2ffa507e512543adf8a6761
 +        }
 +    }
 +}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/MembershipLease.kt b/app/src/main/java/io/github/phantom/gps/utils/MembershipLease.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..301e60e1dbcd4cbe72d09f10fe90cd9ef944db65
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/MembershipLease.kt
+@@ -0,0 +1,18 @@
++package io.github.phantom.gps.utils
++
++import android.content.Context
++import android.os.SystemClock
++import android.provider.Settings
++import io.github.phantom.gps.BuildConfig
++
++object MembershipLease {
++    val verifier by lazy { MembershipLeaseVerifier(BuildConfig.MEMBERSHIP_PUBLIC_KEY) }
++    @Volatile var hookBootCount = -1
++    @Volatile private var cachedBootCount = -1
++    fun bootCount(context: Context): Int {
++        if(cachedBootCount >= 0) return cachedBootCount
++        return runCatching { Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT) }.getOrDefault(-1).also { if(it >= 0) cachedBootCount = it }
++    }
++    fun valid(context: Context): Boolean = verifier.isValid(PrefManager.membershipLease, System.currentTimeMillis(), SystemClock.elapsedRealtime(), bootCount(context), DeviceIdProvider.getDeviceId())
++    fun hookValid(token: String): Boolean = verifier.isValid(token, System.currentTimeMillis(), SystemClock.elapsedRealtime(), hookBootCount)
++}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/MembershipLeaseVerifier.kt b/app/src/main/java/io/github/phantom/gps/utils/MembershipLeaseVerifier.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..05183b3c834ac6bd7e268fdf6e046ac81aa0e56d
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/MembershipLeaseVerifier.kt
+@@ -0,0 +1,40 @@
++package io.github.phantom.gps.utils
++
++import androidx.annotation.Keep
++import com.google.gson.Gson
++import java.security.KeyFactory
++import java.security.Signature
++import java.security.spec.X509EncodedKeySpec
++import java.util.Base64
++
++@Keep data class MembershipLeasePayload(val v: Int = 0, val kid: String = "", val uid: String = "", val session: String = "",
++    val device: String = "", val issuedAt: Long = 0, val expiresAt: Long = 0, val membershipExpiresAt: Long = 0,
++    val boot: Int = -1, val anchor: Long = -1, val audience: String = "")
++
++/** A signed capability, not an auth token. No network and no secrets in the Hook. */
++class MembershipLeaseVerifier(publicKey: String) {
++    private val key = KeyFactory.getInstance("RSA").generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode(publicKey)))
++    private var lastToken = ""
++    private var lastPayload: MembershipLeasePayload? = null
++    @Synchronized fun inspect(token: String): MembershipLeasePayload? {
++        if (token == lastToken) return lastPayload
++        val parsed = runCatching {
++            require(token.length in 100..8192)
++            val parts = token.split('.'); require(parts.size == 2)
++            val signature = Signature.getInstance("SHA256withRSA").apply { initVerify(key); update(parts[0].toByteArray(Charsets.US_ASCII)) }
++            require(signature.verify(Base64.getUrlDecoder().decode(parts[1])))
++            Gson().fromJson(String(Base64.getUrlDecoder().decode(parts[0]), Charsets.UTF_8), MembershipLeasePayload::class.java).also {
++                require(it.v == 1 && it.kid == "membership-v1" && it.audience == "io.github.phantom.gps")
++                require(it.uid.isNotBlank() && it.session.isNotBlank() && it.device.matches(Regex("[a-f0-9]{64}")))
++                require(it.anchor >= 0 && it.boot >= 0 && it.expiresAt > it.issuedAt && it.expiresAt - it.issuedAt <= 600000)
++                require(it.expiresAt <= it.membershipExpiresAt)
++            }
++        }.getOrNull()
++        lastToken = token; lastPayload = parsed; return parsed
++    }
++    fun isValid(token: String, wallMs: Long, elapsedMs: Long, bootCount: Int, deviceId: String? = null): Boolean {
++        val p = inspect(token) ?: return false
++        return p.boot == bootCount && (deviceId == null || p.device == deviceId) && wallMs >= p.issuedAt - 120000 && wallMs < p.expiresAt &&
++            elapsedMs >= p.anchor && elapsedMs - p.anchor < p.expiresAt - p.issuedAt
++    }
++}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/NotificationIntents.kt b/app/src/main/java/io/github/phantom/gps/utils/NotificationIntents.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..87ee49f86bde6a56292f6ba995f6f054147f1644
+index 0000000000000000000000000000000000000000..215e229e5b0884d708ea4160f099d02ef2f99719
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/NotificationIntents.kt
 @@ -0,0 +1,38 @@
@@ -4478,7 +4855,7 @@ index 0000000000000000000000000000000000000000..87ee49f86bde6a56292f6ba995f6f054
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/NotificationsChannel.kt b/app/src/main/java/io/github/phantom/gps/utils/NotificationsChannel.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..3829dc57f97338399a8b3d67190079aa19d37748
+index 0000000000000000000000000000000000000000..42e3279a55a1a021f51fa0afefa65f45bf1a44f7
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/NotificationsChannel.kt
 @@ -0,0 +1,117 @@
@@ -4601,7 +4978,7 @@ index 0000000000000000000000000000000000000000..3829dc57f97338399a8b3d67190079aa
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/OpenLocationCode.kt b/app/src/main/java/io/github/phantom/gps/utils/OpenLocationCode.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..92e34751a6db8deedd52438609384062e59e7ef3
+index 0000000000000000000000000000000000000000..42c33415002004f2b24906ad517311ff50e54a7d
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/OpenLocationCode.kt
 @@ -0,0 +1,295 @@
@@ -4900,31 +5277,73 @@ index 0000000000000000000000000000000000000000..92e34751a6db8deedd52438609384062
 +    }
 +}
 +
-diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-similarity index 45%
-rename from app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
-rename to app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-index d83bcd1d9e6696a92ac6fb4d0c65870da9117338..173cdaa31df53e04d9c2f388d55c0f30c09d054d 100644
---- a/app/src/main/java/io/github/jqssun/gpssetter/utils/PrefManager.kt
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..11af8c3544328b241e00d036e788a152dd4bc5c5
+--- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-@@ -1 +1 @@
--package io.github.jqssun.gpssetter.utils
+@@ -0,0 +1,177 @@
 +package io.github.phantom.gps.utils
-@@ -7,2 +7,2 @@ import androidx.appcompat.app.AppCompatDelegate
--import io.github.jqssun.gpssetter.BuildConfig
--import io.github.jqssun.gpssetter.gsApp
++
++import android.annotation.SuppressLint
++import android.content.Context
++import android.content.SharedPreferences
++import androidx.appcompat.app.AppCompatDelegate
 +import io.github.phantom.gps.BuildConfig
 +import io.github.phantom.gps.gsApp
-@@ -22,0 +23 @@ object PrefManager   {
++import kotlinx.coroutines.DelicateCoroutinesApi
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.GlobalScope
++import kotlinx.coroutines.launch
++
++
++@SuppressLint("WorldReadableFiles")
++object PrefManager   {
++
++    var membershipLease: String
++        get() = pref.getString("membership_lease", "").orEmpty()
++        set(value) { pref.edit().putString("membership_lease", value).commit() }
++
++    private const val START = "start"
++    private const val LATITUDE = "latitude"
++    private const val LONGITUDE = "longitude"
++    private const val HOOKED_SYSTEM = "system_hooked"
++    private const val RANDOM_POSITION = "random_position"
 +    private const val RANDOM_RADIUS_METERS = "random_radius_meters"
-@@ -27,0 +29,2 @@ object PrefManager   {
++    private const val ACCURACY_SETTING = "accuracy_level"
++    private const val MAP_TYPE = "map_type"
++    private const val DARK_THEME = "dark_theme"
++    private const val DISABLE_UPDATE = "update_disabled"
++    private const val ENABLE_JOYSTICK = "joystick_enabled"
 +    private const val ENABLE_CLIPBOARD_MONITOR = "clipboard_monitor_enabled"
 +    private const val CLIPBOARD_AUTO_START = "clipboard_monitor_auto_start"
-@@ -52 +55 @@ object PrefManager   {
--        get() = pref.getFloat(LATITUDE, 40.7128F).toDouble()
++
++
++    private val pref: SharedPreferences by lazy {
++        try {
++            val prefsFile = "${BuildConfig.APPLICATION_ID}_prefs"
++            gsApp.getSharedPreferences(
++                prefsFile,
++                Context.MODE_WORLD_READABLE
++            )
++        }catch (e:SecurityException){
++            val prefsFile = "${BuildConfig.APPLICATION_ID}_prefs"
++            gsApp.getSharedPreferences(
++                prefsFile,
++                Context.MODE_PRIVATE
++            )
++        }
++
++    }
++
++
++    val isStarted : Boolean
++        get() = pref.getBoolean(START, false)
++
++    val getLat : Double
 +        get() = if (pref.contains("latitude_bits")) Double.fromBits(pref.getLong("latitude_bits", 0)) else pref.getFloat(LATITUDE, 40.7128F).toDouble()
-@@ -55 +58,7 @@ object PrefManager   {
--        get() = pref.getFloat(LONGITUDE, -74.0060F).toDouble()
++
++    val getLng : Double
 +        get() = if (pref.contains("longitude_bits")) Double.fromBits(pref.getLong("longitude_bits", 0)) else pref.getFloat(LONGITUDE, -74.0060F).toDouble()
 +
 +    val directRequestId: String get() = pref.getString("direct_request_id", "").orEmpty()
@@ -4932,12 +5351,39 @@ index d83bcd1d9e6696a92ac6fb4d0c65870da9117338..173cdaa31df53e04d9c2f388d55c0f30
 +    fun hasSavedLocation(): Boolean {
 +        return pref.contains(LATITUDE) && pref.contains(LONGITUDE)
 +    }
-@@ -64,0 +74,4 @@ object PrefManager   {
++
++    var isSystemHooked : Boolean
++        get() = pref.getBoolean(HOOKED_SYSTEM, false)
++        set(value) { pref.edit().putBoolean(HOOKED_SYSTEM,value).apply() }
++
++    var isRandomPosition :Boolean
++        get() = pref.getBoolean(RANDOM_POSITION, false)
++        set(value) { pref.edit().putBoolean(RANDOM_POSITION, value).apply() }
++
 +    var randomRadiusMeters: String?
 +        get() = pref.getString(RANDOM_RADIUS_METERS, "10")
 +        set(value) { pref.edit().putString(RANDOM_RADIUS_METERS, value).apply() }
 +
-@@ -84,0 +98,26 @@ object PrefManager   {
++    var accuracy : String?
++        get() = pref.getString(ACCURACY_SETTING,"10")
++        set(value) { pref.edit().putString(ACCURACY_SETTING,value).apply()}
++
++    var mapType : Int
++        get() = pref.getInt(MAP_TYPE,1)
++        set(value) { pref.edit().putInt(MAP_TYPE,value).apply()}
++
++    var darkTheme: Int
++        get() = pref.getInt(DARK_THEME, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
++        set(value) = pref.edit().putInt(DARK_THEME, value).apply()
++
++    var isUpdateDisabled: Boolean
++        get() = pref.getBoolean(DISABLE_UPDATE, false)
++        set(value) = pref.edit().putBoolean(DISABLE_UPDATE, value).apply()
++
++    var isJoystickEnabled: Boolean
++        get() = pref.getBoolean(ENABLE_JOYSTICK, false)
++        set(value) = pref.edit().putBoolean(ENABLE_JOYSTICK, value).apply()
++
 +    var isClipboardMonitorEnabled: Boolean
 +        get() = pref.getBoolean(ENABLE_CLIPBOARD_MONITOR, false)
 +        set(value) = pref.edit().putBoolean(ENABLE_CLIPBOARD_MONITOR, value).apply()
@@ -4964,11 +5410,20 @@ index d83bcd1d9e6696a92ac6fb4d0c65870da9117338..173cdaa31df53e04d9c2f388d55c0f30
 +        isClipboardFormatEnabled(ClipboardFormats.KEYS[4])
 +    )
 +
-@@ -87,0 +127,3 @@ object PrefManager   {
++    fun update(start:Boolean, la: Double, ln: Double) {
++        runInBackground {
++            val prefEditor = pref.edit()
 +            prefEditor.putLong("latitude_bits", la.toBits())
 +            prefEditor.putLong("longitude_bits", ln.toBits())
 +            prefEditor.remove("direct_request_id")
-@@ -95,0 +138,27 @@ object PrefManager   {
++            prefEditor.putFloat(LATITUDE, la.toFloat())
++            prefEditor.putFloat(LONGITUDE, ln.toFloat())
++            prefEditor.putBoolean(START, start)
++            prefEditor.apply()
++        }
++
++    }
++
 +    fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
 +        pref.registerOnSharedPreferenceChangeListener(listener)
 +    }
@@ -4996,14 +5451,18 @@ index d83bcd1d9e6696a92ac6fb4d0c65870da9117338..173cdaa31df53e04d9c2f388d55c0f30
 +        return committed
 +    }
 +
-@@ -103 +172,2 @@ object PrefManager   {
--}
-\ No newline at end of file
++    @OptIn(DelicateCoroutinesApi::class)
++    private fun runInBackground(method: suspend () -> Unit){
++        GlobalScope.launch(Dispatchers.IO) {
++            method.invoke()
++        }
++    }
++
 +}
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/RelayLease.kt b/app/src/main/java/io/github/phantom/gps/utils/RelayLease.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..c96be41d37275c45018df2b9c32726b6dc3c0b83
+index 0000000000000000000000000000000000000000..95f0776a24414cb41bc24e0ed62685ce0d40e330
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/RelayLease.kt
 @@ -0,0 +1,14 @@
@@ -5021,9 +5480,84 @@ index 0000000000000000000000000000000000000000..c96be41d37275c45018df2b9c32726b6
 +    }
 +    @Synchronized fun revoke() { revoked = true }
 +}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/RememberedLoginStore.kt b/app/src/main/java/io/github/phantom/gps/utils/RememberedLoginStore.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..644dae16ff6a776c627a7d0a16a854f083090e64
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/RememberedLoginStore.kt
+@@ -0,0 +1,69 @@
++package io.github.phantom.gps.utils
++
++import android.content.Context
++import android.security.keystore.KeyGenParameterSpec
++import android.security.keystore.KeyProperties
++import android.util.Base64
++import org.json.JSONObject
++import java.security.KeyStore
++import javax.crypto.Cipher
++import javax.crypto.KeyGenerator
++import javax.crypto.SecretKey
++import javax.crypto.spec.GCMParameterSpec
++
++/** Private, device-bound credentials. Never use Hook-readable preferences for passwords. */
++class RememberedLoginStore(context:Context,namespace:String="phantom_remembered_login") {
++    init { require(namespace.matches(Regex("phantom_[a-zA-Z0-9_]{1,70}"))) }
++    private val prefs=context.applicationContext.getSharedPreferences(namespace,Context.MODE_PRIVATE)
++    private val alias="$namespace.key.v1"
++    private val aad="${context.packageName}:$namespace:v1".toByteArray(Charsets.UTF_8)
++    // Avoid a generated data-class toString that might accidentally print the password.
++    class Credentials(val username:String,val password:String)
++    fun isEnabled():Boolean=prefs.getBoolean("enabled",true)
++    @Synchronized fun setEnabled(enabled:Boolean) {
++        val edit=prefs.edit().putBoolean("enabled",enabled)
++        if(!enabled)edit.remove("encrypted")
++        check(edit.commit()) { "CREDENTIAL_STORAGE_FAILED" }
++    }
++    @Synchronized fun save(username:String,password:String,remember:Boolean) {
++        if(!remember){setEnabled(false);return}
++        require(username.isNotBlank()&&username.length<=128&&password.isNotEmpty()&&password.length<=256)
++        val plaintext=JSONObject().put("username",username.trim()).put("password",password).toString().toByteArray(Charsets.UTF_8)
++        val cipher=Cipher.getInstance("AES/GCM/NoPadding")
++        cipher.init(Cipher.ENCRYPT_MODE,key(create=true));cipher.updateAAD(aad)
++        val ciphertext=try{cipher.doFinal(plaintext)}finally{plaintext.fill(0)}
++        check(cipher.iv.size==12)
++        val payload=byteArrayOf(1)+cipher.iv+ciphertext
++        check(prefs.edit().putBoolean("enabled",true).putString("encrypted",Base64.encodeToString(payload,Base64.NO_WRAP)).commit()) { "CREDENTIAL_STORAGE_FAILED" }
++    }
++    @Synchronized fun read():Credentials? {
++        if(!isEnabled())return null
++        val encoded=prefs.getString("encrypted",null)?:return null
++        return try {
++            require(encoded.length<=8192)
++            val payload=Base64.decode(encoded,Base64.NO_WRAP)
++            require(payload.size>=30&&payload[0]==1.toByte())
++            val cipher=Cipher.getInstance("AES/GCM/NoPadding")
++            cipher.init(Cipher.DECRYPT_MODE,key(create=false),GCMParameterSpec(128,payload.copyOfRange(1,13)))
++            cipher.updateAAD(aad)
++            val plaintext=cipher.doFinal(payload.copyOfRange(13,payload.size))
++            val json=try{JSONObject(String(plaintext,Charsets.UTF_8))}finally{plaintext.fill(0)}
++            val username=json.getString("username");val password=json.getString("password")
++            require(username.isNotBlank()&&username.length<=128&&password.isNotEmpty()&&password.length<=256)
++            Credentials(username,password)
++        }catch(_:Exception){prefs.edit().remove("encrypted").commit();null}
++    }
++    fun forget()=setEnabled(false)
++    companion object {private val keyLock=Any()}
++    private fun key(create:Boolean):SecretKey = synchronized(keyLock) {
++        val store=KeyStore.getInstance("AndroidKeyStore").apply{load(null)}
++        (store.getKey(alias,null) as? SecretKey)?.let{return it}
++        check(create) { "CREDENTIAL_KEY_UNAVAILABLE" }
++        return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,"AndroidKeyStore").run {
++            init(KeyGenParameterSpec.Builder(alias,KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
++                .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
++                .setKeySize(256).setRandomizedEncryptionRequired(true).setUserAuthenticationRequired(false).build())
++            generateKey()
++        }
++    }
++}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/ShellCommandReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/ShellCommandReceiver.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..6a046fc852902aff575b7efe7cee04a6a2ff589c
+index 0000000000000000000000000000000000000000..2757b12b61e317b01aa4c4e66952ecc0279797c2
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ShellCommandReceiver.kt
 @@ -0,0 +1,90 @@
@@ -5117,9 +5651,28 @@ index 0000000000000000000000000000000000000000..6a046fc852902aff575b7efe7cee04a6
 +        private const val CMD_CLIPBOARD = "clipboard"
 +    }
 +}
+diff --git a/app/src/main/java/io/github/phantom/gps/utils/SigningPolicy.kt b/app/src/main/java/io/github/phantom/gps/utils/SigningPolicy.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..86f37b88f6a0b7aee36601bddaebec8d949f993c
+--- /dev/null
++++ b/app/src/main/java/io/github/phantom/gps/utils/SigningPolicy.kt
+@@ -0,0 +1,13 @@
++package io.github.phantom.gps.utils
++
++import java.util.Locale
++
++/** Trust only the current signer; historical certificates are not current APK signers. */
++internal object SigningPolicy {
++    private fun normalized(value: String) = value.replace(":", "").replace(Regex("\\s+"), "").uppercase(Locale.US)
++    fun matches(expected: String, currentSigners: Set<String>): Boolean {
++        val pin = normalized(expected)
++        if (!pin.matches(Regex("[0-9A-F]{64}")) || currentSigners.size != 1) return false
++        return normalized(currentSigners.single()) == pin
++    }
++}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/StartLocationReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/StartLocationReceiver.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..cc51d76d0314e5e5095506d6ce3fff32a4d9eedc
+index 0000000000000000000000000000000000000000..da015da6b184df988c8d7eb21dbbd39e90e212c3
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/StartLocationReceiver.kt
 @@ -0,0 +1,30 @@
@@ -5155,7 +5708,7 @@ index 0000000000000000000000000000000000000000..cc51d76d0314e5e5095506d6ce3fff32
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/StopLocationReceiver.kt b/app/src/main/java/io/github/phantom/gps/utils/StopLocationReceiver.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..924cab4604a297f39f9dbe3e6ad7625467ca0bbc
+index 0000000000000000000000000000000000000000..e54a4e1f85b028f445e7d902de00083a7af6b86b
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/StopLocationReceiver.kt
 @@ -0,0 +1,13 @@
@@ -5173,10 +5726,10 @@ index 0000000000000000000000000000000000000000..924cab4604a297f39f9dbe3e6ad76254
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/ext/Ext+Context.kt b/app/src/main/java/io/github/phantom/gps/utils/ext/Ext+Context.kt
-similarity index 92%
+similarity index 95%
 rename from app/src/main/java/io/github/jqssun/gpssetter/utils/ext/Ext+Context.kt
 rename to app/src/main/java/io/github/phantom/gps/utils/ext/Ext+Context.kt
-index 46f9b898e42ae79167dc5020cccf54c72cc5be4d..0b1587c496cc8064f375f599740f9d521539bb81 100644
+index 94d965c301ccb3fafff7d07bcf66ce368165becd..60b20458ec9fac965335905870cdac7ffff0c525 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/utils/ext/Ext+Context.kt
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ext/Ext+Context.kt
 @@ -1 +1 @@
@@ -5185,10 +5738,10 @@ index 46f9b898e42ae79167dc5020cccf54c72cc5be4d..0b1587c496cc8064f375f599740f9d52
 @@ -33,0 +34 @@ fun Context.isNetworkConnected(): Boolean {
 +
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/ext/Ext+LatLng.kt b/app/src/main/java/io/github/phantom/gps/utils/ext/Ext+LatLng.kt
-similarity index 89%
+similarity index 91%
 rename from app/src/main/java/io/github/jqssun/gpssetter/utils/ext/Ext+LatLng.kt
 rename to app/src/main/java/io/github/phantom/gps/utils/ext/Ext+LatLng.kt
-index 83bfba95ab5617a753a27daf70c2fe465f46525d..fdd89f167c31de9ced53324d24f41bb5337f6551 100644
+index 7062c6c30e952bdf70c5f689ab9c892d0296b575..34bb01115c24bc668387e2498ea346c3f83c060e 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/utils/ext/Ext+LatLng.kt
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ext/Ext+LatLng.kt
 @@ -1 +1 @@
@@ -5202,10 +5755,10 @@ index 83bfba95ab5617a753a27daf70c2fe465f46525d..fdd89f167c31de9ced53324d24f41bb5
 \ No newline at end of file
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/utils/ext/Ext+ViewModel.kt b/app/src/main/java/io/github/phantom/gps/utils/ext/Ext+ViewModel.kt
-similarity index 89%
+similarity index 92%
 rename from app/src/main/java/io/github/jqssun/gpssetter/utils/ext/Ext+ViewModel.kt
 rename to app/src/main/java/io/github/phantom/gps/utils/ext/Ext+ViewModel.kt
-index 6be35d28dc23e323c3679dc133a49a227188ebe8..217c7efcf73d732c51bb5d5a2b30ecef71e4c308 100644
+index 8a60ae98b348c0a0563422826b681001391875de..9bec9b78cf4ec5d0e70da72eba0fb31a3f2a3773 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/utils/ext/Ext+ViewModel.kt
 +++ b/app/src/main/java/io/github/phantom/gps/utils/ext/Ext+ViewModel.kt
 @@ -1 +1 @@
@@ -5217,7 +5770,7 @@ index 6be35d28dc23e323c3679dc133a49a227188ebe8..217c7efcf73d732c51bb5d5a2b30ecef
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/xposed/ClipboardHook.kt b/app/src/main/java/io/github/phantom/gps/xposed/ClipboardHook.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..3087feedc0636a49e8fd5896d21d7c199cf4c6d6
+index 0000000000000000000000000000000000000000..ca1e24492563d7fc471ba2c9d0573ef3ba7c2be0
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/ClipboardHook.kt
 @@ -0,0 +1,123 @@
@@ -5344,44 +5897,49 @@ index 0000000000000000000000000000000000000000..3087feedc0636a49e8fd5896d21d7c19
 +    }
 +
 +}
-diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/HookEntry.kt b/app/src/main/java/io/github/phantom/gps/xposed/HookEntry.kt
-similarity index 46%
-rename from app/src/main/java/io/github/jqssun/gpssetter/xposed/HookEntry.kt
-rename to app/src/main/java/io/github/phantom/gps/xposed/HookEntry.kt
-index d25c40cd2563d70cd2e147f926aafaae50d404de..12d61aa0aa76949aca6548ab11ed5e592a03f2f7 100644
---- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/HookEntry.kt
+diff --git a/app/src/main/java/io/github/phantom/gps/xposed/HookEntry.kt b/app/src/main/java/io/github/phantom/gps/xposed/HookEntry.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..9a663ac0de574fdf98c7180e815ae999ff22c4e6
+--- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/HookEntry.kt
-@@ -1 +1 @@
--package io.github.jqssun.gpssetter.xposed
+@@ -0,0 +1,32 @@
 +package io.github.phantom.gps.xposed
-@@ -2,0 +3,2 @@ package io.github.jqssun.gpssetter.xposed
++
 +import android.app.AndroidAppHelper
 +import android.content.Context
-@@ -8 +10,2 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
--import io.github.jqssun.gpssetter.BuildConfig
++import de.robv.android.xposed.IXposedHookLoadPackage
++import de.robv.android.xposed.XC_MethodHook
++import de.robv.android.xposed.XposedBridge
++import de.robv.android.xposed.XposedHelpers
++import de.robv.android.xposed.callbacks.XC_LoadPackage
 +import io.github.phantom.gps.BuildConfig
 +import io.github.phantom.gps.utils.AppIntegrity
-@@ -12,0 +16,6 @@ class HookEntry : IXposedHookLoadPackage {
++
++class HookEntry : IXposedHookLoadPackage {
++
++    override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
 +        val ctx = runCatching { AndroidAppHelper.currentApplication() as? Context }.getOrNull()
 +        if (ctx != null && !AppIntegrity.isModuleApkValid(ctx)) {
-+            XposedBridge.log("PHANToM GPS: module signature mismatch - hooks disabled")
++            XposedBridge.log("GeoX: module signature mismatch - hooks disabled")
 +            return
 +        }
 +
-@@ -14 +23 @@ class HookEntry : IXposedHookLoadPackage {
--            XposedHelpers.findAndHookMethod("io.github.jqssun.gpssetter.ui.viewmodel.MainViewModel", lpparam.classLoader, "updateXposedState", object : XC_MethodHook() {
++        if (lpparam.packageName == BuildConfig.APPLICATION_ID) {
 +            XposedHelpers.findAndHookMethod("io.github.phantom.gps.ui.viewmodel.MainViewModel", lpparam.classLoader, "updateXposedState", object : XC_MethodHook() {
-@@ -19,0 +29 @@ class HookEntry : IXposedHookLoadPackage {
++                override fun beforeHookedMethod(param: MethodHookParam) {
++                    param.result = null
++                }
++            })
++        }
 +        ClipboardHook.initHooks(lpparam)
-@@ -22 +32 @@ class HookEntry : IXposedHookLoadPackage {
--}
-\ No newline at end of file
++        LocationHook.initHooks(lpparam)
++    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
 similarity index 69%
 rename from app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
 rename to app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-index 148f35a8286984e547d39004e83d20c7579d23d2..a4eab81189f6ec9560bfb135168c7e2cd75a3c81 100644
+index 61ed6adaf6b92a8260ae655611f2391470833343..ea57f6b72ccbf0fe7ff4b087ca9895ba5be3440f 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
 @@ -1 +1 @@
@@ -5403,7 +5961,7 @@ index 148f35a8286984e547d39004e83d20c7579d23d2..a4eab81189f6ec9560bfb135168c7e2c
 @@ -21,0 +30,2 @@ import kotlin.math.cos
 +import kotlin.math.sin
 +import kotlin.math.sqrt
-@@ -32 +42,54 @@ object LocationHook {
+@@ -32 +42,55 @@ object LocationHook {
 -    private var mLastUpdated: Long = 0
 +    @Volatile private var mLastUpdated: Long = 0
 +    @Volatile private var refreshRegistered = false
@@ -5416,6 +5974,7 @@ index 148f35a8286984e547d39004e83d20c7579d23d2..a4eab81189f6ec9560bfb135168c7e2c
 +
 +    @Synchronized
 +    fun ensureRefreshReceiver(source: Context) {
++        io.github.phantom.gps.utils.MembershipLease.hookBootCount = io.github.phantom.gps.utils.MembershipLease.bootCount(source)
 +        if (refreshRegistered) return
 +        val receiverContext = source.applicationContext ?: source
 +        if (receiverContext.packageName == BuildConfig.APPLICATION_ID) return
@@ -5429,7 +5988,7 @@ index 148f35a8286984e547d39004e83d20c7579d23d2..a4eab81189f6ec9560bfb135168c7e2c
 +                    if (loadedDirectRequestId != id) updateLocation(forceReload = true)
 +                    val matching = loadedDirectRequestId == id
 +                    val modeReady = receiverContext.packageName != "android" || (systemHooksReady && settings.isHookedSystem)
-+                    val code = if (!matching) 409 else if (loadedStarted && modeReady) 101 else 412
++                    val code = if (!matching) 409 else if (loadedStarted && settings.isStarted && modeReady) 101 else 412
 +                    reply.send(code, android.os.Bundle().apply { putString("request_id", id) })
 +                } else if (intent?.action == LocationRefresh.ACTION) {
 +                    updateLocation(forceReload = true)
@@ -5459,13 +6018,13 @@ index 148f35a8286984e547d39004e83d20c7579d23d2..a4eab81189f6ec9560bfb135168c7e2c
 +            trace.mark("hook_first_read")
 +        }
 +    }
-@@ -37 +100,2 @@ object LocationHook {
+@@ -37 +101,2 @@ object LocationHook {
 -    private fun updateLocation() {
 +    @Synchronized
 +    private fun updateLocation(forceReload: Boolean = false) {
-@@ -38,0 +103 @@ object LocationHook {
+@@ -38,0 +104 @@ object LocationHook {
 +            val snapshot = settings.locationSnapshot(forceReload)
-@@ -40,9 +105,28 @@ object LocationHook {
+@@ -40,9 +106,28 @@ object LocationHook {
 -            val x = (rand.nextInt(50) - 15).toDouble()
 -            val y = (rand.nextInt(50) - 15).toDouble()
 -            val dlat = x / earth
@@ -5494,7 +6053,7 @@ index 148f35a8286984e547d39004e83d20c7579d23d2..a4eab81189f6ec9560bfb135168c7e2c
 +                newlng = baseLng
 +            }
 +            accuracy = snapshot.accuracy
-+            loadedStarted = snapshot.started
++            loadedStarted = snapshot.started && settings.isStarted
 +            loadedDirectRequestId = snapshot.requestId
 +            currentTrace = if (snapshot.traceId > 0 && snapshot.capturedAtMs > 0) ClipboardTrace(snapshot.traceId, snapshot.capturedAtMs) else null
 +            currentTrace?.let { trace ->
@@ -5503,7 +6062,7 @@ index 148f35a8286984e547d39004e83d20c7579d23d2..a4eab81189f6ec9560bfb135168c7e2c
 +                    trace.mark("hook_loaded")
 +                }
 +            }
-@@ -57,0 +142,10 @@ object LocationHook {
+@@ -57,0 +143,10 @@ object LocationHook {
 +        (AndroidAppHelper.currentApplication() as? Context)?.let { ensureRefreshReceiver(it) }
 +        if (lpparam.packageName != "android" && lpparam.packageName != BuildConfig.APPLICATION_ID) {
 +            XposedHelpers.findAndHookMethod(android.app.Application::class.java, "attach", Context::class.java,
@@ -5514,7 +6073,7 @@ index 148f35a8286984e547d39004e83d20c7579d23d2..a4eab81189f6ec9560bfb135168c7e2c
 +                })
 +        }
 +
-@@ -59,2 +153,12 @@ object LocationHook {
+@@ -59,2 +154,12 @@ object LocationHook {
 -        if (lpparam.packageName == "android") { XposedBridge.log("Hooking system server")
 -        if (settings.isStarted && (settings.isHookedSystem && !ignorePkg.contains(lpparam.packageName))) {
 +        if (lpparam.packageName == "android") {
@@ -5529,54 +6088,54 @@ index 148f35a8286984e547d39004e83d20c7579d23d2..a4eab81189f6ec9560bfb135168c7e2c
 +                })
 +            }
 +        if (!ignorePkg.contains(lpparam.packageName)) {
-@@ -76,0 +181 @@ object LocationHook {
+@@ -76,0 +182 @@ object LocationHook {
 +                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -78,0 +184 @@ object LocationHook {
+@@ -78,0 +185 @@ object LocationHook {
 +                            markLocationRead()
-@@ -99,0 +206 @@ object LocationHook {
+@@ -99,0 +207 @@ object LocationHook {
 +                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -114,0 +222 @@ object LocationHook {
+@@ -114,0 +223 @@ object LocationHook {
 +                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -130,0 +239 @@ object LocationHook {
+@@ -130,0 +240 @@ object LocationHook {
 +                            markLocationRead()
-@@ -136 +244,0 @@ object LocationHook {
+@@ -136 +245,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -160,0 +269 @@ object LocationHook {
+@@ -160,0 +270 @@ object LocationHook {
 +                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -163 +272,2 @@ object LocationHook {
+@@ -163 +273,2 @@ object LocationHook {
 -                                    location.latitude = newlat
 +                                    markLocationRead()
 +                            location.latitude = newlat
-@@ -182,0 +293 @@ object LocationHook {
+@@ -182,0 +294 @@ object LocationHook {
 +                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -195,0 +307 @@ object LocationHook {
+@@ -195,0 +308 @@ object LocationHook {
 +                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -211,0 +324 @@ object LocationHook {
+@@ -211,0 +325 @@ object LocationHook {
 +                            markLocationRead()
-@@ -217 +329,0 @@ object LocationHook {
+@@ -217 +330,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -228,0 +341 @@ object LocationHook {
+@@ -228,0 +342 @@ object LocationHook {
 +                systemHooksReady = true
-@@ -248,0 +362 @@ object LocationHook {
+@@ -248,0 +363 @@ object LocationHook {
 +                                    markLocationRead()
-@@ -262,0 +377 @@ object LocationHook {
+@@ -262,0 +378 @@ object LocationHook {
 +                                    markLocationRead()
-@@ -311,0 +427 @@ object LocationHook {
+@@ -311,0 +428 @@ object LocationHook {
 +                            markLocationRead()
-@@ -317 +432,0 @@ object LocationHook {
+@@ -317 +433,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -344,0 +460 @@ object LocationHook {
+@@ -344,0 +461 @@ object LocationHook {
 +                            markLocationRead()
-@@ -350 +465,0 @@ object LocationHook {
+@@ -350 +466,0 @@ object LocationHook {
 -                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -365,0 +481 @@ object LocationHook {
+@@ -365,0 +482 @@ object LocationHook {
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..c106fa3ac770ed388ce8f56060cb1f972ae36559
+index 0000000000000000000000000000000000000000..9efae2cbb00933acd6931b2ae6a7132cb7336f07
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
-@@ -0,0 +1,88 @@
+@@ -0,0 +1,85 @@
 +package io.github.phantom.gps.xposed
 +
 +import de.robv.android.xposed.XSharedPreferences
@@ -5625,10 +6184,7 @@ index 0000000000000000000000000000000000000000..c106fa3ac770ed388ce8f56060cb1f97
 +    val directRequestId: String get() = pref().getString("direct_request_id", "").orEmpty()
 +
 +    val isStarted : Boolean
-+    get() = pref().getBoolean(
-+        "start",
-+        false
-+    )
++    get() = pref().let { it.getBoolean("start", false) && io.github.phantom.gps.utils.MembershipLease.hookValid(it.getString("membership_lease", "").orEmpty()) }
 +
 +    val getLat: Double get() {
 +        val p = pref()
@@ -8489,7 +9045,7 @@ HcmV?d00001
 
 diff --git a/app/src/main/res/drawable/ic_launcher_foreground.xml b/app/src/main/res/drawable/ic_launcher_foreground.xml
 deleted file mode 100644
-index 262a946fd8dfa6db441355476b33ce2f6b676cf2..0000000000000000000000000000000000000000
+index 7b0cd4c437beac7223a7c08be5f6bd6b6c6380ba..0000000000000000000000000000000000000000
 --- a/app/src/main/res/drawable/ic_launcher_foreground.xml
 +++ /dev/null
 @@ -1,10 +0,0 @@
@@ -8505,7 +9061,7 @@ index 262a946fd8dfa6db441355476b33ce2f6b676cf2..00000000000000000000000000000000
 -</vector>
 diff --git a/app/src/main/res/layout/activity_activation.xml b/app/src/main/res/layout/activity_activation.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..b3afcd0724b2cb6439e07e66ba1b5a54dcb17840
+index 0000000000000000000000000000000000000000..411c6ccadb1c2b06b6d69fe05a4cac10795aed18
 --- /dev/null
 +++ b/app/src/main/res/layout/activity_activation.xml
 @@ -0,0 +1,77 @@
@@ -8588,7 +9144,7 @@ index 0000000000000000000000000000000000000000..b3afcd0724b2cb6439e07e66ba1b5a54
 +</LinearLayout>
 diff --git a/app/src/main/res/layout/activity_locked.xml b/app/src/main/res/layout/activity_locked.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..925898671350dbe12e8fc798f52244c7567d2bfc
+index 0000000000000000000000000000000000000000..63f17115b973483b37cf7859e0c1425a8ba224e6
 --- /dev/null
 +++ b/app/src/main/res/layout/activity_locked.xml
 @@ -0,0 +1,47 @@
@@ -8641,7 +9197,7 @@ index 0000000000000000000000000000000000000000..925898671350dbe12e8fc798f52244c7
 +</LinearLayout>
 diff --git a/app/src/main/res/layout/activity_login.xml b/app/src/main/res/layout/activity_login.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..a12f4956c3d1f3c8fe1b6bc495e3efa64fa73225
+index 0000000000000000000000000000000000000000..fd2dd3f458fd832253d11b32caa564e186855f7e
 --- /dev/null
 +++ b/app/src/main/res/layout/activity_login.xml
 @@ -0,0 +1,40 @@
@@ -8685,8 +9241,34 @@ index 0000000000000000000000000000000000000000..a12f4956c3d1f3c8fe1b6bc495e3efa6
 +        android:text="@string/firebase_login_title" />
 +
 +</LinearLayout>
+diff --git a/app/src/main/res/layout/activity_member_login.xml b/app/src/main/res/layout/activity_member_login.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..2d976e22a6a0add84cf4e5e0f9a89662aecf37fc
+--- /dev/null
++++ b/app/src/main/res/layout/activity_member_login.xml
+@@ -0,0 +1,20 @@
++<?xml version="1.0" encoding="utf-8"?>
++<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="#10121D">
++<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center_vertical" android:padding="28dp">
++<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GeoX" android:textSize="30sp" android:textStyle="bold" android:textColor="#C8B6FF" />
++<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="YOUR LOCATION. YOUR CONTROL." android:textSize="12sp" android:textColor="#9B6CFF" />
++<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="GeoX — เดิม PHANToM GPS" android:textSize="13sp" android:textColor="#AAA7BB" />
++<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="เข้าสู่ระบบสมาชิก
++เริ่มสิทธิ์ 7 วันเมื่อเข้าแอปครั้งแรก ต่ออายุผ่านแอดมิน" android:textSize="16sp" android:textColor="#E6E2F2" />
++<TextView android:id="@+id/memberStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textColor="#8AE6C3" />
++<EditText android:id="@+id/memberUsername" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="24dp" android:hint="ชื่อผู้ใช้ GeoX (ไม่ใช่ Gmail)" android:inputType="textVisiblePassword" android:autofillHints="username" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#AAA7BB" android:backgroundTint="#C8B6FF" />
++<EditText android:id="@+id/memberPassword" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="12dp" android:hint="รหัสผ่าน GeoX" android:inputType="textPassword" android:autofillHints="password" android:saveEnabled="false" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#AAA7BB" android:backgroundTint="#C8B6FF" />
++<CheckBox android:id="@+id/memberRemember" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="12dp" android:text="จดจำบัญชีในเครื่องนี้" android:textColor="#E6E2F2" android:buttonTint="#C8B6FF" />
++<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="บันทึกหลังเข้าสู่ระบบสำเร็จ เมื่อจำเป็นต้องเข้าสู่ระบบใหม่ แอปจะกรอกข้อมูลให้ โดยยังต้องตรวจสิทธิ์ตามปกติ" android:textSize="13sp" android:textColor="#AAA7BB" />
++<Button android:id="@+id/memberForget" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ลืมบัญชีที่จดจำไว้" android:visibility="gone" />
++<Button android:id="@+id/memberLogin" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="20dp" android:text="เข้าสู่ระบบ" android:backgroundTint="#B9A0FF" android:textColor="#10121D" />
++<ProgressBar android:id="@+id/memberProgress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="gone" />
++<TextView android:id="@+id/memberError" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="#FFB5B5" android:visibility="gone" />
++<Button android:id="@+id/memberRegister" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="สมัครสมาชิก / จัดการบัญชีบนเว็บ" />
++<Button android:id="@+id/memberLogout" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ออกจากระบบและลืมบัญชี" android:visibility="gone" />
++</LinearLayout></ScrollView>
 diff --git a/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml b/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
-index 4d38bf465a194e769e37e0c316ba6c30a8549896..b3b2e662f16a53e84580ef103043b09e4342c51f 100644
+index 22a5a8c2a43f4bd19c633b2b37f9b5434dd293ac..8bf9db037bb7bdcd86aecaa5d72e64c3bcf3bdb6 100644
 --- a/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
 +++ b/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
 @@ -6,2 +6 @@
@@ -8695,7 +9277,7 @@ index 4d38bf465a194e769e37e0c316ba6c30a8549896..b3b2e662f16a53e84580ef103043b09e
 \ No newline at end of file
 +</adaptive-icon>
 diff --git a/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml b/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
-index 4d38bf465a194e769e37e0c316ba6c30a8549896..b3b2e662f16a53e84580ef103043b09e4342c51f 100644
+index 22a5a8c2a43f4bd19c633b2b37f9b5434dd293ac..8bf9db037bb7bdcd86aecaa5d72e64c3bcf3bdb6 100644
 --- a/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
 +++ b/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
 @@ -6,2 +6 @@
@@ -13901,7 +14483,7 @@ literal 0
 HcmV?d00001
 
 diff --git a/app/src/main/res/values/colors.xml b/app/src/main/res/values/colors.xml
-index 92af04921f33cd0db89337ade1f93d62e5b153dc..619d0a6d54693e276c2d4526aa8fdd78f9c68f8a 100644
+index 93e8e6d939a758aa333d2776ca2adb9912ee6757..b4344661f76c85c338c9b6787a18beef8c0d93c7 100644
 --- a/app/src/main/res/values/colors.xml
 +++ b/app/src/main/res/values/colors.xml
 @@ -9 +9 @@
@@ -13912,17 +14494,17 @@ index 92af04921f33cd0db89337ade1f93d62e5b153dc..619d0a6d54693e276c2d4526aa8fdd78
 \ No newline at end of file
 +</resources>
 diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
-index a349dc8774eced7efd19f207bc05febf0c7830ef..f04ddd7746d90326b91b7f92932677ba0d2d4236 100644
+index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..a3ee1707dfab0135e516a441867369f010d691b1 100644
 --- a/app/src/main/res/values/strings.xml
 +++ b/app/src/main/res/values/strings.xml
 @@ -4,2 +4,2 @@
 -    <string name="app_name">GPS Setter</string>
 -    <string name="xposed_desc">A GPS setter based on the Xposed framework.</string>
-+    <string name="app_name">PHANToM GPS</string>
-+    <string name="xposed_desc">PHANToM GPS: a GPS setter based on the Xposed framework.</string>
++    <string name="app_name">GeoX</string>
++    <string name="xposed_desc">GeoX Location Engine: an LSPosed / Xposed location module.</string>
 @@ -25 +25 @@
 -    <string name="about_info">Brought to you by \n@jqssun (2024-2025) \n@Android1500 (2022-2023) \n\nA GPS setter based on the Xposed framework.</string>
-+    <string name="about_info">Brought to you by \n@jqssun (2024-2025) \n@Android1500 (2022-2023) \n\nPHANToM GPS: a GPS setter based on the Xposed framework.</string>
++    <string name="about_info">Brought to you by \n@jqssun (2024-2025) \n@Android1500 (2022-2023) \n\nGeoX Location Engine: an LSPosed / Xposed location module.</string>
 @@ -29 +29 @@
 -    <string name="update_button">Update</string>
 +    <string name="update_button">ดาวน์โหลดอัปเดต</string>
@@ -13930,7 +14512,7 @@ index a349dc8774eced7efd19f207bc05febf0c7830ef..f04ddd7746d90326b91b7f92932677ba
 -    <string name="check_update">Check for updates</string>
 -    <string name="check_update_summary">Automatically check the latest version from GitHub</string>
 +    <string name="check_update">ปิดการแจ้งอัปเดตอัตโนมัติ</string>
-+    <string name="check_update_summary">เมื่อปิดสวิตช์ แอปจะตรวจรุ่นใหม่จากเว็บไซต์ PHANToM GPS ทุก 15 นาทีขณะใช้งาน</string>
++    <string name="check_update_summary">เมื่อปิดสวิตช์ แอปจะตรวจรุ่นใหม่จากเว็บไซต์ GeoX ทุก 15 นาทีขณะใช้งาน</string>
 @@ -55 +55,2 @@
 -    <string name="random_position_summary">Use a random location around the set location</string>
 +    <string name="random_position_summary">Use a random location around the set location within the configured radius</string>
@@ -13955,20 +14537,20 @@ index a349dc8774eced7efd19f207bc05febf0c7830ef..f04ddd7746d90326b91b7f92932677ba
 +    <string name="clipboard_not_found_desc">Could not find coordinates for: %1$s</string>
 +    <string name="clipboard_outside_th_title">Outside Thailand blocked</string>
 +    <string name="clipboard_outside_th_desc">%1$s matched %2$s, but this is outside Thailand</string>
-+    <string name="firebase_login_title">PHANToM GPS login</string>
++    <string name="firebase_login_title">GeoX login</string>
 +    <string name="firebase_login_summary">Sign in with email/password</string>
-+    <string name="firebase_login_dialog_title">PHANToM GPS login</string>
++    <string name="firebase_login_dialog_title">GeoX login</string>
 +    <string name="firebase_email_hint">Email</string>
 +    <string name="firebase_password_hint">Password</string>
-+    <string name="firebase_login_success">PHANToM GPS login success</string>
-+    <string name="firebase_login_failed">PHANToM GPS login failed</string>
++    <string name="firebase_login_success">GeoX login success</string>
++    <string name="firebase_login_failed">GeoX login failed</string>
 +    <string name="firebase_login_fill_all">Please enter email and password</string>
 +    <string name="firebase_session_sync_failed">Unable to activate online session</string>
 +    <string name="session_locked_title">Session locked</string>
 +    <string name="session_locked_desc">This app license is locked. Please verify your license or activate again.</string>
 +    <string name="session_locked_notif_desc">Session check failed in background. Tap to login again.</string>
-+    <string name="session_locked_login_button">PHANToM GPS login</string>
-+    <string name="activation_title">Activate PHANToM GPS</string>
++    <string name="session_locked_login_button">GeoX login</string>
++    <string name="activation_title">Activate GeoX</string>
 +    <string name="activation_subtitle">Enter your activation code once to unlock this device.</string>
 +    <string name="activation_code_hint">Activation code</string>
 +    <string name="activation_button">Activate app</string>
@@ -13991,8 +14573,8 @@ index a349dc8774eced7efd19f207bc05febf0c7830ef..f04ddd7746d90326b91b7f92932677ba
 -</resources>
 \ No newline at end of file
 +    <string name="check_update_now">ตรวจสอบอัปเดตตอนนี้</string>
-+    <string name="check_update_now_summary">ดูเวอร์ชันล่าสุดจากเว็บไซต์ PHANToM GPS</string>
-+    <string name="update_current">คุณใช้ PHANToM GPS รุ่นล่าสุดแล้ว</string>
++    <string name="check_update_now_summary">ดูเวอร์ชันล่าสุดจากเว็บไซต์ GeoX</string>
++    <string name="update_current">คุณใช้ GeoX รุ่นล่าสุดแล้ว</string>
 +    <string name="update_check_failed">ตรวจอัปเดตไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่</string>
 +    <string name="update_later">ไว้ภายหลัง</string>
 +    <string name="update_website_message">%1$s\n\nเปิดหน้าดาวน์โหลดเพื่อดูรายละเอียดและติดตั้งรุ่นใหม่ การตั้งค่าจะอยู่ครบเมื่อติดตั้งทับแอปเดิม</string>
@@ -14015,18 +14597,51 @@ index a349dc8774eced7efd19f207bc05febf0c7830ef..f04ddd7746d90326b91b7f92932677ba
 +    <string name="activation_submitting">กำลังเปิดใช้งานแอป…</string>
 +    <string name="activation_retry_check">ตรวจสอบอีกครั้ง</string>
 +</resources>
+diff --git a/app/src/main/res/xml/data_extraction_rules.xml b/app/src/main/res/xml/data_extraction_rules.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..b853a8d2452fe340b2e07d1899f3437e49fb123b
+--- /dev/null
++++ b/app/src/main/res/xml/data_extraction_rules.xml
+@@ -0,0 +1,25 @@
++<?xml version="1.0" encoding="utf-8"?>
++<data-extraction-rules>
++    <cloud-backup>
++        <exclude domain="root" path="." />
++        <exclude domain="file" path="." />
++        <exclude domain="database" path="." />
++        <exclude domain="sharedpref" path="." />
++        <exclude domain="external" path="." />
++        <exclude domain="device_root" path="." />
++        <exclude domain="device_file" path="." />
++        <exclude domain="device_database" path="." />
++        <exclude domain="device_sharedpref" path="." />
++    </cloud-backup>
++    <device-transfer>
++        <exclude domain="root" path="." />
++        <exclude domain="file" path="." />
++        <exclude domain="database" path="." />
++        <exclude domain="sharedpref" path="." />
++        <exclude domain="external" path="." />
++        <exclude domain="device_root" path="." />
++        <exclude domain="device_file" path="." />
++        <exclude domain="device_database" path="." />
++        <exclude domain="device_sharedpref" path="." />
++    </device-transfer>
++</data-extraction-rules>
 diff --git a/app/src/main/res/xml/preferences.xml b/app/src/main/res/xml/preferences.xml
-index 338facf3f32b810217b023f739485ed9e97bebf2..6f8a017de63dcd34aaedc298fbcf8b23f168d800 100644
+index fabf1050343e8e29653fb416f06b5c06054115ed..e5c0f7cd4c2090355dada11c86fd7c7a90e4438a 100644
 --- a/app/src/main/res/xml/preferences.xml
 +++ b/app/src/main/res/xml/preferences.xml
-@@ -25,0 +26,6 @@
+@@ -5,0 +6 @@
++        <Preference android:key="membership_account" android:title="บัญชีสมาชิก GeoX" android:summary="ดูวันหมดอายุ / ออกจากระบบ" />
+@@ -25,0 +27,6 @@
 +        <Preference
 +            android:key="check_update_now"
 +            android:title="@string/check_update_now"
 +            android:summary="@string/check_update_now_summary"
 +            android:icon="@drawable/ic_update" />
 +
-@@ -40,0 +47,56 @@
+@@ -40,0 +48,56 @@
 +        <SwitchPreferenceCompat
 +            android:title="@string/clipboard_monitor_toggle"
 +            android:summary="@string/clipboard_monitor_toggle_summary"
@@ -14083,7 +14698,7 @@ index 338facf3f32b810217b023f739485ed9e97bebf2..6f8a017de63dcd34aaedc298fbcf8b23
 +            android:defaultValue="true"
 +            android:widgetLayout="@layout/preference_switch_widget" />
 +
-@@ -68,0 +131,9 @@
+@@ -68,0 +132,9 @@
 +        <EditTextPreference
 +            android:defaultValue="10"
 +            android:digits="0123456789"
@@ -14093,12 +14708,12 @@ index 338facf3f32b810217b023f739485ed9e97bebf2..6f8a017de63dcd34aaedc298fbcf8b23
 +            android:dependency="random_position"
 +            android:summary="10 m" />
 +
-@@ -71 +142 @@
+@@ -71 +143 @@
 -</PreferenceScreen>
 \ No newline at end of file
 +</PreferenceScreen>
 diff --git a/app/src/main/resources/META-INF/yukihookapi_init b/app/src/main/resources/META-INF/yukihookapi_init
-index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..7a5a3f669b384065e8a5a00551d3e9b8ff411bc4 100644
+index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..85f00d5de5dba13c0b8975b2bb632c63c454a177 100644
 --- a/app/src/main/resources/META-INF/yukihookapi_init
 +++ b/app/src/main/resources/META-INF/yukihookapi_init
 @@ -1 +1 @@
@@ -14107,7 +14722,7 @@ index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..7a5a3f669b384065e8a5a00551d3e9b8
 +io.github.phantom.gps.xposed.HookEntry
 diff --git a/app/src/test/java/io/github/phantom/gps/ui/ActivationUiStateTest.kt b/app/src/test/java/io/github/phantom/gps/ui/ActivationUiStateTest.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..514a0ab079f28f388fd0e299a8afff7fe1340a8f
+index 0000000000000000000000000000000000000000..5daff7608f2bc98f64508ae24b071dc184c27ade
 --- /dev/null
 +++ b/app/src/test/java/io/github/phantom/gps/ui/ActivationUiStateTest.kt
 @@ -0,0 +1,31 @@
@@ -14144,7 +14759,7 @@ index 0000000000000000000000000000000000000000..514a0ab079f28f388fd0e299a8afff7f
 +}
 diff --git a/app/src/test/java/io/github/phantom/gps/update/PublicReleaseTest.kt b/app/src/test/java/io/github/phantom/gps/update/PublicReleaseTest.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..27d05ef1b9f2fa29d4b569202ffe7b982d0e13a0
+index 0000000000000000000000000000000000000000..83476dfca217b02387f7a7efd685777dd42fcf84
 --- /dev/null
 +++ b/app/src/test/java/io/github/phantom/gps/update/PublicReleaseTest.kt
 @@ -0,0 +1,39 @@
@@ -14189,7 +14804,7 @@ index 0000000000000000000000000000000000000000..27d05ef1b9f2fa29d4b569202ffe7b98
 +}
 diff --git a/app/src/test/java/io/github/phantom/gps/utils/ClipboardEventGateTest.kt b/app/src/test/java/io/github/phantom/gps/utils/ClipboardEventGateTest.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..f4f722853c0c12ca9d43cda6bd78d723786436de
+index 0000000000000000000000000000000000000000..dbc0f8479aed8c922c6c9bfec580f849308067fd
 --- /dev/null
 +++ b/app/src/test/java/io/github/phantom/gps/utils/ClipboardEventGateTest.kt
 @@ -0,0 +1,29 @@
@@ -14224,7 +14839,7 @@ index 0000000000000000000000000000000000000000..f4f722853c0c12ca9d43cda6bd78d723
 +}
 diff --git a/app/src/test/java/io/github/phantom/gps/utils/ClipboardFormatsTest.kt b/app/src/test/java/io/github/phantom/gps/utils/ClipboardFormatsTest.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..dff3aad550eab41fd710e4280ad2de366253d983
+index 0000000000000000000000000000000000000000..4c3d3a5f4e946372053ca6d2e420ff271ad63378
 --- /dev/null
 +++ b/app/src/test/java/io/github/phantom/gps/utils/ClipboardFormatsTest.kt
 @@ -0,0 +1,47 @@
@@ -14275,9 +14890,29 @@ index 0000000000000000000000000000000000000000..dff3aad550eab41fd710e4280ad2de36
 +        assertTrue(none.urls("geo:13.7,100.5").isEmpty())
 +    }
 +}
+diff --git a/app/src/test/java/io/github/phantom/gps/utils/DeviceProofTest.kt b/app/src/test/java/io/github/phantom/gps/utils/DeviceProofTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..17f6783c5c9d8003e08d6dd70872e33d2d1eaacb
+--- /dev/null
++++ b/app/src/test/java/io/github/phantom/gps/utils/DeviceProofTest.kt
+@@ -0,0 +1,14 @@
++package io.github.phantom.gps.utils
++import org.junit.Assert.*
++import org.junit.Test
++class DeviceProofTest {
++ @Test fun canonicalMessageHasFixedOrderAndExactNumbers(){
++  val message=DeviceProof.message("uid","renew","ab".repeat(16),"N".repeat(43),"cd".repeat(32),5,123456789L,"session")
++  assertEquals(listOf("PHANTOM-DEVICE-PROOF","1","uid","renew","ab".repeat(16),"N".repeat(43),"cd".repeat(32),"5","123456789","session","io.github.phantom.gps").joinToString("\n"),message)
++ }
++ @Test fun rejectsLineInjectionAndUnsupportedActions(){
++  for(pair in listOf("bad\nuid" to "open","uid" to "other")){
++   try{DeviceProof.message(pair.first,pair.second,"ab".repeat(16),"N".repeat(43),"cd".repeat(32),5,1L,"");fail("Accepted invalid proof message") }catch(_:IllegalArgumentException){}
++  }
++ }
++}
 diff --git a/app/src/test/java/io/github/phantom/gps/utils/DirectLocationProtocolTest.kt b/app/src/test/java/io/github/phantom/gps/utils/DirectLocationProtocolTest.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..64a9bf7779937ecd9ffce3a38741a27fa38eadaa
+index 0000000000000000000000000000000000000000..14a6373e912781ad33993f4e5f19250537cc22b9
 --- /dev/null
 +++ b/app/src/test/java/io/github/phantom/gps/utils/DirectLocationProtocolTest.kt
 @@ -0,0 +1,37 @@
@@ -14320,7 +14955,7 @@ index 0000000000000000000000000000000000000000..64a9bf7779937ecd9ffce3a38741a27f
 +}
 diff --git a/app/src/test/java/io/github/phantom/gps/utils/DirectRequestQueueTest.kt b/app/src/test/java/io/github/phantom/gps/utils/DirectRequestQueueTest.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..ec29083b0bc644b9213db862fd74cf5e086c737d
+index 0000000000000000000000000000000000000000..363a0d34463a4421fae75a011eda39794697ba29
 --- /dev/null
 +++ b/app/src/test/java/io/github/phantom/gps/utils/DirectRequestQueueTest.kt
 @@ -0,0 +1,40 @@
@@ -14366,7 +15001,7 @@ index 0000000000000000000000000000000000000000..ec29083b0bc644b9213db862fd74cf5e
 +}
 diff --git a/app/src/test/java/io/github/phantom/gps/utils/HookLocationSnapshotTest.kt b/app/src/test/java/io/github/phantom/gps/utils/HookLocationSnapshotTest.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..e27c8f089b9e1a0a637bfbd6d75ad4f6dbec6ee6
+index 0000000000000000000000000000000000000000..632698bddc2c55ec24d2ac2418aa0d7a653b6847
 --- /dev/null
 +++ b/app/src/test/java/io/github/phantom/gps/utils/HookLocationSnapshotTest.kt
 @@ -0,0 +1,27 @@
@@ -14397,9 +15032,59 @@ index 0000000000000000000000000000000000000000..e27c8f089b9e1a0a637bfbd6d75ad4f6
 +        assertEquals(13.0, snapshot.latitude, 0.0); assertEquals("A", snapshot.requestId)
 +    }
 +}
+diff --git a/app/src/test/java/io/github/phantom/gps/utils/MembershipLeaseVerifierTest.kt b/app/src/test/java/io/github/phantom/gps/utils/MembershipLeaseVerifierTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..a0691b8ae5e7579b42746491df4e53004b1e9fcd
+--- /dev/null
++++ b/app/src/test/java/io/github/phantom/gps/utils/MembershipLeaseVerifierTest.kt
+@@ -0,0 +1,44 @@
++package io.github.phantom.gps.utils
++
++import com.google.gson.Gson
++import java.security.KeyPairGenerator
++import java.security.Signature
++import java.util.Base64
++import org.junit.Assert.*
++import org.junit.Test
++
++class MembershipLeaseVerifierTest {
++    private val keys=KeyPairGenerator.getInstance("RSA").apply{initialize(2048)}.generateKeyPair()
++    private val verifier=MembershipLeaseVerifier(Base64.getEncoder().encodeToString(keys.public.encoded))
++    private val payload=MembershipLeasePayload(1,"membership-v1","user","session","ab".repeat(32),1000000,1600000,10000000,2,10000,"io.github.phantom.gps")
++    private fun token(p:MembershipLeasePayload=payload):String {
++        val body=Base64.getUrlEncoder().withoutPadding().encodeToString(Gson().toJson(p).toByteArray())
++        val sig=Signature.getInstance("SHA256withRSA").apply{initSign(keys.private);update(body.toByteArray(Charsets.US_ASCII))}.sign()
++        return body+"."+Base64.getUrlEncoder().withoutPadding().encodeToString(sig)
++    }
++    @Test fun acceptsSignedBoundLeaseAndExpiresAtBoundary() {
++        val t=token();assertTrue(verifier.isValid(t,1000000,10000,2,payload.device))
++        assertFalse(verifier.isValid(t,1600000,610000,2,payload.device))
++        assertFalse(verifier.isValid(t,1000000,610000,2,payload.device))
++    }
++    @Test fun rejectsWrongDeviceRebootAndReversedMonotonicClock() {
++        val t=token();assertFalse(verifier.isValid(t,1000000,10000,3,payload.device))
++        assertFalse(verifier.isValid(t,1000000,10000,2,"cd".repeat(32)))
++        assertFalse(verifier.isValid(t,1000000,9999,2,payload.device))
++        assertFalse(verifier.isValid(t,800000,10000,2,payload.device))
++    }
++    @Test fun rejectsTamperedPayloadSignatureAndDifferentKey() {
++        val t=token();val altered="e30."+t.substringAfter('.');assertNull(verifier.inspect(altered))
++        assertNull(verifier.inspect(t.dropLast(5)+"abcde"))
++        val other=KeyPairGenerator.getInstance("RSA").apply{initialize(2048)}.generateKeyPair()
++        assertNull(MembershipLeaseVerifier(Base64.getEncoder().encodeToString(other.public.encoded)).inspect(t))
++    }
++    @Test fun rejectsSignedButUnsupportedOrUnboundedLease() {
++        for(p in listOf(payload.copy(v=2),payload.copy(audience="other"),payload.copy(expiresAt=1600001),payload.copy(membershipExpiresAt=1200000),payload.copy(anchor=-1)))assertNull(verifier.inspect(token(p)))
++    }
++    @Test fun clockRollbackCannotExtendMonotonicWindowAndCacheDoesNotFreezeExpiry() {
++        val t=token();assertTrue(verifier.isValid(t,1000000,10000,2))
++        assertFalse(verifier.isValid(t,1000000,610000,2))
++        assertFalse(verifier.isValid(t,1600000,20000,2))
++    }
++}
 diff --git a/app/src/test/java/io/github/phantom/gps/utils/RelayLeaseTest.kt b/app/src/test/java/io/github/phantom/gps/utils/RelayLeaseTest.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..52d42e4cbbea2f134ad1f6d1761f9b4a06d7e2d4
+index 0000000000000000000000000000000000000000..7355610d706d65292fc187e5e23df313613989e8
 --- /dev/null
 +++ b/app/src/test/java/io/github/phantom/gps/utils/RelayLeaseTest.kt
 @@ -0,0 +1,29 @@
@@ -14432,8 +15117,36 @@ index 0000000000000000000000000000000000000000..52d42e4cbbea2f134ad1f6d1761f9b4a
 +        time = 99L; assertFalse(lease.valid()); assertFalse(lease.renew())
 +    }
 +}
+diff --git a/app/src/test/java/io/github/phantom/gps/utils/SigningPolicyTest.kt b/app/src/test/java/io/github/phantom/gps/utils/SigningPolicyTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..e1b8848bdbd88c0cf993c275aac59a49015a708c
+--- /dev/null
++++ b/app/src/test/java/io/github/phantom/gps/utils/SigningPolicyTest.kt
+@@ -0,0 +1,22 @@
++package io.github.phantom.gps.utils
++
++import org.junit.Assert.*
++import org.junit.Test
++
++class SigningPolicyTest {
++    private val pin = "AB".repeat(32)
++    @Test fun acceptsOnlyPinnedCurrentSigner() {
++        assertTrue(SigningPolicy.matches(pin, setOf(pin)))
++        assertTrue(SigningPolicy.matches(pin.lowercase(), setOf(pin.chunked(2).joinToString(":"))))
++        assertFalse(SigningPolicy.matches(pin, setOf("CD".repeat(32))))
++    }
++    @Test fun rejectsUnknownMissingAndMalformedPins() {
++        assertFalse(SigningPolicy.matches("", setOf(pin)))
++        assertFalse(SigningPolicy.matches("AB", setOf(pin)))
++        assertFalse(SigningPolicy.matches("ZZ".repeat(32), setOf(pin)))
++        assertFalse(SigningPolicy.matches(pin, emptySet()))
++    }
++    @Test fun rejectsAdditionalSignerEvenWhenPinPresent() {
++        assertFalse(SigningPolicy.matches(pin, setOf(pin, "CD".repeat(32))))
++    }
++}
 diff --git a/build.gradle b/build.gradle
-index 188a24150b403c465d35bdba0374b8c66bfb1d67..f69b9386442eb0cb0c36b27cdcd90ef545ad41a9 100644
+index e9503906879469f850583d768d842d8b60820738..adecd63869bab5ac073dd1c10836a20513a86069 100644
 --- a/build.gradle
 +++ b/build.gradle
 @@ -11,0 +12 @@ plugins {
@@ -14443,11 +15156,12 @@ index 188a24150b403c465d35bdba0374b8c66bfb1d67..f69b9386442eb0cb0c36b27cdcd90ef5
 \ No newline at end of file
 +}
 diff --git a/settings.gradle b/settings.gradle
-index 83060f3bd36a294a48d58ee220340492a543d7b6..e458085b9674d4f58fae5a981f4aecc0ed3d031f 100644
+index f1fd99c019b91e987128646f42e8ebb5719f500d..d69bcb883a9e7ea72ea1e3157354b79736da519a 100644
 --- a/settings.gradle
 +++ b/settings.gradle
 @@ -19 +19 @@ dependencyResolutionManagement {
 -rootProject.name = "GPS Setter"
-+rootProject.name = "PHANToM GPS"
-@@ -20,0 +21 @@ include ':app'
++rootProject.name = "GeoX"
+@@ -20,0 +21,2 @@ include ':app'
 +include ':installer'
++

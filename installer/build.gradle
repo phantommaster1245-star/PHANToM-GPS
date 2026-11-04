@@ -11,9 +11,13 @@ android {
         applicationId "io.github.phantom.gps.installer"
         minSdk 27
         targetSdk 34
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "2.0.0"
+        testInstrumentationRunner "io.github.phantom.gps.installer.test.AdminTestRunner"
 
+        buildConfigField "String", "FIREBASE_API_KEY", "\"AIzaSyDT0JdPIXR9LolsMQkpJ-t2t6sn4cmr4MY\""
+        buildConfigField "String", "FIREBASE_APP_ID", "\"1:140329128209:android:c18d6cd02d0525449cbcb0\""
+        buildConfigField "String", "FIREBASE_PROJECT_ID", "\"phantom-gps\""
         buildConfigField "String", "TARGET_APP_PACKAGE", "\"io.github.phantom.gps\""
         buildConfigField "String", "GITHUB_RELEASES_API_BASE", "\"https://api.github.com/repos/Phantomguy7845/PHANToM-GPS/\""
         buildConfigField "String", "GITHUB_RELEASES_PAGE", "\"https://github.com/Phantomguy7845/PHANToM-GPS/releases\""
@@ -42,7 +46,8 @@ android {
             minifyEnabled false
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             signingConfig signingConfigs.release.storeFile ? signingConfigs.release : signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -64,6 +69,13 @@ android {
 }
 
 dependencies {
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    implementation platform('com.google.firebase:firebase-bom:34.9.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-functions'
+
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.activity:activity-ktx:1.9.0'

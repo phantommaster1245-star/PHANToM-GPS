@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PHANToM Installer</string>
-    <string name="installer_subtitle">Install or update the full PHANToM GPS build directly from GitHub releases.</string>
+    <string name="app_name">GeoX Admin</string>
+    <string name="installer_subtitle">Manage GeoX memberships and renewals.</string>
     <string name="installer_status_title">Release status</string>
     <string name="installer_installed_label">Installed app</string>
     <string name="installer_latest_label">Latest full build</string>
@@ -9,7 +9,7 @@
     <string name="installer_installed_format">%1$s (code %2$d)</string>
     <string name="installer_release_unknown">Not checked yet</string>
     <string name="installer_checking_release">Checking latest release…</string>
-    <string name="installer_status_waiting">Ready to check the latest PHANToM GPS full build.</string>
+    <string name="installer_status_waiting">Ready to check the latest GeoX full build.</string>
     <string name="installer_status_install_ready">Latest full build is ready to install.</string>
     <string name="installer_status_update_ready">A newer full build is ready to update this device.</string>
     <string name="installer_status_up_to_date">This device already has the latest published full build.</string>
@@ -25,8 +25,8 @@
     <string name="installer_activation_code_placeholder">No active code yet</string>
     <string name="installer_activation_expiry_placeholder">The generated code stays valid for 1 minute.</string>
     <string name="installer_activation_expiry_format">Expires in %1$s</string>
-    <string name="installer_action_install">Install full PHANToM GPS</string>
-    <string name="installer_action_update">Download and update PHANToM GPS</string>
+    <string name="installer_action_install">Install full GeoX</string>
+    <string name="installer_action_update">Download and update GeoX</string>
     <string name="installer_action_reinstall">Reinstall the latest full build</string>
     <string name="installer_action_downloading">Downloading APK…</string>
     <string name="installer_action_refresh">Refresh release info</string>
@@ -45,7 +45,7 @@
     <string name="installer_permission_message">Android must allow this installer app to open APK packages. After enabling it, return here and the install screen will continue.</string>
     <string name="installer_permission_continue">Open permission settings</string>
     <string name="installer_install_cancelled">Package installation was cancelled or not completed.</string>
-    <string name="installer_target_app_missing">PHANToM GPS is not installed yet.</string>
-    <string name="installer_open_activation_failed">Could not open the PHANToM GPS activation screen.</string>
+    <string name="installer_target_app_missing">GeoX is not installed yet.</string>
+    <string name="installer_open_activation_failed">Could not open the GeoX activation screen.</string>
     <string name="installer_activation_code_copied">Activation code copied.</string>
 </resources>

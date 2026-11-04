@@ -1,1 +1,1 @@
-
+-renamesourcefileattribute SourceFile

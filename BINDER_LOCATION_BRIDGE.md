@@ -1,4 +1,4 @@
-# Full Lock → PHANToM GPS Binder relay v1
+# Full Lock → GeoX Binder relay v1
 
 วันที่ 2026-11-04 · Implementation ฝั่ง GPS พร้อมคอมไพล์/ทดสอบ JVM แล้ว; ยังไม่ทดสอบข้ามแอปจริง
 
@@ -53,7 +53,7 @@ KEEP_ALIVE/CLOSE มีเพียง writeInterfaceToken และ readExcepti
 คำขอสูงสุด 8192 bytes. ตรวจ finite/range/string length ผ่าน DirectLocationRequest เดิม.
 เพิ่ม code503 status BUSY เมื่อคิวเต็ม (32 waiting); ไม่มี retry อัตโนมัติ และคำขอที่ถูกปฏิเสธไม่ทำให้คำขอที่รับแล้วกลายเป็น SUPERSEDED.
 
-## การทำงานฝั่ง Full Lock ที่ยังต้องทำ
+## รายการที่ต้องตรวจฝั่ง Full Lock (มีโค้ดแล้ว ยังต้องทดสอบร่วมกัน)
 - เพิ่ม operation สำหรับมอบ session Binder ให้ LocalRelayMain จาก owner UID เท่านั้น.
 - เพิ่ม operation ส่งพิกัดแยกจากคิวอ่านหน้าจอ ให้รับจาก Driver UID ที่อนุญาตเท่านั้น.
 - ตัวกลางส่ง GPS บน worker แยก ไม่ block Main/Binder thread ด้วย license/disk/Hook wait.
@@ -70,7 +70,7 @@ Intent/Binder ใช้ worker เดียว คิวจำกัด แล�
 คำขอที่ commit ไปแล้วอาจมีผลชั่วคราวก่อนคำขอใหม่ commit; การถอน session ไม่ย้อนคืนพิกัดที่ commit แล้ว.
 ตรวจ session ก่อนเริ่มและก่อน commit path; การ revoke ระหว่าง commit ที่เริ่มไปแล้วไม่รับประกัน rollback.
 Service ไม่ใช้ foreground notification; Android อาจฆ่าเมื่อ Full Lock/client ถูกจำกัดเบื้องหลัง ต้อง reconnect.
-เริ่มเผยแพร่ Binder ใน PHANToM GPS 0.0.16 / versionCode16; ควรใช้ bind+OPEN handshake ตรวจรองรับด้วย.
+เริ่มเผยแพร่ Binder ใน GeoX 0.0.16 / versionCode16; ควรใช้ bind+OPEN handshake ตรวจรองรับด้วย.
 
 ## ต้องทดสอบจริงก่อนเปิดใช้
 HMA ซ่อน/ไม่ซ่อน Full Lock; session หมดอายุ/ปิดโหมด/kill GPS/kill relay/kill Full Lock;
@@ -80,3 +80,7 @@ HMA ซ่อน/ไม่ซ่อน Full Lock; session หมดอายุ/
 
 ## Full Lock implementation update 2026-11-04
 Full Lock เพิ่ม owner-only GPS_CONFIG=5 และ Driver-only GPS_SEND=6 ใน LocalRelayMain แล้ว. GPS session Binder เก็บเฉพาะตัวกลาง ไม่ส่งให้ Driver. ตัวกลาง clearCallingIdentity ก่อน transact GPS เพื่อให้ Binder เห็น root UIDจริง. Full Lock bind/OPENล่วงหน้าและ KEEP_ALIVE5วินาที. Probe ใช้ workerแยกจากการอ่านหน้าจอ ไม่เขียนclipboard/ไม่retryเอง. ยังต้องทดสอบroot/HMA/IPCจริงร่วมกันก่อนเผยแพร่.
+
+## Membership 0.0.17
+
+รอบนี้เพิ่ม signed membership lease ใน Engine/Hook ต้อง login บัญชี PHANToM ที่ยังไม่หมดอายุก่อนส่ง การตรวจต่อการแตะยัง local ไม่มี network. 402/403 ให้ผู้ใช้เปิดแอปดูสถานะหรือเข้าสู่ระบบ ไม่ขอ activation code; bootstrap session กับ membership session เป็นคนละสิทธิ์. อ่านเอกสารสมาชิกในโปรเจค GPS ก่อนนำรุ่นใหม่ไปใช้จริง (ยังไม่ deploy/push)
