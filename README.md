@@ -24,7 +24,7 @@ The root Gradle files in this repository build only the standalone Installer. Th
 
 ## Public website and updates
 
-PHANToM GPS 0.0.15 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
+PHANToM GPS 0.0.16 includes website release checks, update notifications, and a manual check in settings. The website source is in web/ and distributes only the full GPS APK.
 
 Website: https://phantom-gps.vercel.app/
 Download: https://phantom-gps.vercel.app/download.html
@@ -54,3 +54,7 @@ Reboot once after this module update to load the changed hooks. See PERFORMANCE.
 Version 0.0.15 receives native Double latitude/longitude through an explicit Intent from com.fulllock.app. It commits coordinates, requests Hook refresh, and replies with APPLIED before notification work. Optional target-package confirmation produces HOOK_LOADED only after that Hook loads the matching request snapshot. This channel is independent of Clipboard monitor and does not execute su or ADB commands.
 
 See [INTENT_LOCATION_BRIDGE.md](INTENT_LOCATION_BRIDGE.md) for the complete protocol, Java client helper, authentication token, result semantics, and integration test steps for the Full Lock agent.
+
+## Full Lock Binder integration
+
+Version 0.0.16 adds authenticated root-relay sessions. See BINDER_LOCATION_BRIDGE.md for bootstrap, Parcel order, heartbeat/reconnection and callback statuses. Disable Clipboard monitor when using Full Lock; the sender should not copy coordinates after Intent/Binder submission. Physical device/HMA integration remains to be verified.

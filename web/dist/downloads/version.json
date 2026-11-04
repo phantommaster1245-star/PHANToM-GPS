@@ -1,14 +1,15 @@
 {
   "packageName": "io.github.phantom.gps",
-  "version": "v0.0.15",
-  "versionCode": 15,
-  "filename": "PHANToM-GPS-v0.0.15.apk",
-  "sha256": "9897d2289b5b9528c2569fd0bab1a71f8f6948ed47da79a906f22a425035fd51",
-  "bytes": 3415867,
-  "publishedAt": "2026-11-03T23:43:17.034Z",
+  "version": "v0.0.16",
+  "versionCode": 16,
+  "filename": "PHANToM-GPS-v0.0.16.apk",
+  "sha256": "cd7802ea01193ce5e6493663a0a0da7f048daa289fb1731c4ee61e75124557a0",
+  "bytes": 3415883,
+  "publishedAt": "2026-11-04T08:33:26.876Z",
   "changes": [
-    "เพิ่มช่องทางรับ lat,lng โดยตรงจาก Full Lock ผ่าน Intent โดยไม่ใช้คลิปบอร์ด su หรือ ADB",
-    "ตอบกลับสถานะตั้งพิกัดแล้ว และยืนยันแยกเมื่อ Hook ในแอปปลายทางโหลดพิกัดใหม่",
-    "คงความละเอียดพิกัดแบบ Double และใช้จุดที่ส่งมาตรง ๆ โดยไม่สุ่มรัศมีสำหรับ direct request"
+    "เพิ่มช่องทาง Binder จากตัวกลาง Full Lock พร้อมยืนยันสิทธิ์ session และรับพิกัด Double โดยตรง",
+    "รองรับ session หมดอายุ heartbeat และถอนสิทธิ์เมื่อการเชื่อมต่อหลุด",
+    "แก้กรณีคิวเต็มไม่ให้คำขอที่ถูกปฏิเสธยกเลิกคำขอก่อนหน้า",
+    "เมื่อใช้ Full Lock ให้ปิด Clipboard monitor และส่งพิกัดโดยไม่คัดลอกลงคลิปบอร์ด"
   ]
 }

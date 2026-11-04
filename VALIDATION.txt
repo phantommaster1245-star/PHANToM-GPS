@@ -1,9 +1,7 @@
 Patch applied successfully to sanitized base 0577d8e8a3a0fea7d0e421509be8506c760080ba.
-All 138 tracked app/build/settings/test files match source 1e06b7fda073b4227e8b87a589c9b775ea300b21 after normalizing Windows line endings.
-Android :app:testFullReleaseUnitTest (24 tests) and :app:assembleFullRelease passed. APK version 0.0.15-full, versionCode 15. Signing certificate matches the previous APK.
-Tests cover direct coordinate validity, request correlation/history, exact Double snapshots and legacy Float compatibility, direct randomization override, activation state, clipboard routes and duplicate suppression, and release metadata.
-The Java Full Lock example extracted from INTENT_LOCATION_BRIDGE.md compiled against Android SDK 34.
-Website tests: 4 passed; download size and SHA-256 match the full release APK. APK contains the Vercel origin and direct Intent action, with no Sites origin.
-No physical Android device is connected; cross-app Intent/Binder delivery and actual latency have not been verified on a device. Full Lock implementation is delegated to its owner/agent via the guide.
-Vercel deployment is managed by the repository owner; no deployment was performed.
-Framework scope now registers its refresh receiver after SystemServer service startup, even without a clipboard event. System hooks are installed with runtime enable/start guards and readiness is reported separately. The direct contract accepts target_package=android.
+All 144 canonical app/build/settings/test files match source 5cf3e9736a0bf325a1a7c8a1f376aac4bbad48ea after normalizing Windows line endings; module paths normalized from phantom-gps/app to app.
+Android :app:testFullReleaseUnitTest (30 tests, zero failures) and :app:assembleFullRelease passed. APK version 0.0.16-full, versionCode 16. Signing certificate matches the previous APK.
+Tests include rejected queue admission preserving accepted work, latest accepted ordering, session lease expiry/renewal/revocation, numeric validity, snapshots, activation, clipboard and metadata.
+Binder/UID/HMA/reconnect and actual latency have not been verified on a physical device. Full Lock client implementation is managed separately.
+No Vercel/Sites deployment was performed; the owner manages deployment from the repository.
+Website tests: 4 passed; downloadable APK size/SHA-256 match version.json.
