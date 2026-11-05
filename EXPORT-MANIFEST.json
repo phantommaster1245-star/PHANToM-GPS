@@ -286,8 +286,8 @@
     },
     {
       "path": "web/dist/account.html",
-      "bytes": 7728,
-      "sha256": "532cf8392647c58374452305b80e39158eec85deac57634a82126362e0d2d666"
+      "bytes": 7722,
+      "sha256": "30d5a8dcfbe68883c3c501eb735a55c15b1682af27d102a83ac835af9e0acebf"
     },
     {
       "path": "web/dist/assets/LICENSE.txt",
@@ -303,6 +303,11 @@
       "path": "web/dist/assets/firebase-config.mjs",
       "bytes": 403,
       "sha256": "4da647068aad889c4e370cef083b35c108040276a5c053406a435b336cc9f3e7"
+    },
+    {
+      "path": "web/dist/assets/geox-icon.png",
+      "bytes": 141200,
+      "sha256": "90b15abc088c2714c4110b72c105db4be380243ba82a2e309ceb3c2880072adb"
     },
     {
       "path": "web/dist/assets/home.mjs",
@@ -356,8 +361,8 @@
     },
     {
       "path": "web/dist/download.html",
-      "bytes": 6488,
-      "sha256": "167228b1c2ddb2febff0a699354eeb66bb84c6392385dbbac34ce90172f76d8c"
+      "bytes": 6479,
+      "sha256": "6d1ee3a777051180f67ae45f160f16696ec1c125d39f02664edd9b947bc5df07"
     },
     {
       "path": "web/dist/downloads/PHANToM-GPS-v0.0.16.apk",
@@ -376,13 +381,13 @@
     },
     {
       "path": "web/dist/index.html",
-      "bytes": 4990,
-      "sha256": "2366a35b1336fd5aa71be065a811fa1a301ac179797d874188b0967c8b0ef0a1"
+      "bytes": 4984,
+      "sha256": "0613fbbfbb18b50947c8adfd089922830eb0c7b04bae4a8f03b0b7f30a0c8936"
     },
     {
       "path": "web/dist/register.html",
-      "bytes": 7713,
-      "sha256": "b08a4d3bf166322e9a7e85d0c3171694ca8d091fb8bbd086c18b88d1a31a31b0"
+      "bytes": 7707,
+      "sha256": "864b9b46e677b2fb93694e0be95e2a6192fe04fd76fbf4e14d9577001c9fb505"
     },
     {
       "path": "web/tests/membership.test.mjs",
