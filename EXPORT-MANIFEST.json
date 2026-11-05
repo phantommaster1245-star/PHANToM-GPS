@@ -1,8 +1,8 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "sourceTree": "12ce506d9b7ce1e90d84287b00b057ff066c3081",
+  "sourceTree": "fbc6a9ae7ed12990428c2b5f3e833f4ff10375f3",
   "brand": "GeoX",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "files": [
     {
       "path": ".gitattributes",
@@ -51,8 +51,8 @@
     },
     {
       "path": "VALIDATION.txt",
-      "bytes": 2543,
-      "sha256": "4d4bd26cf09d15624276770b392042a92efa32039c9ba941cf42182fade252f1"
+      "bytes": 3129,
+      "sha256": "b5c7d14277721c296ea6e5f9f4093fb672e6b22142986765da1bbfc1ac2b9ced"
     },
     {
       "path": "build.gradle",
@@ -137,7 +137,7 @@
     {
       "path": "installer/build.gradle",
       "bytes": 3427,
-      "sha256": "fd21ffec41465e9a385c394f18c3e9c0ebbad69205e6291551f78e4b627bb1be"
+      "sha256": "9b805a45358ddc79868fa11c8763a02c89d28855ab6079fcbe217c467991a832"
     },
     {
       "path": "installer/proguard-rules.pro",
@@ -156,23 +156,23 @@
     },
     {
       "path": "installer/src/main/java/io/github/phantom/gps/installer/AdminViewModel.kt",
-      "bytes": 4390,
-      "sha256": "0662846626e67f42cd822d782d13f6764d5904b6351042c64068bb630e9363f0"
+      "bytes": 5004,
+      "sha256": "202aeeb95d006f0d85e1cf1c9789c8e0d1b86595158f7a6e55dc47077e209c9c"
     },
     {
       "path": "installer/src/main/java/io/github/phantom/gps/installer/MainActivity.kt",
-      "bytes": 3161,
-      "sha256": "a1a75fb23221b2a79063b0f4523bfaf5b087dfb59933d8a0dde71985a87d28b5"
+      "bytes": 5686,
+      "sha256": "7d9a4e5d0ecf5ae9a4ec92f8cfe4fa5560f2f8172b7effbe82db94eb01440b38"
     },
     {
       "path": "installer/src/main/res/drawable-nodpi/ic_launcher_foreground.png",
-      "bytes": 81091,
-      "sha256": "e8a06a8df45e846c4e48bb368f4da2f6498bb2d99df1a86d86226ead2c94534d"
+      "bytes": 180565,
+      "sha256": "bbdcb01dcfe7e5fc73793e71b375d61a27e76ebef000e1f0c51d54266eb46a40"
     },
     {
       "path": "installer/src/main/res/layout/activity_main.xml",
-      "bytes": 4144,
-      "sha256": "a3e70e19dff5ab5a1b646e934794f3cf89f9b64f4c1890ff720c0fa47714f505"
+      "bytes": 4496,
+      "sha256": "e6e4a622cc27a7d4e40f180c8326274e02f31981d9723792ee1c274a65b0b9b0"
     },
     {
       "path": "installer/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
@@ -191,8 +191,8 @@
     },
     {
       "path": "installer/src/main/res/mipmap-hdpi/ic_launcher_round.png",
-      "bytes": 7381,
-      "sha256": "9b49ca8939b81ed812012a75070b62a4cf1956569dae75b1e55de6ca754f5ee4"
+      "bytes": 13962,
+      "sha256": "02f1516f1e65bf60f52b013cc0e3fdaf4282a85b715d90b243b1aab27ba26276"
     },
     {
       "path": "installer/src/main/res/mipmap-mdpi/ic_launcher.png",
@@ -201,8 +201,8 @@
     },
     {
       "path": "installer/src/main/res/mipmap-mdpi/ic_launcher_round.png",
-      "bytes": 3643,
-      "sha256": "6d7124990e4e52da9720b67df1f8015b787ca5c033d61bdce65f32c01da52e3f"
+      "bytes": 6642,
+      "sha256": "5c87dc1ff8aa4dfa9cd164bf010da7cdbfffcb708244b14a12c29b40f1f5ec6a"
     },
     {
       "path": "installer/src/main/res/mipmap-xhdpi/ic_launcher.png",
@@ -211,8 +211,8 @@
     },
     {
       "path": "installer/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
-      "bytes": 12556,
-      "sha256": "bcd9f6b4437f7fe8fd37fe29b468dacc8a8cdc64612fdff0708bbf57ad2771c1"
+      "bytes": 23574,
+      "sha256": "be8b7c2c2e9224fa2125d523e23d7feb9a6a89dfb0daaa18d205805988c71f1f"
     },
     {
       "path": "installer/src/main/res/mipmap-xxhdpi/ic_launcher.png",
@@ -221,8 +221,8 @@
     },
     {
       "path": "installer/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
-      "bytes": 26516,
-      "sha256": "92a2ec7431f1a48c6974a178f04de0e6dab35fc89d9165c61844086fa0092aef"
+      "bytes": 49276,
+      "sha256": "f3290e86f2f74b00f336fb84951af42dd9c7700248f6c045e1b76dc46ed33010"
     },
     {
       "path": "installer/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
@@ -231,13 +231,13 @@
     },
     {
       "path": "installer/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
-      "bytes": 44072,
-      "sha256": "a3df2ab3981523a2729a26233b8722ad6e964ca99ea53e3bcbd4341e3664e54a"
+      "bytes": 83068,
+      "sha256": "a6824b4713614bbd1e9976628f91e9943b6b7e8d71c924505017b6fba98c830b"
     },
     {
       "path": "installer/src/main/res/values/colors.xml",
       "bytes": 781,
-      "sha256": "ba7a3a00ae8b71b43349619de18b797742a86f1665ae041ad90d0901c5870e9b"
+      "sha256": "c1fb1266ca0b117d92513c2ef36fc75ce5472f392ef725dbd3b9c04c4083175d"
     },
     {
       "path": "installer/src/main/res/values/strings.xml",
@@ -261,8 +261,8 @@
     },
     {
       "path": "patches/phantom-gps.patch",
-      "bytes": 997463,
-      "sha256": "85231f1ddfb3cc8e9825ab1c8ca5289c37d09e97d3207f1c56dff453b28acbe6"
+      "bytes": 1299484,
+      "sha256": "43c03059c192a13e0e836d606d2085a05740a03c30d40b7f3e7b9df93cbc4823"
     },
     {
       "path": "settings.gradle",
@@ -281,13 +281,13 @@
     },
     {
       "path": "web/README.md",
-      "bytes": 2961,
-      "sha256": "0a2b92a18e487346dc6a6d3c2d13e0da5bb0ceaa34bb7505d33ffa32125928b5"
+      "bytes": 3131,
+      "sha256": "4f06fe7836f161d2ba95da366a5b389aec8a79ce28c373ab18035de409c3cfc9"
     },
     {
       "path": "web/dist/account.html",
-      "bytes": 7853,
-      "sha256": "16c6971cec9aef8c706693b3859f760eb0b48ff02299950a6fe800048d266027"
+      "bytes": 9093,
+      "sha256": "7c9b0d75333b00a731df68782d948f889834e254f2b981bbe0fe1abed7931dfa"
     },
     {
       "path": "web/dist/assets/LICENSE.txt",
@@ -326,13 +326,13 @@
     },
     {
       "path": "web/dist/assets/member.css",
-      "bytes": 2056,
-      "sha256": "a203f16292b14b14c582c526527579cb5e85d4046b91547bdce3474f73513b0c"
+      "bytes": 2273,
+      "sha256": "3195bbe8c2d483d5acacb40c8d1b378d5d453383b6f1d93b4574b00653c79349"
     },
     {
       "path": "web/dist/assets/member.mjs",
-      "bytes": 14814,
-      "sha256": "42f3716a638297464190578d7ea5244c63dd23afb221f9da7cde9c08be6dea38"
+      "bytes": 17060,
+      "sha256": "88f0205b8475936a0028f86566aefe75f877bdd2a782962c363c7dc78066b553"
     },
     {
       "path": "web/dist/assets/phantom-icon.png",
@@ -385,9 +385,14 @@
       "sha256": "969aed3f5b34e84698079afb188028f2b6543fb13ce59062fe2f607cee2c08fc"
     },
     {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.0.21.apk",
+      "bytes": 4300457,
+      "sha256": "c4f18b035c223738f67a5e1ef449481972fcff9f3fa924ec23d50e45545345d6"
+    },
+    {
       "path": "web/dist/downloads/version.json",
-      "bytes": 1028,
-      "sha256": "2de148c185ee263813207f67af3ae9376f8fda0afb7ec993f21cd3d4a94f16a0"
+      "bytes": 1021,
+      "sha256": "16e955af367742efb38b51cf9989517c23ea4c35fcd2e7f07c2b255c54b9c7ae"
     },
     {
       "path": "web/dist/index.html",
@@ -396,13 +401,13 @@
     },
     {
       "path": "web/dist/register.html",
-      "bytes": 7838,
-      "sha256": "2210f9ddb428260ad7ed936b97f89dca097e992f6d6b76b2db09b48b58c5f4cb"
+      "bytes": 9078,
+      "sha256": "8a58012b34c3720142dbe846ee2966fa2eec8ea66115531e4f65be7b8aec43b8"
     },
     {
       "path": "web/tests/membership.test.mjs",
-      "bytes": 1877,
-      "sha256": "6f6ed4ede1f673f23d03d9e8e0708d411f50e45b6f155cc1393fd0ede076bfd6"
+      "bytes": 1878,
+      "sha256": "0a054d6ced43f4b8fb7987df13044312bfc936dcfdf35ac5e148f72c4f3ddc6d"
     },
     {
       "path": "web/tests/registration-flow.test.mjs",

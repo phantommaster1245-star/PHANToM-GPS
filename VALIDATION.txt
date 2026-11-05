@@ -19,3 +19,5 @@ Release build passed; 40 existing JVM tests passed during redesign validation. N
 Reconstructed tree: 12ce506d9b7ce1e90d84287b00b057ff066c3081
 Patch SHA256: 85231f1ddfb3cc8e9825ab1c8ca5289c37d09e97d3207f1c56dff453b28acbe6
 All 166 canonical files reconstruct exactly. Floating header, system-bar/cutout/IME insets, coordinate dock and dark road-map palette included. Website download advanced to 0.0.20 with owner authorization.
+
+GeoX 0.0.21 (2026-11-05): Main/Admin release builds pass. Android 41, web 16, backend 20 tests pass; real Firestore/Auth emulator admin transaction checks pass. Admin 2.1.0 installed on e3b20843 without data wipe. Source reconstructed exactly: fbc6a9ae7ed12990428c2b5f3e833f4ff10375f3; patch SHA256 43c03059c192a13e0e836d606d2085a05740a03c30d40b7f3e7b9df93cbc4823. New admin backend 3 endpoints deployed and unauthorized access denied; 20 unrelated endpoints unchanged. APK visual/notification checks on device not yet completed. Public APK updated to 0.0.21 with owner authorization.

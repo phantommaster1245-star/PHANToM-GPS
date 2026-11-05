@@ -38,17 +38,18 @@ class AdminViewModel(app:Application):AndroidViewModel(app) {
         mutable.value=State(admin=FirebaseAuth.getInstance().currentUser?.email.orEmpty(),member=m)
         }
     }
-    fun renew() {
+    fun renew(days:Int=7)=manage("extend",days)
+    fun manage(action:String,days:Int=7,reason:String="") {
         val current=mutable.value?:return;val member=current.member?:return
         val uid=member["uid"]?.toString()?:return
-        val request=if(prefs.getString("uid","")==uid)prefs.getString("request",null)?:UUID.randomUUID().toString() else UUID.randomUUID().toString()
-        prefs.edit().putString("uid",uid).putString("request",request).commit()
+        val fingerprint="$uid|$action|$days|$reason"
+        val request=if(prefs.getString("operation","")==fingerprint)prefs.getString("request",null)?:UUID.randomUUID().toString() else UUID.randomUUID().toString()
+        prefs.edit().putString("operation",fingerprint).putString("request",request).commit()
         run {
-            val result=call("adminMemberRenew",mapOf("uid" to uid,"requestId" to request))
+            val result=call("adminMemberManage",mapOf("uid" to uid,"action" to action,"days" to days,"reason" to reason,"requestId" to request))
             val updated=member.entries.associate { it.key to it.value }.toMutableMap()
-            updated["expiresAtMs"]=result["expiresAtMs"]
-            updated["prepaidDays"]=result["prepaidDays"]
-            mutable.value=State(admin=current.admin,member=updated,message="ต่ออายุเพิ่ม 7 วันสำเร็จ")
+            listOf("expiresAtMs","prepaidDays","disabled","banReason","serverNowMs").forEach { updated[it]=result[it] }
+            mutable.value=State(admin=current.admin,member=updated,message="บันทึกการจัดการสมาชิกสำเร็จ")
             prefs.edit().clear().commit()
         }
     }
@@ -59,7 +60,7 @@ class AdminViewModel(app:Application):AndroidViewModel(app) {
         viewModelScope.launch {
             try{block()}catch(e:Exception){if(e is kotlinx.coroutines.CancellationException)throw e
                 val code=if(e is FirebaseFunctionsException)(e.details as? Map<*, *>)?.get("code")?.toString() else ""
-                mutable.value=(mutable.value?:State()).copy(message=when(code){"ADMIN_REQUIRED"->"บัญชีนี้ไม่มีสิทธิ์แอดมิน";"MEMBER_NOT_FOUND"->"ไม่พบสมาชิกที่ลงทะเบียนเสร็จแล้ว";else->"ดำเนินการไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่"})
+                mutable.value=(mutable.value?:State()).copy(message=when(code){"ADMIN_REQUIRED"->"บัญชีนี้ไม่มีสิทธิ์แอดมิน";"MEMBER_NOT_FOUND"->"ไม่พบสมาชิกที่ลงทะเบียนเสร็จแล้ว";"TIME_REDUCTION_LIMIT"->"ลดเวลาไม่ได้: เหลือไม่เกิน 1 ชั่วโมงหรือไม่มีวันสะสม";"MEMBER_DISABLED"->"บัญชีถูกแบน กรุณาปลดแบนก่อนต่ออายุ";"DAYS_INVALID"->"จำนวนวันไม่ถูกต้อง";else->"ดำเนินการไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่"})
             }finally{mutable.value=(mutable.value?:State()).copy(busy=false)}
         }
     }

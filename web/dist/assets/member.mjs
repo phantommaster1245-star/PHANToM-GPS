@@ -38,10 +38,13 @@ function setBusy(value){actionBusy=value;updateBusy();}
 function updateBusy(){
  const value=actionBusy||authLoading;busy=value;document.querySelector('.member-grid')?.setAttribute('aria-busy',String(value));
  document.querySelectorAll('button').forEach(el=>{if(!buttonLabels.has(el))buttonLabels.set(el,el.textContent);el.disabled=value;el.textContent=value&&!el.hidden?'กำลังดำเนินการ…':buttonLabels.get(el);});
- document.querySelectorAll('#signup-form input,#admin-search input').forEach(el=>el.readOnly=value);
- $('admin-renew').disabled=value||!currentMember;
+ document.querySelectorAll('#signup-form input,#admin-panel input,#admin-panel textarea').forEach(el=>el.readOnly=value);
+ $('admin-days').disabled=value;
+ $('admin-renew').disabled=value||!currentMember||currentMember.disabled===true;
+ for(const id of ['admin-reduce','admin-ban'])$(id).disabled=value||!currentMember;
+ $('admin-ban').textContent=currentMember?.disabled?'ปลดแบนบัญชี':'แบนบัญชี';
 }
-function errorText(e){const code=e?.details?.code||e?.code;return ({USERNAME_TAKEN:'ชื่อผู้ใช้นี้ถูกใช้แล้ว กรุณาเลือกชื่ออื่น',USERNAME_INVALID:'ชื่อผู้ใช้ต้องเป็นอักษรอังกฤษ ตัวเลข หรือ _ รวม 4–24 ตัว',GOOGLE_PASSWORD_REQUIRED:'กรุณายืนยัน Google และตั้งรหัสผ่านให้ครบ',ADMIN_REQUIRED:'บัญชีนี้ไม่มีสิทธิ์แอดมิน',MEMBER_NOT_FOUND:'ไม่พบสมาชิกที่ลงทะเบียนเสร็จแล้ว','auth/network-request-failed':'เชื่อมต่อไม่ได้ กรุณาตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง','functions/unavailable':'เซิร์ฟเวอร์ยังไม่พร้อม กรุณาลองอีกครั้ง','functions/deadline-exceeded':'การเชื่อมต่อใช้เวลานาน กรุณาลองอีกครั้ง','auth/too-many-requests':'ลองบ่อยเกินไป กรุณารอสักครู่','auth/cancelled-popup-request':'มีหน้าต่าง Google เปิดอยู่ กรุณาดำเนินการในหน้าต่างนั้น','auth/web-storage-unsupported':'เบราว์เซอร์ไม่อนุญาตให้เก็บสถานะเข้าสู่ระบบ ลองเปิดใน Chrome หรือ Safari','auth/popup-blocked':'เบราว์เซอร์บล็อกหน้าต่าง Google กรุณาอนุญาตแล้วลองอีกครั้ง','auth/popup-closed-by-user':'ยังไม่ได้ลงชื่อเข้าใช้ Google','auth/unauthorized-domain':'โดเมนนี้ยังไม่ได้ตั้งค่า Google Sign-in','auth/operation-not-allowed':'ระบบ Google Sign-in ยังไม่ได้เปิดใช้งาน','auth/weak-password':'รหัสผ่านยังไม่ผ่านเงื่อนไขความปลอดภัย','auth/user-mismatch':'กรุณาเลือกบัญชี Google เดิมที่ใช้สมัคร','auth/requires-recent-login':'กรุณาออกจากระบบเว็บแล้วลงชื่อเข้าใช้ Google ใหม่','LOGIN_CHANGED':'บัญชีที่เข้าสู่ระบบเปลี่ยนไป กรุณาเริ่มใหม่','GOOGLE_PROOF_REQUIRED':'Google ไม่ได้ส่งหลักฐานยืนยัน กรุณาเลือก Gmail เดิมแล้วลองอีกครั้ง','GOOGLE_PROOF_INVALID':'ตรวจหลักฐาน Google ไม่สำเร็จ กรุณาเลือก Gmail เดิมแล้วลองอีกครั้ง','TOO_MANY_REQUESTS':'ยืนยันบ่อยเกินไป กรุณารอ 1 นาทีแล้วลองใหม่'})[code]||'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';}
+function errorText(e){const code=e?.details?.code||e?.code;return ({USERNAME_TAKEN:'ชื่อผู้ใช้นี้ถูกใช้แล้ว กรุณาเลือกชื่ออื่น',USERNAME_INVALID:'ชื่อผู้ใช้ต้องเป็นอักษรอังกฤษ ตัวเลข หรือ _ รวม 4–24 ตัว',GOOGLE_PASSWORD_REQUIRED:'กรุณายืนยัน Google และตั้งรหัสผ่านให้ครบ',ADMIN_REQUIRED:'บัญชีนี้ไม่มีสิทธิ์แอดมิน',MEMBER_NOT_FOUND:'ไม่พบสมาชิกที่ลงทะเบียนเสร็จแล้ว',MEMBER_DISABLED:'บัญชีถูกแบน กรุณาติดต่อแอดมิน',TIME_REDUCTION_LIMIT:'ลดเวลาไม่ได้: เหลือไม่เกิน 1 ชั่วโมง หรือไม่มีวันสะสม',DAYS_INVALID:'จำนวนวันไม่ถูกต้อง',REQUEST_ID_REUSED:'คำขอนี้มีข้อมูลไม่ตรงกับรายการเดิม กรุณาค้นหาสมาชิกอีกครั้ง','auth/network-request-failed':'เชื่อมต่อไม่ได้ กรุณาตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง','functions/unavailable':'เซิร์ฟเวอร์ยังไม่พร้อม กรุณาลองอีกครั้ง','functions/deadline-exceeded':'การเชื่อมต่อใช้เวลานาน กรุณาลองอีกครั้ง','auth/too-many-requests':'ลองบ่อยเกินไป กรุณารอสักครู่','auth/cancelled-popup-request':'มีหน้าต่าง Google เปิดอยู่ กรุณาดำเนินการในหน้าต่างนั้น','auth/web-storage-unsupported':'เบราว์เซอร์ไม่อนุญาตให้เก็บสถานะเข้าสู่ระบบ ลองเปิดใน Chrome หรือ Safari','auth/popup-blocked':'เบราว์เซอร์บล็อกหน้าต่าง Google กรุณาอนุญาตแล้วลองอีกครั้ง','auth/popup-closed-by-user':'ยังไม่ได้ลงชื่อเข้าใช้ Google','auth/unauthorized-domain':'โดเมนนี้ยังไม่ได้ตั้งค่า Google Sign-in','auth/operation-not-allowed':'ระบบ Google Sign-in ยังไม่ได้เปิดใช้งาน','auth/weak-password':'รหัสผ่านยังไม่ผ่านเงื่อนไขความปลอดภัย','auth/user-mismatch':'กรุณาเลือกบัญชี Google เดิมที่ใช้สมัคร','auth/requires-recent-login':'กรุณาออกจากระบบเว็บแล้วลงชื่อเข้าใช้ Google ใหม่','LOGIN_CHANGED':'บัญชีที่เข้าสู่ระบบเปลี่ยนไป กรุณาเริ่มใหม่','GOOGLE_PROOF_REQUIRED':'Google ไม่ได้ส่งหลักฐานยืนยัน กรุณาเลือก Gmail เดิมแล้วลองอีกครั้ง','GOOGLE_PROOF_INVALID':'ตรวจหลักฐาน Google ไม่สำเร็จ กรุณาเลือก Gmail เดิมแล้วลองอีกครั้ง','TOO_MANY_REQUESTS':'ยืนยันบ่อยเกินไป กรุณารอ 1 นาทีแล้วลองใหม่'})[code]||'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';}
 $('google-login').addEventListener('click',async()=>{if(busy)return;setBusy(true);message('กำลังเปิด Google กรุณาดำเนินการในหน้าต่างยืนยันบัญชี');try{const p=new GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});await signInWithPopup(auth,p);}catch(e){message(errorText(e),true);}finally{setBusy(false);}});
 async function renderAccount(user){
  const version=++renderVersion;message('');$('retry-account').hidden=true;
@@ -81,9 +84,33 @@ $('signup-form').addEventListener('submit',async event=>{event.preventDefault();
 });
 $('logout').addEventListener('click',async()=>{if(busy)return;setBusy(true);try{await signOut(auth);$('new-password').value='';$('confirm-password').value='';}catch(e){message(errorText(e),true);}finally{setBusy(false);}});
 $('reset-password').addEventListener('click',async()=>{if(busy||!auth.currentUser?.email)return;setBusy(true);try{await sendPasswordResetEmail(auth,auth.currentUser.email);message('ส่งอีเมลตั้งรหัสผ่านใหม่แล้ว กรุณาตรวจกล่องจดหมาย');}catch(e){message(errorText(e),true);}finally{setBusy(false);}});
-$('admin-search').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;currentMember=null;pendingRenewal=null;$('admin-result').hidden=true;setBusy(true);try{currentMember=await call('adminMemberFind',{email:$('member-email').value.trim()});$('admin-result').hidden=false;$('admin-result').textContent=currentMember.username+'\n'+currentMember.email+'\n'+(currentMember.firstLoginAtMs==null?'ยังไม่เข้าแอป มีวันต่ออายุรอ '+currentMember.prepaidDays+' วัน':'หมดอายุ: '+new Date(currentMember.expiresAtMs).toLocaleString('th-TH'));message('',false,'admin-message');}catch(e){message(errorText(e),true,'admin-message');}finally{setBusy(false);}});
-$('admin-renew').addEventListener('click',async()=>{if(busy||!currentMember)return;if(!window.confirm('ต่ออายุให้ '+currentMember.email+' เพิ่ม 7 วัน?'))return;
- if(!pendingRenewal){try{const stored=JSON.parse(sessionStorage.getItem('phantom_pending_renewal')||'null');if(stored?.uid===currentMember.uid&&stored?.adminUid===auth.currentUser?.uid)pendingRenewal=stored;}catch{}} pendingRenewal??={uid:currentMember.uid,requestId:crypto.randomUUID(),adminUid:auth.currentUser.uid};try{sessionStorage.setItem('phantom_pending_renewal',JSON.stringify(pendingRenewal));}catch{}setBusy(true);try{const p=await call('adminMemberRenew',pendingRenewal);pendingRenewal=null;try{sessionStorage.removeItem('phantom_pending_renewal');}catch{}message(p.expiresAtMs?'ต่ออายุสำเร็จ ใช้ได้ถึง '+new Date(p.expiresAtMs).toLocaleString('th-TH'):'เพิ่มวันต่ออายุรอเริ่มแล้ว รวม '+p.prepaidDays+' วัน',false,'admin-message');}catch(e){message(errorText(e)+' หากการเชื่อมต่อขาด กดซ้ำเพื่อตรวจรายการเดิมได้',true,'admin-message');}finally{setBusy(false);}});
+$('admin-search').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;currentMember=null;pendingRenewal=null;$('admin-result').hidden=true;setBusy(true);try{currentMember=await call('adminMemberFind',{email:$('member-email').value.trim()});$('admin-result').hidden=false;$('admin-result').textContent=currentMember.username+'\n'+currentMember.email+'\n'+(currentMember.firstLoginAtMs==null?'ยังไม่เข้าแอป มีวันต่ออายุรอ '+currentMember.prepaidDays+' วัน':'หมดอายุ: '+new Date(currentMember.expiresAtMs).toLocaleString('th-TH'));$('admin-result').textContent+='\nสถานะ: '+(currentMember.disabled?'ถูกแบน':'ปกติ')+'\nเหตุผลแบน: '+(currentMember.banReason||'—');message('',false,'admin-message');}catch(e){message(errorText(e),true,'admin-message');}finally{setBusy(false);}});
+async function manageMember(action,days=7){
+ if(busy||!currentMember)return;
+ if(action==='reduce'&&(!Number.isSafeInteger(days)||days<1||days>36500)){message('กรอกจำนวนวัน 1–36500',true,'admin-message');return;}
+ const reason=$('admin-reason').value.trim();
+ const label=action==='extend'?'เพิ่ม '+days+' วัน':action==='reduce'?'ลด '+days+' วัน (สิทธิ์ที่เริ่มแล้วเหลือขั้นต่ำ 1 ชั่วโมง)':action==='ban'?'แบนบัญชี':'ปลดแบนบัญชี';
+ if(!window.confirm(label+' ให้ '+currentMember.email+'?'))return;
+ const operation={uid:currentMember.uid,action,days,reason,adminUid:auth.currentUser.uid};
+ const fingerprint=JSON.stringify(operation);
+ if(!pendingRenewal||pendingRenewal.fingerprint!==fingerprint){
+  pendingRenewal=null;
+  try{const stored=JSON.parse(sessionStorage.getItem('phantom_pending_renewal')||'null');if(stored?.fingerprint===fingerprint)pendingRenewal=stored;}catch{}
+  pendingRenewal??={...operation,fingerprint,requestId:crypto.randomUUID()};
+ }
+ try{sessionStorage.setItem('phantom_pending_renewal',JSON.stringify(pendingRenewal));}catch{}
+ setBusy(true);
+ try{
+  const result=await call('adminMemberManage',pendingRenewal);
+  currentMember={...currentMember,...result};pendingRenewal=null;
+  try{sessionStorage.removeItem('phantom_pending_renewal');}catch{}
+  $('admin-result').textContent=currentMember.username+'\n'+currentMember.email+'\nสถานะ: '+(currentMember.disabled?'ถูกแบน':'ปกติ')+'\n'+(currentMember.firstLoginAtMs==null?'วันสะสมรอเริ่ม: '+currentMember.prepaidDays+' วัน':'สิ้นสุด: '+new Date(currentMember.expiresAtMs).toLocaleString('th-TH'))+'\nเหตุผลแบน: '+(currentMember.banReason||'—');
+  message('บันทึกรายการสำเร็จ',false,'admin-message');
+ }catch(e){message(errorText(e)+' หากการเชื่อมต่อขาด กดซ้ำเพื่อตรวจรายการเดิมได้',true,'admin-message');}finally{setBusy(false);}
+}
+$('admin-renew').addEventListener('click',()=>manageMember('extend',Number($('admin-days').value)));
+$('admin-reduce').addEventListener('click',()=>manageMember('reduce',Number($('admin-reduce-days').value)));
+$('admin-ban').addEventListener('click',()=>manageMember(currentMember?.disabled?'unban':'ban'));
 $('retry-account').addEventListener('click',async()=>{if(busy||!auth.currentUser)return;setBusy(true);try{await renderAccount(auth.currentUser);}finally{setBusy(false);}});
 refreshMemberCount();
 initializeAuth();

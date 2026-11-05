@@ -8,7 +8,7 @@ test('membership pages reference local assets and expose no activation-code flow
  }
 });
 test('web account management cannot start the trial or a device session',async()=>{
- const js=await readFile(resolve(dist,'assets/member.mjs'),'utf8');assert.doesNotMatch(js,/memberOpenSession|memberRenewLease/);assert.match(js,/memberRegister/);assert.match(js,/adminMemberRenew/);assert.doesNotMatch(js,/innerHTML|console\.log|localStorage/);assert.match(js,/sessionStorage.*phantom_pending_renewal/);
+ const js=await readFile(resolve(dist,'assets/member.mjs'),'utf8');assert.doesNotMatch(js,/memberOpenSession|memberRenewLease/);assert.match(js,/memberRegister/);assert.match(js,/adminMemberManage/);assert.doesNotMatch(js,/innerHTML|console\.log|localStorage/);assert.match(js,/sessionStorage.*phantom_pending_renewal/);
 });
 test('counter shows unavailable state instead of invented counts',async()=>{
  const js=await readFile(resolve(dist,'assets/member-count.mjs'),'utf8');assert.match(js,/Number\.isSafeInteger/);assert.match(js,/memberPublicStats/);assert.match(js,/textContent='—'/);

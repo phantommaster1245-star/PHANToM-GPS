@@ -38,3 +38,5 @@ Public website download updated to GeoX 0.0.18 on 2026-11-05, authorized by the 
 2026-11-05: Public download now serves GeoX 0.0.19 with the new mascot launcher icon.
 
 2026-11-05: Public download updated to GeoX 0.0.20 with redesigned map home.
+
+2026-11-05: Website APK advanced to GeoX 0.0.21. Admin web now supports 1/7/30 day renewal, time reduction and ban/unban through the deployed authorized management API.

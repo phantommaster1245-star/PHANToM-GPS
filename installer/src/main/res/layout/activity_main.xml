@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="#10121D">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="#101416">
 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GeoX Admin" android:textColor="#C8B6FF" android:textSize="28sp" android:textStyle="bold" />
 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="จัดการสมาชิกและต่ออายุสิทธิ์" android:textColor="#E4DFF2" />
 <LinearLayout android:id="@+id/adminLoginForm" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="24dp">
-<EditText android:id="@+id/adminEmail" android:layout_width="match_parent" android:layout_height="56dp" android:hint="Gmail แอดมิน" android:inputType="textEmailAddress" android:autofillHints="username" android:textColor="#FFFFFF" android:textColorHint="#A9A6BA" />
-<EditText android:id="@+id/adminPassword" android:layout_width="match_parent" android:layout_height="56dp" android:hint="รหัสผ่าน GeoX" android:inputType="textPassword" android:autofillHints="password" android:saveEnabled="false" android:textColor="#FFFFFF" android:textColorHint="#A9A6BA" />
+<EditText android:id="@+id/adminEmail" android:layout_width="match_parent" android:layout_height="56dp" android:hint="Gmail แอดมิน" android:inputType="textEmailAddress" android:autofillHints="username" android:textColor="#FFFFFF" android:textColorHint="#9AA8A3" />
+<EditText android:id="@+id/adminPassword" android:layout_width="match_parent" android:layout_height="56dp" android:hint="รหัสผ่าน GeoX" android:inputType="textPassword" android:autofillHints="password" android:saveEnabled="false" android:textColor="#FFFFFF" android:textColorHint="#9AA8A3" />
 <Button android:id="@+id/adminSignIn" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="เข้าสู่ระบบแอดมิน" />
-<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="บัญชีแอดมินต้องยืนยัน Google และตั้งรหัสผ่าน GeoX บนเว็บไซต์ก่อน" android:textColor="#A9A6BA" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="บัญชีแอดมินต้องยืนยัน Google และตั้งรหัสผ่าน GeoX บนเว็บไซต์ก่อน" android:textColor="#9AA8A3" />
 </LinearLayout>
 <LinearLayout android:id="@+id/adminMemberForm" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
-<TextView android:id="@+id/adminIdentity" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:textColor="#8AE6C3" />
-<EditText android:id="@+id/memberEmail" android:layout_width="match_parent" android:layout_height="56dp" android:hint="ค้นหา Gmail สมาชิก" android:inputType="textEmailAddress" android:textColor="#FFFFFF" android:textColorHint="#A9A6BA" />
+<TextView android:id="@+id/adminIdentity" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:textColor="#C7F568" />
+<EditText android:id="@+id/memberEmail" android:layout_width="match_parent" android:layout_height="56dp" android:hint="ค้นหา Gmail สมาชิก" android:inputType="textEmailAddress" android:textColor="#FFFFFF" android:textColorHint="#9AA8A3" />
 <Button android:id="@+id/adminFind" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ค้นหาสมาชิก" />
 <TextView android:id="@+id/adminMemberDetails" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:padding="16dp" android:textColor="#FFFFFF" android:textSize="16sp" />
-<Button android:id="@+id/adminRenew" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ต่ออายุเพิ่ม 7 วัน" android:enabled="false" android:backgroundTint="#B9A0FF" android:textColor="#10121D" />
-<Button android:id="@+id/adminLogout" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ออกจากระบบ" />
+<Button android:id="@+id/adminRenew" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ต่ออายุสมาชิก" android:enabled="false" android:backgroundTint="#C7F568" android:textColor="#101416" />
+<Button android:id="@+id/adminReduce" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ลดเวลาสมาชิก" android:enabled="false"/><Button android:id="@+id/adminBan" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="แบนบัญชี" android:enabled="false"/><Button android:id="@+id/adminLogout" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ออกจากระบบ" />
 </LinearLayout>
 <ProgressBar android:id="@+id/adminProgress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="gone" />
-<TextView android:id="@+id/adminMessage" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="#8AE6C3" />
+<TextView android:id="@+id/adminMessage" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="#C7F568" />
 <Button android:id="@+id/adminWebsite" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="เปิดเว็บไซต์ / ดาวน์โหลด GeoX" />
 </LinearLayout></ScrollView>
