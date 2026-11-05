@@ -286,8 +286,8 @@
     },
     {
       "path": "web/dist/account.html",
-      "bytes": 7784,
-      "sha256": "a8505da2438db98aa1e739442968d1a60b5c8408ed1e6db3d7d2b95739b22136"
+      "bytes": 7728,
+      "sha256": "532cf8392647c58374452305b80e39158eec85deac57634a82126362e0d2d666"
     },
     {
       "path": "web/dist/assets/LICENSE.txt",
