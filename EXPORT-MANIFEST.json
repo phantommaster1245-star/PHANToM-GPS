@@ -1,8 +1,8 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "sourceTree": "5a54fdbad9d8910381b65b77ddf40d694a3246fc",
+  "sourceTree": "faa2d5bf1fddc79f9bfb91da1551a784f4b301a7",
   "brand": "GeoX",
-  "version": "0.0.22",
+  "version": "0.1.02",
   "files": [
     {
       "path": ".gitattributes",
@@ -51,8 +51,13 @@
     },
     {
       "path": "VALIDATION.txt",
-      "bytes": 3769,
-      "sha256": "c758e645bd679974d9bc7ce689f5de18466702487651c631a88856cf608546e6"
+      "bytes": 4135,
+      "sha256": "6b016c099c1e8ef29cafa62865e525e19d8ff4599c2b7f00e49575bf03897cc4"
+    },
+    {
+      "path": "VERSIONING.md",
+      "bytes": 630,
+      "sha256": "028325caec0daafd74242e672d8dffacc996e99c8da3b14a6eb62792c9a490a5"
     },
     {
       "path": "build.gradle",
@@ -262,7 +267,7 @@
     {
       "path": "patches/phantom-gps.patch",
       "bytes": 1325841,
-      "sha256": "3ee7ea9ced70ecb4470e77404aed0d723b154449632f754e9276093878f83a2a"
+      "sha256": "4e6095ea4d9281cc67c23fb467b57176a0bec04088d15afa41e29f85357e65b9"
     },
     {
       "path": "settings.gradle",
@@ -281,8 +286,8 @@
     },
     {
       "path": "web/README.md",
-      "bytes": 3237,
-      "sha256": "860b59abc9571dd5f0fcfb4447767cd2b5e1da5bf377005d1051572a8a1563c8"
+      "bytes": 3387,
+      "sha256": "6840297624d607cdd3138e53f7a2e2036cd9da8e893179e1086a86fdd4764f83"
     },
     {
       "path": "web/dist/account.html",
@@ -395,9 +400,14 @@
       "sha256": "5460a57fe4673fa213e43112544875fe56be8ddbf5cf3fe65fe73c19d1ef62d0"
     },
     {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.02.apk",
+      "bytes": 4300625,
+      "sha256": "b261aa722405dbb236509831c81e27cd0fba9376c6f728b067d1ec104dd23af0"
+    },
+    {
       "path": "web/dist/downloads/version.json",
-      "bytes": 1063,
-      "sha256": "e2379c9f126edfc25abdebfead759ff261d496981ecfd56ef2b9eb1d87455903"
+      "bytes": 708,
+      "sha256": "186d6ce9339fb0f9e5229f722fbe88f912c19440863f197b672af84c3cda8d5d"
     },
     {
       "path": "web/dist/index.html",
