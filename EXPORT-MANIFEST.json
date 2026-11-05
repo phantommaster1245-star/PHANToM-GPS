@@ -346,8 +346,8 @@
     },
     {
       "path": "web/dist/assets/precision.css",
-      "bytes": 14138,
-      "sha256": "f969e67013de26832878b3f26e7097fba9f7ccd9d503eb001fbcd1e8ed907a7b"
+      "bytes": 14157,
+      "sha256": "54c3fa47d6b1786b81b0e135659cf905c6eef95d014872d73e01ce3d20ed7bf4"
     },
     {
       "path": "web/dist/assets/release.mjs",
