@@ -381,8 +381,8 @@
     },
     {
       "path": "web/dist/register.html",
-      "bytes": 7769,
-      "sha256": "a9ea4b7fc08be27d959cea82c05c3b8accfd8e204de56174d1c70242650499fc"
+      "bytes": 7713,
+      "sha256": "b08a4d3bf166322e9a7e85d0c3171694ca8d091fb8bbd086c18b88d1a31a31b0"
     },
     {
       "path": "web/tests/membership.test.mjs",
