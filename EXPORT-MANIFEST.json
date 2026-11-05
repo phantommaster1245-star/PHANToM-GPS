@@ -286,8 +286,8 @@
     },
     {
       "path": "web/dist/account.html",
-      "bytes": 7038,
-      "sha256": "7da789082a4c0812d176281586b57f263337a7a96ad642ba327cdf1c4981b0f9"
+      "bytes": 7784,
+      "sha256": "a8505da2438db98aa1e739442968d1a60b5c8408ed1e6db3d7d2b95739b22136"
     },
     {
       "path": "web/dist/assets/LICENSE.txt",
@@ -335,6 +335,16 @@
       "sha256": "c61cc9182596befcbef2d4b6889518b5ef08d17ef1b9c19e32dfb518d37334e9"
     },
     {
+      "path": "web/dist/assets/precision-pages.css",
+      "bytes": 2151,
+      "sha256": "08814c8becaa494ec471a1d6ea771392e9163897b431fdfe2e304b833809c218"
+    },
+    {
+      "path": "web/dist/assets/precision.css",
+      "bytes": 14138,
+      "sha256": "f969e67013de26832878b3f26e7097fba9f7ccd9d503eb001fbcd1e8ed907a7b"
+    },
+    {
       "path": "web/dist/assets/release.mjs",
       "bytes": 691,
       "sha256": "502d5a9aba3fa143e2ec6e5df9ed56a378ea0dbb51ef7d26a9d33d4b25cf1668"
@@ -346,8 +356,8 @@
     },
     {
       "path": "web/dist/download.html",
-      "bytes": 6931,
-      "sha256": "771d55af7ad1d6b6d8344ba66b08d1c68f64ad1c2160b92265ab153e9270f897"
+      "bytes": 6488,
+      "sha256": "167228b1c2ddb2febff0a699354eeb66bb84c6392385dbbac34ce90172f76d8c"
     },
     {
       "path": "web/dist/downloads/PHANToM-GPS-v0.0.16.apk",
@@ -366,13 +376,13 @@
     },
     {
       "path": "web/dist/index.html",
-      "bytes": 12538,
-      "sha256": "0f304ffc5def41b0282cc09c6ae910f2cfa2bd1dc2e76bc7c8a3f0c76f50148c"
+      "bytes": 4990,
+      "sha256": "2366a35b1336fd5aa71be065a811fa1a301ac179797d874188b0967c8b0ef0a1"
     },
     {
       "path": "web/dist/register.html",
-      "bytes": 7023,
-      "sha256": "dfe4f4c5a7dfdd694ab3a6868855368dd92df4dee322ed9dd2a8938ef964e6ba"
+      "bytes": 7769,
+      "sha256": "a9ea4b7fc08be27d959cea82c05c3b8accfd8e204de56174d1c70242650499fc"
     },
     {
       "path": "web/tests/membership.test.mjs",
