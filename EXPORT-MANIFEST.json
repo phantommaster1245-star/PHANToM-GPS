@@ -1,8 +1,8 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "sourceTree": "544e98f5e6c708fc7b4e7db79612749a211aeb09",
+  "sourceTree": "0efd24c24589181e0c963cb2bba80a5d70c95a52",
   "brand": "GeoX",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "files": [
     {
       "path": ".gitattributes",
@@ -51,8 +51,8 @@
     },
     {
       "path": "VALIDATION.txt",
-      "bytes": 1585,
-      "sha256": "952fc6cf2718b9f072ec2688b130ea556d8f343b31ae972f758ca803a99b8c2c"
+      "bytes": 1970,
+      "sha256": "6fb46033da91678d65492104b223bbd7c366cf92164fc59e807176036c7de4e1"
     },
     {
       "path": "build.gradle",
@@ -166,8 +166,8 @@
     },
     {
       "path": "installer/src/main/res/drawable-nodpi/ic_launcher_foreground.png",
-      "bytes": 147039,
-      "sha256": "55cc00c7c6a4fe6f5893454b609e235923879aef027945ecd45849417829c75b"
+      "bytes": 81091,
+      "sha256": "e8a06a8df45e846c4e48bb368f4da2f6498bb2d99df1a86d86226ead2c94534d"
     },
     {
       "path": "installer/src/main/res/layout/activity_main.xml",
@@ -176,68 +176,68 @@
     },
     {
       "path": "installer/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
-      "bytes": 273,
-      "sha256": "1eb8b3b86d82e54c86302b747dbc4c17fae8b36a1da801f311e0420621b2918c"
+      "bytes": 272,
+      "sha256": "e7bd727d83a1b2b207e7cda8addeaad02a943c6c398997dca2f04413474df7c8"
     },
     {
       "path": "installer/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
-      "bytes": 273,
-      "sha256": "1eb8b3b86d82e54c86302b747dbc4c17fae8b36a1da801f311e0420621b2918c"
+      "bytes": 272,
+      "sha256": "e7bd727d83a1b2b207e7cda8addeaad02a943c6c398997dca2f04413474df7c8"
     },
     {
       "path": "installer/src/main/res/mipmap-hdpi/ic_launcher.png",
-      "bytes": 11158,
-      "sha256": "e764dc9788aad7cf91bceff8cf840e117ceae840636c8710f20804b1ba6b9d27"
+      "bytes": 13944,
+      "sha256": "7f7339889f978469484bad80170edf01af395717a483a9a65848930861abd2e6"
     },
     {
       "path": "installer/src/main/res/mipmap-hdpi/ic_launcher_round.png",
-      "bytes": 11286,
-      "sha256": "5947b1b8e6edcb516f6161ca1c82b796db1da20b6611526cbfcf7268b75d3ea6"
+      "bytes": 7381,
+      "sha256": "9b49ca8939b81ed812012a75070b62a4cf1956569dae75b1e55de6ca754f5ee4"
     },
     {
       "path": "installer/src/main/res/mipmap-mdpi/ic_launcher.png",
-      "bytes": 5438,
-      "sha256": "bb77ca23923e452e603cc6498d527d015fe328c9186c88633d68e945a77e93b1"
+      "bytes": 6673,
+      "sha256": "45ce3702bb60bf4ea616bb2d68a4b5cd3939aaf26ed43a8eaf857b0a99ad19d9"
     },
     {
       "path": "installer/src/main/res/mipmap-mdpi/ic_launcher_round.png",
-      "bytes": 5666,
-      "sha256": "6701e1c6ce2b906e443e46ae7aefc2c8ee18891ea05f60ee8d15cb2341373d11"
+      "bytes": 3643,
+      "sha256": "6d7124990e4e52da9720b67df1f8015b787ca5c033d61bdce65f32c01da52e3f"
     },
     {
       "path": "installer/src/main/res/mipmap-xhdpi/ic_launcher.png",
-      "bytes": 18643,
-      "sha256": "430a02618dd8e48591ecad5279e9a8ebb6ff65f4e56ce0d22b025cfec3099b55"
+      "bytes": 23519,
+      "sha256": "7d39408172138014d202a19a03fcb2b7ad76b167e73e2e13d9e5b3432c61d09e"
     },
     {
       "path": "installer/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
-      "bytes": 18396,
-      "sha256": "a02e6f9a269a620ef100325881f98346a4a316a0f0408e4b4cf75e840c35ff3f"
+      "bytes": 12556,
+      "sha256": "bcd9f6b4437f7fe8fd37fe29b468dacc8a8cdc64612fdff0708bbf57ad2771c1"
     },
     {
       "path": "installer/src/main/res/mipmap-xxhdpi/ic_launcher.png",
-      "bytes": 37769,
-      "sha256": "064d2ae618e9ed1f79bea351f930911691ea36ccc86002e4901542a464f02b2d"
+      "bytes": 49100,
+      "sha256": "0580c6473700bc078415a36e98c52db19f805839bf1f38549bb97f494abb0c7a"
     },
     {
       "path": "installer/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
-      "bytes": 36500,
-      "sha256": "496b020703d30b4a4b1d7e4246f34b59ddf8dac44ef44a688d990d110cc89969"
+      "bytes": 26516,
+      "sha256": "92a2ec7431f1a48c6974a178f04de0e6dab35fc89d9165c61844086fa0092aef"
     },
     {
       "path": "installer/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
-      "bytes": 61390,
-      "sha256": "c61cc9182596befcbef2d4b6889518b5ef08d17ef1b9c19e32dfb518d37334e9"
+      "bytes": 83012,
+      "sha256": "88754ba2380547e3e85b6c82e19d7a14c7844b443bf1066d98b67e1911496076"
     },
     {
       "path": "installer/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
-      "bytes": 58886,
-      "sha256": "c6b6ac588054371451e2374ae338f7c297d48d62236e4f5a565395082e1fa26c"
+      "bytes": 44072,
+      "sha256": "a3df2ab3981523a2729a26233b8722ad6e964ca99ea53e3bcbd4341e3664e54a"
     },
     {
       "path": "installer/src/main/res/values/colors.xml",
       "bytes": 781,
-      "sha256": "f353ffe2186ca68af3d265ee6972bbbc42e7211b7e4f374615fd2418cdb9ed4a"
+      "sha256": "ba7a3a00ae8b71b43349619de18b797742a86f1665ae041ad90d0901c5870e9b"
     },
     {
       "path": "installer/src/main/res/values/strings.xml",
@@ -261,8 +261,8 @@
     },
     {
       "path": "patches/phantom-gps.patch",
-      "bytes": 874860,
-      "sha256": "b7d1eacbb7bacb1933a951f9e9d06094339640b0800bd1faee2b66f3cfb9f4a6"
+      "bytes": 795621,
+      "sha256": "c9c11f401389ed742ffc75ffa2142bbc94efe05c568375bed8ea05180cf8c0ea"
     },
     {
       "path": "settings.gradle",
@@ -281,8 +281,8 @@
     },
     {
       "path": "web/README.md",
-      "bytes": 2796,
-      "sha256": "c968f6a211095ec6f1a7e52b9e0730f9d13da6bc908b63abccf89a3a8d5dc7cf"
+      "bytes": 2883,
+      "sha256": "0822cb92dfef24d5e61507cf366711b8e0bd68703fa0cf2fce1cf07f0a41ac92"
     },
     {
       "path": "web/dist/account.html",
@@ -375,9 +375,14 @@
       "sha256": "540036eb9525a95509a72258a0c3023cbdb68b1cf9814e24257a26e5ae05fd5e"
     },
     {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.0.19.apk",
+      "bytes": 4023577,
+      "sha256": "6d888cc6fd4214548c2a779371777930d4bd91f4ed657f2e27862a188f075b6a"
+    },
+    {
       "path": "web/dist/downloads/version.json",
-      "bytes": 966,
-      "sha256": "6ea2cb860cc141a083ba157aadc6a735c99fe7a00465846cf08b5dccbe057cba"
+      "bytes": 606,
+      "sha256": "e82352d7f310d1ea5e1a0d5fbd4303bc690e312fb7c1af2510996b28788738a2"
     },
     {
       "path": "web/dist/index.html",

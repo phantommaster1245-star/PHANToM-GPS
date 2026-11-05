@@ -8,3 +8,8 @@ Android JVM: 40 passed. App/Admin release builds passed. Main APK signer unchang
 Device: Android 15 membership/admin emulator instrumentation, same-UID protection, release startup after reboot, unrelated Binder caller denial, encrypted remember/opt-out/tamper/missing-key, force-stop credential restore passed. Full Lock binding observed. Probe-to-root-to-GPS APPLIED/HOOK_LOADED under HMA, prolonged offline/lifecycle and two physical devices remain unverified.
 Website tests: 16 passed. Public website APK/version.json intentionally remain 0.0.16. GitHub pre-release must not replace latest. No Vercel/Sites deployment is triggered manually by this task; Git push may trigger the owner's connected Vercel integration.
 Domain update: APK 0.0.18 uses https://geox-azure.vercel.app/; Google sign-in authorized domain added while preserving existing domains. Old website alias requires owner Vercel configuration.
+
+GeoX 0.0.19 icon update (2026-11-05):
+Reconstructed tree: 0efd24c24589181e0c963cb2bba80a5d70c95a52
+Patch SHA256: c9c11f401389ed742ffc75ffa2142bbc94efe05c568375bed8ea05180cf8c0ea
+All 162 canonical files reconstruct exactly. New GeoX launcher assets are included for app and Admin. Website download metadata will advance to 0.0.19. Earlier website hold statements above are historical.

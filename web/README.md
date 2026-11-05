@@ -34,3 +34,5 @@ GeoX is the current public brand. Downloads remain at PHANToM GPS 0.0.16 while G
 GeoX 0.0.18 uses geox-azure.vercel.app. The Google sign-in authorized domains include the new hostname. Keep phantom-gps.vercel.app as an alias for older clients if required; downloads/version.json stays at 0.0.16 on the new site too.
 
 Public website download updated to GeoX 0.0.18 on 2026-11-05, authorized by the project owner. The current version.json supersedes the earlier website-first hold at 0.0.16.
+
+2026-11-05: Public download now serves GeoX 0.0.19 with the new mascot launcher icon.
