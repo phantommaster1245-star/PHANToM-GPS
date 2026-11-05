@@ -13,3 +13,9 @@ GeoX 0.0.19 icon update (2026-11-05):
 Reconstructed tree: 0efd24c24589181e0c963cb2bba80a5d70c95a52
 Patch SHA256: c9c11f401389ed742ffc75ffa2142bbc94efe05c568375bed8ea05180cf8c0ea
 All 162 canonical files reconstruct exactly. New GeoX launcher assets are included for app and Admin. Website download metadata will advance to 0.0.19. Earlier website hold statements above are historical.
+
+GeoX 0.0.20 map home redesign (2026-11-05):
+Release build passed; 40 existing JVM tests passed during redesign validation. No connected ADB device; visual/on-device interaction checks remain outstanding. APK signer unchanged.
+Reconstructed tree: 12ce506d9b7ce1e90d84287b00b057ff066c3081
+Patch SHA256: 85231f1ddfb3cc8e9825ab1c8ca5289c37d09e97d3207f1c56dff453b28acbe6
+All 166 canonical files reconstruct exactly. Floating header, system-bar/cutout/IME insets, coordinate dock and dark road-map palette included. Website download advanced to 0.0.20 with owner authorization.

@@ -36,3 +36,5 @@ GeoX 0.0.18 uses geox-azure.vercel.app. The Google sign-in authorized domains in
 Public website download updated to GeoX 0.0.18 on 2026-11-05, authorized by the project owner. The current version.json supersedes the earlier website-first hold at 0.0.16.
 
 2026-11-05: Public download now serves GeoX 0.0.19 with the new mascot launcher icon.
+
+2026-11-05: Public download updated to GeoX 0.0.20 with redesigned map home.
