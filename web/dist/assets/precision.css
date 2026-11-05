@@ -10,3 +10,8 @@ body.canvas{min-height:100vh;font-family:"Leelawadee UI",Tahoma,system-ui,sans-s
 .g-nav .g-nav-links{display:flex!important}.g-phone{height:490px}@media(max-width:760px){.g-nav .g-nav-links{gap:12px!important;font-size:11px}.g-phone{height:420px}.g-visual{min-height:445px!important}}
 
 .g-nav .g-nav-links a{display:inline!important}@media(max-width:760px){.g-nav .g-nav-links a:nth-child(2){display:none!important}}
+
+/* Real-page interaction and accessibility rules. */
+.g-nav-links a{display:inline-flex!important;align-items:center;min-height:44px;padding:8px 4px}.g-cta{transition:background .15s ease,transform .15s ease}.g-cta:hover{background:#d5ff88;color:#172019}.g-cta:active{transform:translateY(1px)}.g-secondary{display:inline-flex;align-items:center;min-height:44px}.g-footer summary{cursor:pointer;min-height:44px;padding:10px 0}.g-footer a{display:inline-flex;align-items:center;min-height:44px}html{scroll-padding-top:24px}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}@media(max-width:760px){.g-nav{padding-inline:20px!important}.g-nav .g-nav-links{gap:8px!important}.g-nav .g-nav-links a:nth-child(2){display:inline-flex!important}.g-nav .g-nav-links a:first-child{display:none!important}.g-phone{height:450px}.g-visual{min-height:470px!important}}
+
+.g-hero>div{min-width:0}.g-visual{overflow:clip;min-width:0}.g-graphic{max-width:100%}.g-ring{max-width:94%}@media(min-width:761px) and (max-width:900px){.g-hero{grid-template-columns:1fr;padding:40px 36px}.g-title{font-size:52px}.g-desc{max-width:580px}.g-visual{min-height:540px}.g-features{gap:24px}}

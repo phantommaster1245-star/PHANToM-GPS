@@ -286,8 +286,8 @@
     },
     {
       "path": "web/dist/account.html",
-      "bytes": 7722,
-      "sha256": "30d5a8dcfbe68883c3c501eb735a55c15b1682af27d102a83ac835af9e0acebf"
+      "bytes": 7853,
+      "sha256": "16c6971cec9aef8c706693b3859f760eb0b48ff02299950a6fe800048d266027"
     },
     {
       "path": "web/dist/assets/LICENSE.txt",
@@ -316,8 +316,8 @@
     },
     {
       "path": "web/dist/assets/member-count.mjs",
-      "bytes": 749,
-      "sha256": "c4d67c9bd4a1b5ff810e1762b5429ed2e8ccd0423669d13a13b6e8c06d24e0fd"
+      "bytes": 779,
+      "sha256": "c9805a99065803427fcaa7d11358d4f0aea954f671db8b538e648cc7ecb7cfeb"
     },
     {
       "path": "web/dist/assets/member-registration.mjs",
@@ -331,8 +331,8 @@
     },
     {
       "path": "web/dist/assets/member.mjs",
-      "bytes": 11816,
-      "sha256": "cc400d1459a38c4a7960f703bbee5bf0caf51324f7b17948d92c2fd997ac1f07"
+      "bytes": 14814,
+      "sha256": "42f3716a638297464190578d7ea5244c63dd23afb221f9da7cde9c08be6dea38"
     },
     {
       "path": "web/dist/assets/phantom-icon.png",
@@ -346,8 +346,8 @@
     },
     {
       "path": "web/dist/assets/precision.css",
-      "bytes": 14157,
-      "sha256": "54c3fa47d6b1786b81b0e135659cf905c6eef95d014872d73e01ce3d20ed7bf4"
+      "bytes": 15443,
+      "sha256": "16f314396f005ea1eb7c90749d4a574b77890917bcd97698c2dd456a108f2375"
     },
     {
       "path": "web/dist/assets/release.mjs",
@@ -391,8 +391,8 @@
     },
     {
       "path": "web/dist/register.html",
-      "bytes": 7707,
-      "sha256": "864b9b46e677b2fb93694e0be95e2a6192fe04fd76fbf4e14d9577001c9fb505"
+      "bytes": 7838,
+      "sha256": "2210f9ddb428260ad7ed936b97f89dca097e992f6d6b76b2db09b48b58c5f4cb"
     },
     {
       "path": "web/tests/membership.test.mjs",
