@@ -281,8 +281,8 @@
     },
     {
       "path": "web/README.md",
-      "bytes": 2622,
-      "sha256": "ca7db6445a60716e298b5be656af2766a52ce75dd9a2eafd449023d4ba314771"
+      "bytes": 2796,
+      "sha256": "c968f6a211095ec6f1a7e52b9e0730f9d13da6bc908b63abccf89a3a8d5dc7cf"
     },
     {
       "path": "web/dist/account.html",
@@ -355,9 +355,14 @@
       "sha256": "cd7802ea01193ce5e6493663a0a0da7f048daa289fb1731c4ee61e75124557a0"
     },
     {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.0.18.apk",
+      "bytes": 4148353,
+      "sha256": "540036eb9525a95509a72258a0c3023cbdb68b1cf9814e24257a26e5ae05fd5e"
+    },
+    {
       "path": "web/dist/downloads/version.json",
-      "bytes": 1025,
-      "sha256": "ef60d75c0602bb9e6ff97aaa0ba1cea56640b796d2d94962652e0a3df9554669"
+      "bytes": 966,
+      "sha256": "6ea2cb860cc141a083ba157aadc6a735c99fe7a00465846cf08b5dccbe057cba"
     },
     {
       "path": "web/dist/index.html",
