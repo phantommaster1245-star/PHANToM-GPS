@@ -1,7 +1,7 @@
 # GeoX version numbering
 
-Owner instruction, 2026-11-06: current version is 0.1.02. Continue numbering from this version; next version 0.1.03, then 0.1.04. Preserve the leading zero in the displayed patch number. Do not resume 0.0.xx.
+Current release: 0.1.03 (Android versionCode 24). Next: 0.1.04 (versionCode 25). Preserve the leading zero in the displayed patch number; do not resume 0.0.xx.
 
-Current Android versionCode is 23; increment it monotonically for each future release (next 24). Keep application ID and signing certificate unchanged. Installer/Admin retains its independent version series unless explicitly requested otherwise.
+Keep application ID and signing certificate unchanged. Admin retains its independent version series.
 
-Public version metadata is v0.1.02, and the compatibility download filename is PHANToM-GPS-v0.1.02.apk. Internal full flavor suffix remains -full.
+Public metadata: v0.1.03. Compatibility download filename: PHANToM-GPS-v0.1.03.apk. Internal full flavor suffix remains -full.

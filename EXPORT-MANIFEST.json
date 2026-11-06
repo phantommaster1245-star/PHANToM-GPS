@@ -1,8 +1,8 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "sourceTree": "faa2d5bf1fddc79f9bfb91da1551a784f4b301a7",
+  "sourceTree": "276de745dd610b0e2343a22a3acea26791cd6910",
   "brand": "GeoX",
-  "version": "0.1.02",
+  "version": "0.1.03",
   "files": [
     {
       "path": ".gitattributes",
@@ -18,6 +18,11 @@
       "path": "BINDER_LOCATION_BRIDGE.md",
       "bytes": 10274,
       "sha256": "55f21c70535f66e1843f1fe6b577fc54ae77a2be2fdc3233c2ec2286924a663d"
+    },
+    {
+      "path": "GEOX_0.1.03_LSPOSED_NOTIFICATIONS.md",
+      "bytes": 4838,
+      "sha256": "bcac8a0123256cbea1bfd28c36f2d0973e255bde9cc2f21361236f39331bcc38"
     },
     {
       "path": "GEOX_FULL_LOCK_HANDOFF.md",
@@ -56,8 +61,8 @@
     },
     {
       "path": "VERSIONING.md",
-      "bytes": 630,
-      "sha256": "028325caec0daafd74242e672d8dffacc996e99c8da3b14a6eb62792c9a490a5"
+      "bytes": 416,
+      "sha256": "4761c897c96921a860f7e70b7218c1f99d6486b371ec4a69870d1991cd55cf37"
     },
     {
       "path": "build.gradle",
@@ -266,8 +271,8 @@
     },
     {
       "path": "patches/phantom-gps.patch",
-      "bytes": 1325841,
-      "sha256": "4e6095ea4d9281cc67c23fb467b57176a0bec04088d15afa41e29f85357e65b9"
+      "bytes": 1335803,
+      "sha256": "9baf03301ede1b7662caee124892d1da87ae8a3fd69560b088e6bf239eb49d3b"
     },
     {
       "path": "settings.gradle",
@@ -351,8 +356,8 @@
     },
     {
       "path": "web/dist/assets/precision.css",
-      "bytes": 15443,
-      "sha256": "16f314396f005ea1eb7c90749d4a574b77890917bcd97698c2dd456a108f2375"
+      "bytes": 16042,
+      "sha256": "a064d4953a5e4c2dbe15c839e93267df3fdbb44e220e3b3fc8b0400f09c1b74f"
     },
     {
       "path": "web/dist/assets/release.mjs",
@@ -405,9 +410,14 @@
       "sha256": "b261aa722405dbb236509831c81e27cd0fba9376c6f728b067d1ec104dd23af0"
     },
     {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.03.apk",
+      "bytes": 4300989,
+      "sha256": "4f4555724f6964a831ffdb56c44c48c1560eaec641701785285250be761d505c"
+    },
+    {
       "path": "web/dist/downloads/version.json",
-      "bytes": 708,
-      "sha256": "186d6ce9339fb0f9e5229f722fbe88f912c19440863f197b672af84c3cda8d5d"
+      "bytes": 1046,
+      "sha256": "fbda3142b0c2ec403236329c00d26d3b66397a4e1292ea69e36a89450425c3a3"
     },
     {
       "path": "web/dist/index.html",
