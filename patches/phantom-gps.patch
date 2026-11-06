@@ -1,12 +1,12 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..290839936fb316b9b0fff8a94ebae7a51266402f 100644
+index d211674657a4308ba7437287558c90117ce56c75..a917e244590077d8a4277baa0cab49a79a50a91e 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
 +    id 'com.google.gms.google-services'
 @@ -10 +11,26 @@ plugins {
 -def tagName = '0.0.6'
-+def tagName = '0.1.03'
++def tagName = '0.1.04'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -37,7 +37,7 @@ index d211674657a4308ba7437287558c90117ce56c75..290839936fb316b9b0fff8a94ebae7a5
 +        applicationId "io.github.phantom.gps"
 @@ -18 +44 @@ android {
 -        versionCode 6
-+        versionCode 24
++        versionCode 25
 @@ -20 +46,3 @@ android {
 -        // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 +        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://geox-azure.vercel.app/\""
@@ -1285,7 +1285,7 @@ index 0000000000000000000000000000000000000000..cf57d652a4f1108adeb40f631e0a8e1d
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/MembershipAccount.kt b/app/src/full/java/io/github/phantom/gps/utils/MembershipAccount.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..01570f326257d567e1bfe19d37f224e1d9468d75
+index 0000000000000000000000000000000000000000..ef3582a5917ef5810d1b1f15978445df28fcce9e
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/MembershipAccount.kt
 @@ -0,0 +1,88 @@
@@ -1317,7 +1317,7 @@ index 0000000000000000000000000000000000000000..01570f326257d567e1bfe19d37f224e1
 +        val result = call("memberLogin", mapOf("username" to username.trim(), "password" to password))
 +        auth.signInWithEmailAndPassword(result["email"] as? String ?: error("INVALID_RESPONSE"),password).waitFor()
 +        try { val opened = call("memberOpenSession", provedInput(c,"open")); save(c, opened)
-+            prefs(c).edit().putString("username", username.trim()).commit()
++            prefs(c).edit().putString("username", result["username"] as? String ?: username.trim()).commit()
 +        } catch (e: Exception) { logout(c); throw e }
 +    }
 +    suspend fun renew(c: Context) {
@@ -1360,7 +1360,7 @@ index 0000000000000000000000000000000000000000..01570f326257d567e1bfe19d37f224e1
 +    }
 +    fun errorCode(error: Throwable): String = if(error is FirebaseFunctionsException) (error.details as? Map<*, *>)?.get("code")?.toString() ?: error.code.name else error.message.orEmpty()
 +    fun message(error: Throwable): String = when(errorCode(error)) {
-+        "LOGIN_FAILED", "USERNAME_INVALID" -> "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"
++        "LOGIN_FAILED", "USERNAME_INVALID" -> "ชื่อผู้ใช้ Gmail หรือรหัสผ่านไม่ถูกต้อง"
 +        "TOO_MANY_REQUESTS" -> "ลองเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่"
 +        "MEMBER_NOT_FOUND", "GOOGLE_PASSWORD_REQUIRED" -> "กรุณาสมัครสมาชิกผ่านเว็บไซต์ก่อน"
 +        "MEMBERSHIP_EXPIRED" -> "สิทธิ์ใช้งานหมดอายุ กรุณาติดต่อแอดมินเพื่อต่ออายุ"
@@ -1379,7 +1379,7 @@ index 0000000000000000000000000000000000000000..01570f326257d567e1bfe19d37f224e1
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/MembershipDisplay.kt b/app/src/full/java/io/github/phantom/gps/utils/MembershipDisplay.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..f7c52a2ea22291820db289fc4df9d641bdda4cbc
+index 0000000000000000000000000000000000000000..12a7bca093cd6a2c745e1dcd9f88c6b328fa7d0e
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/MembershipDisplay.kt
 @@ -0,0 +1,55 @@
@@ -1429,7 +1429,7 @@ index 0000000000000000000000000000000000000000..f7c52a2ea22291820db289fc4df9d641
 +        if(!ExpiryReminderPolicy.shouldShow(expiry-time,time,count,p.getLong("$key.last",0),sameDay&&p.getBoolean("$key.suppressed",false)))return
 +        val check=CheckBox(activity).apply { text="ไม่แสดงอีกในวันนี้";setPadding(24,16,24,16) }
 +        owner=activity
-+        dialog=MaterialAlertDialogBuilder(activity).setTitle("เวลาการใช้งานเหลือน้อยแล้ว")
++        dialog=MaterialAlertDialogBuilder(activity,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).setTitle("เวลาการใช้งานเหลือน้อยแล้ว")
 +            .setMessage("เวลาคงเหลือ ${duration(expiry-time)}\nสิ้นสุด ${date(expiry)}\nติดต่อแอดมินเพื่อต่ออายุได้")
 +            .setView(check).setPositiveButton("ปิด") {_,_->
 +                if(check.isChecked)p.edit().putString("$key.day",day).putBoolean("$key.suppressed",true).apply()
@@ -2724,10 +2724,10 @@ index 0000000000000000000000000000000000000000..93a7599c72678d96d94be268647e3dc7
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-similarity index 58%
+similarity index 56%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-index 84f61ea4a62c3086df23447da30a593cddcd347a..8630a5af2e99851c94bcff2fb40512f2af05dc04 100644
+index 84f61ea4a62c3086df23447da30a593cddcd347a..4845c6f46b7a03a78b9f1b31133bf6721b374a29 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
 @@ -1 +1 @@
@@ -2980,11 +2980,24 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..8630a5af2e99851c94bcff2fb40512f2
 +        viewModel.isXposed.observe(this) { injected ->
 +            binding.toolbar.contentDescription = if(injected) "GeoX: พบ Hook ในโปรเซสแอป" else "GeoX: ตรวจ Hook ของแอปเป้าหมายได้ใน Settings"
 +        }
-@@ -253,2 +397,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -218,2 +362,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
+-        alertDialog = MaterialAlertDialogBuilder(this)
+-        layoutInflater.inflate(R.layout.about,null).apply {
++        alertDialog = MaterialAlertDialogBuilder(this,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog)
++        android.view.LayoutInflater.from(alertDialog.context).inflate(R.layout.about,null).apply {
+@@ -233 +377 @@ abstract class BaseMapActivity: AppCompatActivity() {
+-        alertDialog =  MaterialAlertDialogBuilder(this).apply {
++        alertDialog =  MaterialAlertDialogBuilder(this,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).apply {
+@@ -253,3 +397,3 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    private fun openFavoriteListDialog() {
 -        getAllUpdatedFavList()
+-        alertDialog = MaterialAlertDialogBuilder(this)
 +    protected fun openFavoriteListDialog() {
 +        if (favoriteListJob == null) getAllUpdatedFavList()
++        alertDialog = MaterialAlertDialogBuilder(this,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog)
+@@ -257 +401 @@ abstract class BaseMapActivity: AppCompatActivity() {
+-        val view = layoutInflater.inflate(R.layout.fav,null)
++        val view = android.view.LayoutInflater.from(alertDialog.context).inflate(R.layout.fav,null)
 @@ -259,0 +404 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +        rcv.layoutParams.height = minOf((resources.displayMetrics.heightPixels * 0.45).toInt(), (320 * resources.displayMetrics.density).toInt())
 @@ -260,0 +406,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
@@ -3048,7 +3061,7 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..8630a5af2e99851c94bcff2fb40512f2
 +                viewModel.update.collect { update ->
 +                    if (update != null && shownUpdateVersion != update.version) {
 +                        shownUpdateVersion = update.version
-+                        MaterialAlertDialogBuilder(this@BaseMapActivity)
++                        MaterialAlertDialogBuilder(this@BaseMapActivity,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog)
 +                            .setTitle(update.name)
 +                            .setMessage(getString(R.string.update_website_message, update.changelog))
 +                            .setPositiveButton(R.string.update_button) { _, _ ->
@@ -3209,7 +3222,7 @@ index 0000000000000000000000000000000000000000..610e33609a6781da93f0f89994e8dadc
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt b/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..2be9abb9b4d4c2f798163c10b4a60c7c0ab26c9d
+index 0000000000000000000000000000000000000000..c72bf37ca9e445fc1fe0e2444a99ea6b24678a51
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt
 @@ -0,0 +1,33 @@
@@ -3233,7 +3246,7 @@ index 0000000000000000000000000000000000000000..2be9abb9b4d4c2f798163c10b4a60c7c
 +    }
 +    fun login(username:String,password:String,remember:Boolean) {
 +        if(state.value?.busy==true)return
-+        if(username.isBlank()||password.isBlank()){state.value=State(error="กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");return}
++        if(username.isBlank()||password.isBlank()){state.value=State(error="กรุณากรอกชื่อผู้ใช้หรือ Gmail และรหัสผ่าน");return}
 +        state.value=State(busy=true)
 +        viewModelScope.launch {
 +            try{
@@ -3248,10 +3261,10 @@ index 0000000000000000000000000000000000000000..2be9abb9b4d4c2f798163c10b4a60c7c
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..99320e1cad53406353116df2b0bb5750caf34aba
+index 0000000000000000000000000000000000000000..03ecb56014df4e422570d33bbbb8264472573d51
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
-@@ -0,0 +1,351 @@
+@@ -0,0 +1,388 @@
 +package io.github.phantom.gps.ui
 +
 +
@@ -3391,6 +3404,43 @@ index 0000000000000000000000000000000000000000..99320e1cad53406353116df2b0bb5750
 +    }
 +
 +    class SettingsPreferenceFragment : PreferenceFragmentCompat() {
++        private var preferenceDialog: androidx.appcompat.app.AlertDialog? = null
++        override fun onDisplayPreferenceDialog(preference: Preference) {
++            if(preferenceDialog?.isShowing==true)return
++            val builder=MaterialAlertDialogBuilder(requireContext(),R.style.ThemeOverlay_GeoX_Dialog)
++                .setTitle(preference.title).setNegativeButton(android.R.string.cancel,null)
++            when(preference) {
++                is EditTextPreference -> {
++                    val input=EditText(builder.context).apply {
++                        setText(preference.text);setSelectAllOnFocus(true)
++                        inputType=InputType.TYPE_CLASS_NUMBER or if(preference.key=="accuracy_level")InputType.TYPE_NUMBER_FLAG_DECIMAL else 0
++                        keyListener=DigitsKeyListener.getInstance(if(preference.key=="accuracy_level")"0123456789." else "0123456789")
++                    }
++                    val frame=android.widget.FrameLayout(builder.context).apply {
++                        val pad=(24*resources.displayMetrics.density).toInt();setPadding(pad,0,pad,0);addView(input)
++                    }
++                    val dialog=builder.setView(frame).setPositiveButton(android.R.string.ok,null).create()
++                    dialog.setOnShowListener {
++                        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
++                            val value=input.text.toString()
++                            val valid=if(preference.key=="accuracy_level")value.toDoubleOrNull()?.let{it.isFinite()&&it>=0}==true else value.toIntOrNull()?.let{it>=1}==true
++                            if(!valid){input.error=getString(R.string.enter_valid_input);return@setOnClickListener}
++                            if(preference.callChangeListener(value)){preference.text=value;dialog.dismiss()}
++                        }
++                    }
++                    preferenceDialog=dialog;dialog.show()
++                }
++                is androidx.preference.ListPreference -> {
++                    preferenceDialog=builder.setSingleChoiceItems(preference.entries,preference.findIndexOfValue(preference.value)){dialog,index->
++                        val value=preference.entryValues[index].toString()
++                        if(preference.callChangeListener(value))preference.value=value
++                        dialog.dismiss()
++                    }.show()
++                }
++                else -> super.onDisplayPreferenceDialog(preference)
++            }
++        }
++        override fun onDestroyView() { preferenceDialog?.dismiss();preferenceDialog=null;super.onDestroyView() }
 +        private var formatsExpanded = false
 +
 +        override fun onSaveInstanceState(outState: Bundle) {
@@ -3436,7 +3486,7 @@ index 0000000000000000000000000000000000000000..99320e1cad53406353116df2b0bb5750
 +                        if (update == null) {
 +                            Toast.makeText(requireContext(), R.string.update_current, Toast.LENGTH_LONG).show()
 +                        } else {
-+                            MaterialAlertDialogBuilder(requireContext()).setTitle(update.name)
++                            MaterialAlertDialogBuilder(requireContext(),io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).setTitle(update.name)
 +                                .setMessage(getString(R.string.update_website_message, update.changelog))
 +                                .setPositiveButton(R.string.update_button) { _, _ ->
 +                                    runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PUBLIC_SITE_BASE_URL + "download.html"))) }
@@ -3475,7 +3525,7 @@ index 0000000000000000000000000000000000000000..99320e1cad53406353116df2b0bb5750
 +
 +            findPreference<Preference>("hook_diagnostics")?.setOnPreferenceClickListener {
 +                val input=EditText(requireContext()).apply { hint="เช่น com.example.app หรือ android";inputType=InputType.TYPE_CLASS_TEXT }
-+                val dialog=MaterialAlertDialogBuilder(requireContext()).setTitle("ตรวจ Hook ของแอปที่เปิดอยู่")
++                val dialog=MaterialAlertDialogBuilder(requireContext(),io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).setTitle("ตรวจ Hook ของแอปที่เปิดอยู่")
 +                    .setMessage("เปิดแอปเป้าหมายไว้ก่อน แล้วกรอกชื่อแพ็กเกจ หากเพิ่งอัปเดตโมดูล อาจต้องเปิดแอปเป้าหมายใหม่หรือรีเครื่อง")
 +                    .setView(input).setPositiveButton("ตรวจสอบ",null).setNegativeButton("ยกเลิก",null).create()
 +                dialog.setOnShowListener { dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
@@ -3486,7 +3536,7 @@ index 0000000000000000000000000000000000000000..99320e1cad53406353116df2b0bb5750
 +            }
 +
 +            findPreference<Preference>("membership_account")?.setOnPreferenceClickListener {
-+                MaterialAlertDialogBuilder(requireContext()).setTitle("ออกจากระบบ?").setMessage("ข้อมูลบัญชีที่แอปจดจำจะถูกลบ")
++                MaterialAlertDialogBuilder(requireContext(),io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).setTitle("ออกจากระบบ?").setMessage("ข้อมูลบัญชีที่แอปจดจำจะถูกลบ")
 +                    .setNegativeButton("ยกเลิก", null).setPositiveButton("ออกจากระบบ") { _, _ ->
 +                        io.github.phantom.gps.utils.RememberedLoginStore(requireContext()).forget()
 +                        io.github.phantom.gps.utils.LicenseGuard.clearLicenseAndDeactivate(requireContext())
@@ -5102,7 +5152,7 @@ index 0000000000000000000000000000000000000000..363d32453f64237a503dde1b8cbc6347
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/HookDiagnostics.kt b/app/src/main/java/io/github/phantom/gps/utils/HookDiagnostics.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..46bd4426a1a0dabab09c0cb25b0f4633ebb52817
+index 0000000000000000000000000000000000000000..c6f541a698a22ff1e39a54128dac0226c51b8ceb
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/HookDiagnostics.kt
 @@ -0,0 +1,56 @@
@@ -5126,7 +5176,7 @@ index 0000000000000000000000000000000000000000..46bd4426a1a0dabab09c0cb25b0f4633
 +        val sharing=if(PrefManager.isHookSharingAvailable)"GeoX: ช่องทางค่าร่วมพร้อม" else "GeoX: ช่องทางค่าร่วม LSPosed ไม่พร้อม (กำลังใช้ private prefs)"
 +        var answered=false
 +        val states=linkedSetOf<String>()
-+        val dialog=MaterialAlertDialogBuilder(activity).setTitle("ตรวจ Hook: $target")
++        val dialog=MaterialAlertDialogBuilder(activity,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).setTitle("ตรวจ Hook: $target")
 +            .setMessage(sharing+"\n\nกำลังรอคำตอบจากแอปเป้าหมาย…").setPositiveButton("ปิด",null).create()
 +        val observer=object:DefaultLifecycleObserver { override fun onDestroy(owner:LifecycleOwner){dialog.dismiss()} }
 +        val timeout=Runnable {
@@ -14374,25 +14424,25 @@ index 054c97b2e62bc248b0485ae238bb60a05c95ff14..d13677f661d55f60415c964153221752
 \ No newline at end of file
 diff --git a/app/src/main/res/layout/activity_member_login.xml b/app/src/main/res/layout/activity_member_login.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..2d976e22a6a0add84cf4e5e0f9a89662aecf37fc
+index 0000000000000000000000000000000000000000..5a3ccc4e2b9dbcae52137d0a524974606bc924fb
 --- /dev/null
 +++ b/app/src/main/res/layout/activity_member_login.xml
 @@ -0,0 +1,20 @@
 +<?xml version="1.0" encoding="utf-8"?>
-+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="#10121D">
++<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="#101416">
 +<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center_vertical" android:padding="28dp">
-+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GeoX" android:textSize="30sp" android:textStyle="bold" android:textColor="#C8B6FF" />
-+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="YOUR LOCATION. YOUR CONTROL." android:textSize="12sp" android:textColor="#9B6CFF" />
-+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="GeoX — เดิม PHANToM GPS" android:textSize="13sp" android:textColor="#AAA7BB" />
++<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GeoX" android:textSize="30sp" android:textStyle="bold" android:textColor="#C7F568" />
++<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="YOUR LOCATION. YOUR CONTROL." android:textSize="12sp" android:textColor="#C7F568" />
++<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="GeoX — เดิม PHANToM GPS" android:textSize="13sp" android:textColor="#9AA8A3" />
 +<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="เข้าสู่ระบบสมาชิก
-+เริ่มสิทธิ์ 7 วันเมื่อเข้าแอปครั้งแรก ต่ออายุผ่านแอดมิน" android:textSize="16sp" android:textColor="#E6E2F2" />
++เริ่มสิทธิ์ 7 วันเมื่อเข้าแอปครั้งแรก ต่ออายุผ่านแอดมิน" android:textSize="16sp" android:textColor="#EFF5F0" />
 +<TextView android:id="@+id/memberStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textColor="#8AE6C3" />
-+<EditText android:id="@+id/memberUsername" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="24dp" android:hint="ชื่อผู้ใช้ GeoX (ไม่ใช่ Gmail)" android:inputType="textVisiblePassword" android:autofillHints="username" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#AAA7BB" android:backgroundTint="#C8B6FF" />
-+<EditText android:id="@+id/memberPassword" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="12dp" android:hint="รหัสผ่าน GeoX" android:inputType="textPassword" android:autofillHints="password" android:saveEnabled="false" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#AAA7BB" android:backgroundTint="#C8B6FF" />
-+<CheckBox android:id="@+id/memberRemember" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="12dp" android:text="จดจำบัญชีในเครื่องนี้" android:textColor="#E6E2F2" android:buttonTint="#C8B6FF" />
-+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="บันทึกหลังเข้าสู่ระบบสำเร็จ เมื่อจำเป็นต้องเข้าสู่ระบบใหม่ แอปจะกรอกข้อมูลให้ โดยยังต้องตรวจสิทธิ์ตามปกติ" android:textSize="13sp" android:textColor="#AAA7BB" />
++<EditText android:id="@+id/memberUsername" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="24dp" android:hint="ชื่อผู้ใช้ หรือ Gmail" android:inputType="textVisiblePassword" android:autofillHints="username" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#9AA8A3" android:backgroundTint="#C7F568" />
++<EditText android:id="@+id/memberPassword" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="12dp" android:hint="รหัสผ่าน GeoX" android:inputType="textPassword" android:autofillHints="password" android:saveEnabled="false" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#9AA8A3" android:backgroundTint="#C7F568" />
++<CheckBox android:id="@+id/memberRemember" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="12dp" android:text="จดจำบัญชีในเครื่องนี้" android:textColor="#EFF5F0" android:buttonTint="#C7F568" />
++<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="บันทึกหลังเข้าสู่ระบบสำเร็จ เมื่อจำเป็นต้องเข้าสู่ระบบใหม่ แอปจะกรอกข้อมูลให้ โดยยังต้องตรวจสิทธิ์ตามปกติ" android:textSize="13sp" android:textColor="#9AA8A3" />
 +<Button android:id="@+id/memberForget" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ลืมบัญชีที่จดจำไว้" android:visibility="gone" />
-+<Button android:id="@+id/memberLogin" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="20dp" android:text="เข้าสู่ระบบ" android:backgroundTint="#B9A0FF" android:textColor="#10121D" />
++<Button android:id="@+id/memberLogin" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="20dp" android:text="เข้าสู่ระบบ" android:backgroundTint="#C7F568" android:textColor="#101416" />
 +<ProgressBar android:id="@+id/memberProgress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="gone" />
 +<TextView android:id="@+id/memberError" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="#FFB5B5" android:visibility="gone" />
 +<Button android:id="@+id/memberRegister" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="สมัครสมาชิก / จัดการบัญชีบนเว็บ" />
@@ -21575,18 +21625,18 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..bc04cdf9c3b7c8abebbf77e5644a9c70
 +    <string name="activation_retry_check">ตรวจสอบอีกครั้ง</string>
 +<string name="geox_ready">Ready</string><string name="geox_active">Active</string><string name="geox_selected_location">SELECTED LOCATION</string><string name="geox_start">START</string><string name="geox_stop">STOP</string><string name="geox_search">ค้นหาสถานที่ หรือพิกัด</string></resources>
 diff --git a/app/src/main/res/values/themes.xml b/app/src/main/res/values/themes.xml
-index 423f85f518f6d6ba568f2b95ef0b1a8315ca4588..ff09bbf47ccc8c4edf8f6d4ecd012e8e545edb0a 100644
+index 423f85f518f6d6ba568f2b95ef0b1a8315ca4588..aff1dc182646dfc756126246c1116463d5c27fba 100644
 --- a/app/src/main/res/values/themes.xml
 +++ b/app/src/main/res/values/themes.xml
 @@ -4 +4 @@
 -        <item name="colorPrimary">@color/primary</item>
-+        <item name="colorPrimary">#C7F568</item><item name="colorOnPrimary">#172019</item><item name="colorSecondary">#C7F568</item><item name="colorOnSecondary">#172019</item><item name="colorSurface">#1B2823</item><item name="colorSurfaceVariant">#25382E</item><item name="colorOnSurface">#EFF5F0</item><item name="colorOnSurfaceVariant">#9AA8A3</item><item name="android:colorBackground">#101416</item><item name="android:windowBackground">#101416</item><item name="android:textColorPrimary">#EFF5F0</item><item name="android:textColorSecondary">#9AA8A3</item><item name="colorOutline">#46564D</item><item name="colorPrimaryContainer">#25382E</item><item name="colorOnPrimaryContainer">#C7F568</item><item name="colorSecondaryContainer">#25382E</item><item name="colorOnSecondaryContainer">#EFF5F0</item>
++        <item name="colorPrimary">#C7F568</item><item name="colorOnPrimary">#172019</item><item name="colorSecondary">#C7F568</item><item name="colorOnSecondary">#172019</item><item name="colorSurface">#1B2823</item><item name="colorControlNormal">#9AA8A3</item><item name="colorControlActivated">#C7F568</item><item name="colorControlHighlight">#334F4930</item><item name="android:colorAccent">#C7F568</item><item name="colorSurfaceContainerHigh">#1B2823</item><item name="colorSurfaceContainerHighest">#25382E</item><item name="colorSurfaceContainer">#1B2823</item><item name="colorSurfaceVariant">#25382E</item><item name="colorOnSurface">#EFF5F0</item><item name="colorOnSurfaceVariant">#9AA8A3</item><item name="android:colorBackground">#101416</item><item name="android:windowBackground">#101416</item><item name="android:textColorPrimary">#EFF5F0</item><item name="android:textColorSecondary">#9AA8A3</item><item name="colorOutline">#46564D</item><item name="colorPrimaryContainer">#25382E</item><item name="colorOnPrimaryContainer">#C7F568</item><item name="colorSecondaryContainer">#25382E</item><item name="colorOnSecondaryContainer">#EFF5F0</item>
 @@ -10,0 +11 @@
 +        <item name="materialAlertDialogTheme">@style/ThemeOverlay.GeoX.Dialog</item><item name="alertDialogTheme">@style/ThemeOverlay.GeoX.Dialog</item>
 @@ -14 +15 @@
 -</resources>
 \ No newline at end of file
-+<style name="ThemeOverlay.GeoX.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog"><item name="colorSurface">#1B2823</item><item name="colorOnSurface">#EFF5F0</item><item name="colorPrimary">#C7F568</item><item name="android:textColorPrimary">#EFF5F0</item><item name="android:textColorSecondary">#9AA8A3</item><item name="backgroundTint">#1B2823</item></style></resources>
++<style name="ThemeOverlay.GeoX.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog"><item name="colorSurface">#1B2823</item><item name="colorControlNormal">#9AA8A3</item><item name="colorControlActivated">#C7F568</item><item name="colorControlHighlight">#334F4930</item><item name="android:colorAccent">#C7F568</item><item name="colorSurfaceContainerHigh">#1B2823</item><item name="colorSurfaceContainerHighest">#25382E</item><item name="colorSurfaceContainer">#1B2823</item><item name="colorOnSurface">#EFF5F0</item><item name="colorPrimary">#C7F568</item><item name="android:textColorPrimary">#EFF5F0</item><item name="android:textColorSecondary">#9AA8A3</item><item name="backgroundTint">#1B2823</item></style></resources>
 \ No newline at end of file
 diff --git a/app/src/main/res/xml/data_extraction_rules.xml b/app/src/main/res/xml/data_extraction_rules.xml
 new file mode 100644
@@ -21620,7 +21670,7 @@ index 0000000000000000000000000000000000000000..b853a8d2452fe340b2e07d1899f3437e
 +    </device-transfer>
 +</data-extraction-rules>
 diff --git a/app/src/main/res/xml/preferences.xml b/app/src/main/res/xml/preferences.xml
-index fabf1050343e8e29653fb416f06b5c06054115ed..97db6f30e6dee72dd00d226bad0a1d34abfc0a49 100644
+index fabf1050343e8e29653fb416f06b5c06054115ed..036802b281c7705100bdf1c9d8770b2c0368ebdd 100644
 --- a/app/src/main/res/xml/preferences.xml
 +++ b/app/src/main/res/xml/preferences.xml
 @@ -5,0 +6 @@
@@ -21635,6 +21685,9 @@ index fabf1050343e8e29653fb416f06b5c06054115ed..97db6f30e6dee72dd00d226bad0a1d34
 -            android:summary="%s"
 -            android:title="@string/dark_theme" />
 +        
+@@ -16 +10 @@
+-        <DropDownPreference
++        <ListPreference
 @@ -25,0 +20,6 @@
 +        <Preference
 +            android:key="check_update_now"

@@ -57,7 +57,7 @@ class MainActivity:AppCompatActivity() {
             findViewById<Button>(R.id.adminBan).text=if(s.member?.get("disabled")==true)"ปลดแบนบัญชี" else "แบนบัญชี"
             val m=s.member
             fun date(value:Any?)=(value as? Number)?.toLong()?.let{SimpleDateFormat("d MMM yyyy HH:mm",Locale("th","TH")).format(Date(it))}?:"ยังไม่เริ่มนับสิทธิ์"
-            findViewById<TextView>(R.id.adminMemberDetails).text=if(m==null)"ค้นหาสมาชิกด้วย Gmail ก่อนต่ออายุ" else "${m["username"]}\n${m["email"]}\nหมดอายุ: ${date(m["expiresAtMs"])}\nสถานะ: ${if(m["disabled"]==true)"ถูกแบน" else "ปกติ"}\nเหตุผล: ${m["banReason"]?:"—"}\nวันต่ออายุที่รอเริ่ม: ${m["prepaidDays"]?:0} วัน"
+            findViewById<TextView>(R.id.adminMemberDetails).text=if(m==null)"ค้นหาด้วยชื่อผู้ใช้หรือ Gmail ก่อนต่ออายุ" else "${m["username"]}\n${m["email"]}\nหมดอายุ: ${date(m["expiresAtMs"])}\nสถานะ: ${if(m["disabled"]==true)"ถูกแบน" else "ปกติ"}\nเหตุผล: ${m["banReason"]?:"—"}\nวันต่ออายุที่รอเริ่ม: ${m["prepaidDays"]?:0} วัน"
         }
     }
 }

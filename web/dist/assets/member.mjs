@@ -74,7 +74,7 @@ async function initializeAuth(){
 
 $('signup-form').addEventListener('submit',async event=>{event.preventDefault();if(busy)return;
  const password=$('new-password').value,username=$('username').value.trim();if(password!==$('confirm-password').value){message('รหัสผ่านทั้งสองช่องไม่ตรงกัน',true);return;}
- if((password||!registration.canResume(auth.currentUser))&&password.length<12){message('ใช้รหัสผ่านอย่างน้อย 12 ตัว',true);return;}
+ if((password||!registration.canResume(auth.currentUser))&&password.length<6){message('ใช้รหัสผ่านอย่างน้อย 6 ตัว',true);return;}
  setBusy(true);try{
   const user=auth.currentUser;if(!user)throw Error('LOGIN_REQUIRED');
   const result=await registration.start(user,password,username);$('new-password').value='';$('confirm-password').value='';$('new-password').required=false;$('confirm-password').required=false;
@@ -84,7 +84,7 @@ $('signup-form').addEventListener('submit',async event=>{event.preventDefault();
 });
 $('logout').addEventListener('click',async()=>{if(busy)return;setBusy(true);try{await signOut(auth);$('new-password').value='';$('confirm-password').value='';}catch(e){message(errorText(e),true);}finally{setBusy(false);}});
 $('reset-password').addEventListener('click',async()=>{if(busy||!auth.currentUser?.email)return;setBusy(true);try{await sendPasswordResetEmail(auth,auth.currentUser.email);message('ส่งอีเมลตั้งรหัสผ่านใหม่แล้ว กรุณาตรวจกล่องจดหมาย');}catch(e){message(errorText(e),true);}finally{setBusy(false);}});
-$('admin-search').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;currentMember=null;pendingRenewal=null;$('admin-result').hidden=true;setBusy(true);try{currentMember=await call('adminMemberFind',{email:$('member-email').value.trim()});$('admin-result').hidden=false;$('admin-result').textContent=currentMember.username+'\n'+currentMember.email+'\n'+(currentMember.firstLoginAtMs==null?'ยังไม่เข้าแอป มีวันต่ออายุรอ '+currentMember.prepaidDays+' วัน':'หมดอายุ: '+new Date(currentMember.expiresAtMs).toLocaleString('th-TH'));$('admin-result').textContent+='\nสถานะ: '+(currentMember.disabled?'ถูกแบน':'ปกติ')+'\nเหตุผลแบน: '+(currentMember.banReason||'—');message('',false,'admin-message');}catch(e){message(errorText(e),true,'admin-message');}finally{setBusy(false);}});
+$('admin-search').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;currentMember=null;pendingRenewal=null;$('admin-result').hidden=true;setBusy(true);try{currentMember=await call('adminMemberFind',{query:$('member-email').value.trim()});$('admin-result').hidden=false;$('admin-result').textContent=currentMember.username+'\n'+currentMember.email+'\n'+(currentMember.firstLoginAtMs==null?'ยังไม่เข้าแอป มีวันต่ออายุรอ '+currentMember.prepaidDays+' วัน':'หมดอายุ: '+new Date(currentMember.expiresAtMs).toLocaleString('th-TH'));$('admin-result').textContent+='\nสถานะ: '+(currentMember.disabled?'ถูกแบน':'ปกติ')+'\nเหตุผลแบน: '+(currentMember.banReason||'—');message('',false,'admin-message');}catch(e){message(errorText(e),true,'admin-message');}finally{setBusy(false);}});
 async function manageMember(action,days=7){
  if(busy||!currentMember)return;
  if(action==='reduce'&&(!Number.isSafeInteger(days)||days<1||days>36500)){message('กรอกจำนวนวัน 1–36500',true,'admin-message');return;}

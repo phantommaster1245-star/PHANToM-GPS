@@ -26,7 +26,9 @@ class AdminViewModel(app:Application):AndroidViewModel(app) {
         if(FirebaseAuth.getInstance().currentUser!=null)run { call("adminMemberIdentity",emptyMap()).let{mutable.value=State(admin=it["email"].toString())} }
     }
     fun login(email:String,password:String)=run {
-        FirebaseAuth.getInstance().signInWithEmailAndPassword(email.trim(),password).waitFor()
+        val identifier=email.trim()
+        val resolved=if(identifier.contains("@"))identifier else call("memberLogin",mapOf("username" to identifier,"password" to password))["email"] as? String ?: error("LOGIN_FAILED")
+        FirebaseAuth.getInstance().signInWithEmailAndPassword(resolved,password).waitFor()
         try{val who=call("adminMemberIdentity",emptyMap());mutable.value=State(admin=who["email"].toString())}
         catch(e:Exception){FirebaseAuth.getInstance().signOut();throw e}
     }
@@ -34,7 +36,7 @@ class AdminViewModel(app:Application):AndroidViewModel(app) {
         if(mutable.value?.busy==true)return
         mutable.value=(mutable.value?:State()).copy(member=null)
         run {
-        val m=call("adminMemberFind",mapOf("email" to email.trim()))
+        val m=call("adminMemberFind",mapOf("query" to email.trim()))
         mutable.value=State(admin=FirebaseAuth.getInstance().currentUser?.email.orEmpty(),member=m)
         }
     }

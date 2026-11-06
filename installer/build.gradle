@@ -11,8 +11,8 @@ android {
         applicationId "io.github.phantom.gps.installer"
         minSdk 27
         targetSdk 34
-        versionCode 5
-        versionName "2.1.0"
+        versionCode 6
+        versionName "2.1.1"
         testInstrumentationRunner "io.github.phantom.gps.installer.test.AdminTestRunner"
 
         buildConfigField "String", "FIREBASE_API_KEY", "\"AIzaSyDT0JdPIXR9LolsMQkpJ-t2t6sn4cmr4MY\""
