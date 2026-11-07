@@ -1,8 +1,8 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "sourceTree": "57f617c0fbc43f19c9deabc9885a0ab961ae2655",
+  "sourceTree": "09a0076b18997f602043a5cdb45e9456788770f0",
   "brand": "GeoX",
-  "version": "0.1.04",
+  "version": "0.1.07",
   "files": [
     {
       "path": ".gitattributes",
@@ -23,6 +23,11 @@
       "path": "GEOX_0.1.03_LSPOSED_NOTIFICATIONS.md",
       "bytes": 4838,
       "sha256": "bcac8a0123256cbea1bfd28c36f2d0973e255bde9cc2f21361236f39331bcc38"
+    },
+    {
+      "path": "GEOX_0.1.07_MODERN_HANDOFF.md",
+      "bytes": 4032,
+      "sha256": "5bab22947457a6cd1559939171e36f186799a88fa3b74dee9d92d169972a4f60"
     },
     {
       "path": "GEOX_FULL_LOCK_HANDOFF.md",
@@ -56,8 +61,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5606,
-      "sha256": "620691bd5d2714e81bcf3b93788c38e8927fa5eac0c2075e1cfb1da84e94234e"
+      "bytes": 5784,
+      "sha256": "7701c02acc19449f3f49dc757c3ce10203f682986bf00c88dcfa47e39f0886f9"
     },
     {
       "path": "VALIDATION.txt",
@@ -66,8 +71,8 @@
     },
     {
       "path": "VERSIONING.md",
-      "bytes": 441,
-      "sha256": "c6486dfa31082bf2b0a3d93b00be18c7387cc083b3a362fd8a76e29724d38277"
+      "bytes": 289,
+      "sha256": "8fabec5bf98ee2c20c1d8b88822a0840a8c13c515c6ce298dee4869b62922e43"
     },
     {
       "path": "build.gradle",
@@ -276,8 +281,8 @@
     },
     {
       "path": "patches/phantom-gps.patch",
-      "bytes": 1340692,
-      "sha256": "2f7f442bc602c17e95cb5c234e58181344308971cd86e2023bb63af905cce36d"
+      "bytes": 1397059,
+      "sha256": "26454fc0ae3c1014afafc5202b105730102e1ec9da9caef7b684bc43a199b1b0"
     },
     {
       "path": "settings.gradle",
@@ -391,8 +396,8 @@
     },
     {
       "path": "web/dist/download.html",
-      "bytes": 6479,
-      "sha256": "6d1ee3a777051180f67ae45f160f16696ec1c125d39f02664edd9b947bc5df07"
+      "bytes": 6430,
+      "sha256": "8194553314a7fb27381cd5ef80ed7f50e48a212e50a4892a8adcf9ba23602337"
     },
     {
       "path": "web/dist/downloads/PHANToM-GPS-v0.0.16.apk",
@@ -440,14 +445,19 @@
       "sha256": "3ac8705159ea49d1f9ad2082e3301864c0ba114988acb642fe074f43241226ee"
     },
     {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.07.apk",
+      "bytes": 4328427,
+      "sha256": "8397887bfeb8629ebafc607947816564275fde9a6ad2a84e5dd637b3732ddda6"
+    },
+    {
       "path": "web/dist/downloads/version.json",
-      "bytes": 956,
-      "sha256": "402d67882c522aca16881b6409bb6bf5f128b324f127aaf3520f621bea4f2602"
+      "bytes": 894,
+      "sha256": "6e754c6d2b8ef79733d3f26a3069f32f561ddbdf6b1ff883fb575411c8ccd20c"
     },
     {
       "path": "web/dist/index.html",
-      "bytes": 4984,
-      "sha256": "0613fbbfbb18b50947c8adfd089922830eb0c7b04bae4a8f03b0b7f30a0c8936"
+      "bytes": 5019,
+      "sha256": "8061c15a8578c3ffc1c47f75e17000c1e2838f351061d64da2204b6b4a736790"
     },
     {
       "path": "web/dist/register.html",

@@ -1,5 +1,7 @@
 # GeoX additions and GeoX Admin
 
+The current website APK is GeoX 0.1.07 Modern for libxposed API 102. See [the Modern handoff](GEOX_0.1.07_MODERN_HANDOFF.md) for device results and Full Lock/Gozza integration.
+
 GeoX (formerly PHANToM GPS) publishes its Admin module and a derivative patch for the Android application. The firebase/ directory retains legacy service additions; the hosted membership service is managed separately. It does not contain the complete GPS Setter application tree or its Git history.
 
 See PROVENANCE.md for source references, scope, and retained licensing information.

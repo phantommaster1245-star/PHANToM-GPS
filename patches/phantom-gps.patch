@@ -1,12 +1,13 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..a917e244590077d8a4277baa0cab49a79a50a91e 100644
+index d211674657a4308ba7437287558c90117ce56c75..bb5fa0f8ed0bb3a6cea9d023705b85d677419e9e 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
 +    id 'com.google.gms.google-services'
-@@ -10 +11,26 @@ plugins {
+@@ -10 +11,27 @@ plugins {
 -def tagName = '0.0.6'
-+def tagName = '0.1.04'
++def modernXposed = providers.gradleProperty('geoxModern').orNull == 'true'
++def tagName = '0.1.07'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -32,21 +33,25 @@ index d211674657a4308ba7437287558c90117ce56c75..a917e244590077d8a4277baa0cab49a7
 +        return ""
 +    }
 +}
-@@ -15 +41 @@ android {
+@@ -13 +40 @@ android {
+-    compileSdk 34
++    compileSdk modernXposed ? 36 : 34
+@@ -15 +42 @@ android {
 -        applicationId "io.github.jqssun.gpssetter"
 +        applicationId "io.github.phantom.gps"
-@@ -18 +44 @@ android {
+@@ -18 +45,2 @@ android {
 -        versionCode 6
-+        versionCode 25
-@@ -20 +46,3 @@ android {
++        versionCode 28
++        buildConfigField "boolean", "MODERN_XPOSED", modernXposed.toString()
+@@ -20 +48,3 @@ android {
 -        // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 +        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://geox-azure.vercel.app/\""
 +        buildConfigField "String", "MEMBERSHIP_PUBLIC_KEY", "\"MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAxhthf2a1Y4w5zsEGJ9WXRwX4ZgN2KQnXHQTf5UIPs2cu5QDdwHVkBkLNRDWHPSqggjB/uIsdav07K2NG841iq9gU7YQX5Gfxz1UrzgnF14JHSzNTWJhjA6Mo9Ta0OB1TzKWPp3PM2b308rJLNQEs/h0hSihzZmI8Y72s+/yJArkxvEW+IapcIk3Kt/uEskmg0PiOc6tLTl1SV/o+QGp46A9d/eRwKafG2av6onreSdXEM6wYWXcJ4mN3vT9FUg3MynO7aLydcGLsbwYQJJiFGbaTibGwVlNTaD00OQvmf3LoKFHdPbRlK7uDjyiiXrRX+Cg1XkiU/vLg/ywVedIHuMtWoy78FVj2wYq8hALuvt2GCWvHe6irk6/V44QMvtHaT0imAtHgWx9ybgJAfW0mClTWHLIIs5GXVLqB9FfQllUAXYuAFBlqmm0ki/kU6Vt2iuxfa5VOw90m2pHWe8pQD6FTy9YmmJ39dSwtEiGsRsMRpVl6nuofCQ7zPHQVj/HzAgMBAAE=\""
 +        testInstrumentationRunner "io.github.phantom.gps.test.MembershipTestRunner"
-@@ -21,0 +50,2 @@ android {
+@@ -21,0 +52,2 @@ android {
 +        buildConfigField("String", "GITHUB_RELEASES_API_BASE", "\"https://api.github.com/repos/phantommaster1245-star/PHANToM-GPS/\"")
 +        buildConfigField("String", "GITHUB_RELEASES_PAGE", "\"https://github.com/phantommaster1245-star/PHANToM-GPS/releases\"")
-@@ -39,7 +69,11 @@ android {
+@@ -39,7 +71,11 @@ android {
 -            def keystoreProperties = new Properties()
 -            keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 -
@@ -65,7 +70,7 @@ index d211674657a4308ba7437287558c90117ce56c75..a917e244590077d8a4277baa0cab49a7
 +                    storePassword keystoreProperties['storePassword']
 +                }
 +            }
-@@ -54 +88,6 @@ android {
+@@ -54 +90,6 @@ android {
 -            signingConfig signingConfigs.release
 +            def activeSigningConfig = signingConfigs.release.storeFile ? signingConfigs.release : signingConfigs.debug
 +            signingConfig activeSigningConfig
@@ -73,20 +78,32 @@ index d211674657a4308ba7437287558c90117ce56c75..a917e244590077d8a4277baa0cab49a7
 +            def cert = certSha256FromSigningConfig(activeSigningConfig)
 +            if (!cert) throw new GradleException("Release signing certificate is required for integrity checks")
 +            buildConfigField "String", "SIGNING_CERT_SHA256", "\"${cert}\""
-@@ -57,0 +97,3 @@ android {
+@@ -57,0 +99,3 @@ android {
 +            // Used for runtime anti-tamper checks (re-signing / repackaging will change this).
 +            def cert = certSha256FromSigningConfig(signingConfigs.findByName("debug"))
 +            buildConfigField "String", "SIGNING_CERT_SHA256", "\"${cert}\""
-@@ -74,5 +115,0 @@ android {
+@@ -74,5 +117,0 @@ android {
 -        foss {
 -            dimension "version"
 -            // versionNameSuffix "-foss"
 -            isDefault true
 -        }
-@@ -85 +122 @@ android {
+@@ -85 +124,13 @@ android {
 -    namespace 'io.github.jqssun.gpssetter'
++    sourceSets {
++        main {
++            def hookSource = modernXposed ? 'src/modern' : 'src/legacy'
++            java.srcDir "${hookSource}/java"
++            assets.srcDir "${hookSource}/assets"
++            resources.srcDir "${hookSource}/resources"
++        }
++        if (modernXposed) {
++            full.manifest.srcFile 'src/modern/AndroidManifest.xml'
++            test.java.srcDir 'src/modernTest/java'
++        }
++    }
 +    namespace 'io.github.phantom.gps'
-@@ -88,0 +126,11 @@ dependencies {
+@@ -88,0 +140,11 @@ dependencies {
 +    testImplementation 'junit:junit:4.13.2'
 +    androidTestImplementation 'androidx.test:runner:1.6.2'
 +    androidTestImplementation 'androidx.test:rules:1.6.1'
@@ -98,22 +115,31 @@ index d211674657a4308ba7437287558c90117ce56c75..a917e244590077d8a4277baa0cab49a7
 +    fullImplementation 'com.google.firebase:firebase-functions'
 +    fullImplementation 'com.google.firebase:firebase-functions-ktx:21.2.1'
 +    fullImplementation 'androidx.work:work-runtime-ktx:2.9.0'
-@@ -95,6 +142,0 @@ dependencies {
+@@ -92 +154,7 @@ dependencies {
+-    compileOnly 'com.github.deltazefiro:XposedBridge:main-SNAPSHOT'
++    if (modernXposed) {
++        compileOnly 'io.github.libxposed:api:102.0.0'
++        // Only the stable remote preference IPC is needed on the app side.
++        implementation 'io.github.libxposed:service:101.0.0'
++    } else {
++        compileOnly 'com.github.deltazefiro:XposedBridge:main-SNAPSHOT'
++    }
+@@ -95,6 +162,0 @@ dependencies {
 -    // use microg (apache 2.0) and maplibre (bsd 2-clause)
 -    fossImplementation 'org.microg.gms:play-services-location:0.3.6.244735'
 -    fossImplementation ('org.maplibre.gl:android-sdk:11.8.2') 
 -    /* {
 -        exclude group: 'com.google.android.gms'
 -    } */
-@@ -116,0 +159 @@ dependencies {
+@@ -116,0 +179 @@ dependencies {
 +    implementation "androidx.lifecycle:lifecycle-process:2.7.0"
-@@ -130 +173,2 @@ dependencies {
+@@ -130 +193,2 @@ dependencies {
 -}
 \ No newline at end of file
 +}
 +
 diff --git a/app/proguard-rules.pro b/app/proguard-rules.pro
-index c7b931c36891c015c13be3ae11a485a1cb21e625..598b03cace61b65845f4f606e377b618fb1d92fb 100644
+index c7b931c36891c015c13be3ae11a485a1cb21e625..ca6c20d3b71f8d2736a353718bb9b4ce657c6d51 100644
 --- a/app/proguard-rules.pro
 +++ b/app/proguard-rules.pro
 @@ -23,2 +23,4 @@
@@ -127,11 +153,14 @@ index c7b931c36891c015c13be3ae11a485a1cb21e625..598b03cace61b65845f4f606e377b618
 --keep class io.github.jqssun.gpssetter.xposed.Xshare{*;}
 --keep class io.github.jqssun.gpssetter.xposed.HookEntry{*;}
 +-keep class io.github.phantom.gps.xposed.HookEntry{*;}
-@@ -33,0 +35,4 @@
+@@ -33,0 +35,7 @@
 +
 +
 +# Replace original source file names while retaining line mappings for private crash retracing.
 +-renamesourcefileattribute SourceFile
++
++-dontwarn io.github.libxposed.**
++-keep class io.github.phantom.gps.xposed.ModernHookEntry { public <init>(); *; }
 diff --git a/app/src/androidTest/java/io/github/phantom/gps/test/MembershipDeviceTest.kt b/app/src/androidTest/java/io/github/phantom/gps/test/MembershipDeviceTest.kt
 new file mode 100644
 index 0000000000000000000000000000000000000000..fb36aadd89442a720f796da64bb67d84e4817c16
@@ -855,10 +884,10 @@ index 0000000000000000000000000000000000000000..13d6c5a695ebd5445ab90bc8a1b1c658
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..bbf89867708e717a72f26c90a3089e0fe3fd8933
+index 0000000000000000000000000000000000000000..86a1addd45538fd7e0092575a9888b4c5c01e1b9
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,102 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Activity
@@ -883,6 +912,9 @@ index 0000000000000000000000000000000000000000..bbf89867708e717a72f26c90a3089e0f
 +    fun onAppForeground(context: Context) {
 +        if(!MembershipAccount.isSignedIn(context)) return
 +        verifyNowForeground(context)
++        resumeMembershipServices(context)
++    }
++    fun resumeMembershipServices(context: Context) {
 +        startHeartbeat(context)
 +        ClipboardMonitorService.ensureRunning(context)
 +    }
@@ -914,8 +946,9 @@ index 0000000000000000000000000000000000000000..bbf89867708e717a72f26c90a3089e0f
 +    }
 +    fun verifyNowForeground(context: Context,onResult:((Boolean)->Unit)?=null) { scope.launch { val result=check(context,true);onResult?.invoke(result) } }
 +    fun verifyNowForRetry(context: Context,onResult:((Boolean)->Unit)?=null)=verifyNowForeground(context,onResult)
++    suspend fun verifyExistingSession(context: Context): Boolean = check(context, false, notify = false)
 +    suspend fun performBackgroundCheck(context: Context):Boolean = check(context,false)
-+    private suspend fun check(context: Context,launchUi: Boolean):Boolean = mutex.withLock {
++    private suspend fun check(context: Context,launchUi: Boolean,notify: Boolean = true):Boolean = mutex.withLock {
 +        if(!MembershipAccount.isSignedIn(context)) return@withLock false
 +        try { MembershipAccount.renew(context);unlock(context);true }
 +        catch(e:Exception) {
@@ -923,7 +956,7 @@ index 0000000000000000000000000000000000000000..bbf89867708e717a72f26c90a3089e0f
 +            val permanent=MembershipAccount.errorCode(e) in setOf("SESSION_REPLACED","MEMBERSHIP_EXPIRED","MEMBER_DISABLED","MEMBER_NOT_FOUND","LOGIN_REQUIRED","UNAUTHENTICATED")
 +            if(!permanent && MembershipLease.valid(context))return@withLock true
 +            PrefManager.membershipLease=""
-+            lock(context,MembershipAccount.errorCode(e),!permanent,launchUi);false
++            lock(context,MembershipAccount.errorCode(e),!permanent,launchUi,notify);false
 +        }
 +    }
 +    fun isLocallyAllowedForCriticalAction(context: Context):Boolean = AppIntegrity.isSelfValid(context) && MembershipAccount.isSignedIn(context) && !LicenseStore.isLocked(context) && MembershipLease.valid(context)
@@ -940,10 +973,10 @@ index 0000000000000000000000000000000000000000..bbf89867708e717a72f26c90a3089e0f
 +    fun unlock(context: Context) { LicenseStore.setLocked(context,false,"",false);MembershipStatusNotification.clear(context) }
 +    fun lockRetryable(context: Context,reason:String,launchUi:Boolean=true)=lock(context,reason,true,launchUi)
 +    fun lockPermanent(context: Context,reason:String,launchUi:Boolean=true)=lock(context,reason,false,launchUi)
-+    private fun lock(context: Context,reason:String,retryable:Boolean,launchUi:Boolean) {
++    private fun lock(context: Context,reason:String,retryable:Boolean,launchUi:Boolean,notify:Boolean=true) {
 +        val changed=!LicenseStore.isLocked(context)||LicenseStore.getLockReason(context)!=reason
 +        LicenseStore.setLocked(context,true,reason,retryable)
-+        if(changed&&!launchUi)MembershipStatusNotification.show(context,getUserFacingReason(context,reason))
++        if(changed&&!launchUi&&notify)MembershipStatusNotification.show(context,getUserFacingReason(context,reason))
 +        runCatching{LocationController.stop(context)}
 +        runCatching{context.stopService(Intent(context,ClipboardMonitorService::class.java))}
 +        if(launchUi&&isForeground())routeToRequiredScreen(context)
@@ -1644,8 +1677,534 @@ index 0000000000000000000000000000000000000000..06926a9e615e52931cc2cc034a817f88
 +        LicenseWorkScheduler.cancel(context)
 +    }
 +}
+diff --git a/app/src/legacy/assets/xposed_init b/app/src/legacy/assets/xposed_init
+new file mode 100644
+index 0000000000000000000000000000000000000000..85f00d5de5dba13c0b8975b2bb632c63c454a177
+--- /dev/null
++++ b/app/src/legacy/assets/xposed_init
+@@ -0,0 +1 @@
++io.github.phantom.gps.xposed.HookEntry
+diff --git a/app/src/legacy/java/io/github/phantom/gps/utils/HookPreferenceChannel.kt b/app/src/legacy/java/io/github/phantom/gps/utils/HookPreferenceChannel.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..695877b34b968f741b93ad1fa706593cb5f70342
+--- /dev/null
++++ b/app/src/legacy/java/io/github/phantom/gps/utils/HookPreferenceChannel.kt
+@@ -0,0 +1,9 @@
++package io.github.phantom.gps.utils
++
++import android.content.Context
++
++internal object HookPreferenceChannel {
++    val ready = false
++    fun initialize(context: Context) = Unit
++    fun publish(values: Map<String, *>): Boolean = false
++}
+diff --git a/app/src/legacy/java/io/github/phantom/gps/xposed/ClipboardHook.kt b/app/src/legacy/java/io/github/phantom/gps/xposed/ClipboardHook.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..ca1e24492563d7fc471ba2c9d0573ef3ba7c2be0
+--- /dev/null
++++ b/app/src/legacy/java/io/github/phantom/gps/xposed/ClipboardHook.kt
+@@ -0,0 +1,123 @@
++package io.github.phantom.gps.xposed
++
++import android.app.AndroidAppHelper
++import android.content.ClipData
++import android.content.Context
++import android.content.Intent
++import de.robv.android.xposed.XC_MethodHook
++import de.robv.android.xposed.XposedBridge
++import de.robv.android.xposed.XposedHelpers
++import de.robv.android.xposed.callbacks.XC_LoadPackage
++import io.github.phantom.gps.BuildConfig
++import io.github.phantom.gps.utils.LocationActions
++import io.github.phantom.gps.utils.ClipboardTrace
++import io.github.phantom.gps.utils.ClipboardEventGate
++import android.os.SystemClock
++import java.util.concurrent.Executors
++
++object ClipboardHook {
++
++    private val settings = Xshare()
++    private var initialized = false
++    private val eventGate = ClipboardEventGate()
++    private val dispatcher = Executors.newSingleThreadExecutor { task -> Thread(task, "Phantom-clipboard-dispatch").apply { isDaemon = true } }
++
++    fun initHooks(lpparam: XC_LoadPackage.LoadPackageParam) {
++        if (lpparam.packageName != "android" || initialized) return
++        initialized = true
++
++        val targets = listOf(
++            "com.android.server.clipboard.ClipboardService",
++            "com.android.server.clipboard.ClipboardService\$ClipboardImpl"
++        )
++
++        var hookedCount = 0
++        targets.forEach { className ->
++            val targetClass = runCatching {
++                XposedHelpers.findClass(className, lpparam.classLoader)
++            }.getOrNull() ?: return@forEach
++
++            hookedCount += hookClipboardMethods(targetClass)
++        }
++
++        if (hookedCount == 0) {
++            XposedBridge.log("ClipboardHook: no compatible clipboard method found")
++        } else {
++            XposedBridge.log("ClipboardHook: hooked methods = $hookedCount")
++        }
++    }
++
++    private fun hookClipboardMethods(targetClass: Class<*>): Int {
++        var count = 0
++
++        for (method in targetClass.declaredMethods) {
++            if (method.name != "setPrimaryClip" && method.name != "setPrimaryClipAsPackage") continue
++            if (method.parameterTypes.isEmpty()) continue
++
++            val clipArgIndex = method.parameterTypes.indexOfFirst {
++                ClipData::class.java.isAssignableFrom(it)
++            }
++            if (clipArgIndex < 0) continue
++
++            runCatching {
++                XposedBridge.hookMethod(method, object : XC_MethodHook() {
++                    override fun afterHookedMethod(param: MethodHookParam) {
++                        if (param.hasThrowable()) return
++                        val capturedAtMs = SystemClock.elapsedRealtime()
++                        if (!settings.isClipboardMonitorEnabled) return
++                        val clip = param.args.getOrNull(clipArgIndex) as? ClipData ?: return
++                        if (clip.itemCount <= 0) return
++                        val item = clip.getItemAt(0)
++                        val context = resolveContext(param)
++                        val raw = item.text?.toString()
++                            ?: context?.let { item.coerceToText(it)?.toString() }
++                        val text = raw?.trim()
++                        if (text.isNullOrEmpty()) return
++                        if (!eventGate.accept(text, SystemClock.elapsedRealtime())) return
++                        dispatcher.execute {
++                            if (context != null) LocationHook.ensureRefreshReceiver(context)
++                            dispatchClipboardText(context, text, capturedAtMs)
++                        }
++                    }
++                })
++                count += 1
++            }.onFailure {
++                XposedBridge.log("ClipboardHook: failed ${targetClass.name}#${method.name}: $it")
++            }
++        }
++
++        return count
++    }
++
++    private fun dispatchClipboardText(context: Context?, text: String, capturedAtMs: Long) {
++        val ctx = context ?: return
++        ctx.sendBroadcast(Intent().apply {
++            action = LocationActions.ACTION_CLIPBOARD_TEXT
++            setClassName(
++                BuildConfig.APPLICATION_ID,
++                "${BuildConfig.APPLICATION_ID}.utils.ClipboardLocationReceiver"
++            )
++            addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
++            addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
++            putExtra(LocationActions.EXTRA_CLIPBOARD_TEXT, text)
++            putExtra(ClipboardTrace.EXTRA_CAPTURED_AT, capturedAtMs)
++        })
++    }
++
++    private fun resolveContext(param: XC_MethodHook.MethodHookParam): Context? {
++        (AndroidAppHelper.currentApplication() as? Context)?.let { return it }
++        val thisObj = param.thisObject ?: return null
++
++        runCatching {
++            XposedHelpers.getObjectField(thisObj, "mContext") as? Context
++        }.getOrNull()?.let { return it }
++
++        runCatching {
++            val outer = XposedHelpers.getObjectField(thisObj, "this$0")
++            XposedHelpers.getObjectField(outer, "mContext") as? Context
++        }.getOrNull()?.let { return it }
++
++        return null
++    }
++
++}
+diff --git a/app/src/legacy/java/io/github/phantom/gps/xposed/HookEntry.kt b/app/src/legacy/java/io/github/phantom/gps/xposed/HookEntry.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..9a663ac0de574fdf98c7180e815ae999ff22c4e6
+--- /dev/null
++++ b/app/src/legacy/java/io/github/phantom/gps/xposed/HookEntry.kt
+@@ -0,0 +1,32 @@
++package io.github.phantom.gps.xposed
++
++import android.app.AndroidAppHelper
++import android.content.Context
++import de.robv.android.xposed.IXposedHookLoadPackage
++import de.robv.android.xposed.XC_MethodHook
++import de.robv.android.xposed.XposedBridge
++import de.robv.android.xposed.XposedHelpers
++import de.robv.android.xposed.callbacks.XC_LoadPackage
++import io.github.phantom.gps.BuildConfig
++import io.github.phantom.gps.utils.AppIntegrity
++
++class HookEntry : IXposedHookLoadPackage {
++
++    override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
++        val ctx = runCatching { AndroidAppHelper.currentApplication() as? Context }.getOrNull()
++        if (ctx != null && !AppIntegrity.isModuleApkValid(ctx)) {
++            XposedBridge.log("GeoX: module signature mismatch - hooks disabled")
++            return
++        }
++
++        if (lpparam.packageName == BuildConfig.APPLICATION_ID) {
++            XposedHelpers.findAndHookMethod("io.github.phantom.gps.ui.viewmodel.MainViewModel", lpparam.classLoader, "updateXposedState", object : XC_MethodHook() {
++                override fun beforeHookedMethod(param: MethodHookParam) {
++                    param.result = null
++                }
++            })
++        }
++        ClipboardHook.initHooks(lpparam)
++        LocationHook.initHooks(lpparam)
++    }
++}
+diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt b/app/src/legacy/java/io/github/phantom/gps/xposed/LocationHook.kt
+similarity index 64%
+rename from app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
+rename to app/src/legacy/java/io/github/phantom/gps/xposed/LocationHook.kt
+index 61ed6adaf6b92a8260ae655611f2391470833343..e3f480faba460a8831321c70f5d95c75b6438690 100644
+--- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
++++ b/app/src/legacy/java/io/github/phantom/gps/xposed/LocationHook.kt
+@@ -1 +1 @@
+-package io.github.jqssun.gpssetter.xposed
++package io.github.phantom.gps.xposed
+@@ -7,0 +8,7 @@ import android.content.Context
++import android.content.BroadcastReceiver
++import android.content.Intent
++import android.content.IntentFilter
++import android.os.Handler
++import android.os.HandlerThread
++import io.github.phantom.gps.utils.LocationRefresh
++import io.github.phantom.gps.utils.ClipboardTrace
+@@ -17 +24 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
+-import io.github.jqssun.gpssetter.BuildConfig
++import io.github.phantom.gps.BuildConfig
+@@ -20,0 +28 @@ import java.util.*
++import kotlin.math.abs
+@@ -21,0 +30,2 @@ import kotlin.math.cos
++import kotlin.math.sin
++import kotlin.math.sqrt
+@@ -32 +42,79 @@ object LocationHook {
+-    private var mLastUpdated: Long = 0
++    @Volatile private var mLastUpdated: Long = 0
++    @Volatile private var refreshRegistered = false
++    @Volatile private var currentTrace: ClipboardTrace? = null
++    @Volatile private var loadedDirectRequestId: String = ""
++    @Volatile private var loadedStarted: Boolean = false
++    @Volatile private var systemHooksReady: Boolean = false
++    private var loadedTraceId: Long = 0
++    private var consumedTraceId: Long = 0
++    private var lastActiveServicePromotion=0L
++
++    @Synchronized
++    fun ensureRefreshReceiver(source: Context) {
++        io.github.phantom.gps.utils.MembershipLease.initializeHookClock(source)
++        if (refreshRegistered) return
++        val receiverContext = source.applicationContext ?: source
++        if (receiverContext.packageName == BuildConfig.APPLICATION_ID) return
++        val worker = HandlerThread("Phantom-location-refresh").apply { start() }
++        val receiver = object : BroadcastReceiver() {
++            override fun onReceive(context: Context, intent: Intent?) {
++                if (intent?.action == LocationRefresh.DIAGNOSTIC_ACTION) {
++                    val id=intent.getStringExtra("query_id").orEmpty()
++                    if(id.length !in 16..96)return
++                    val reply=intent.getParcelableExtra<android.os.ResultReceiver>("reply") ?: return
++                    val state=runCatching { settings.diagnosticState() }.getOrElse { android.os.Bundle().apply { putString("reason","DIAGNOSTIC_FAILED") } }
++                    state.putString("query_id",id)
++                    state.putString("package",receiverContext.packageName)
++                    state.putString("version",BuildConfig.VERSION_NAME)
++                    state.putBoolean("system_hooks_ready",systemHooksReady)
++                    state.putBoolean("system_mode_enabled",settings.isHookedSystem)
++                    reply.send(0,state)
++                    XposedBridge.log("GeoX Hook diagnostic: package=${receiverContext.packageName} version=${BuildConfig.VERSION_NAME} reason=${state.getString("reason")}")
++                } else if (intent?.action == LocationRefresh.CONFIRM_ACTION) {
++                    val id = intent.getStringExtra("request_id").orEmpty()
++                    val reply = intent.getParcelableExtra<android.os.ResultReceiver>("reply") ?: return
++                    if (id.isBlank()) return
++                    if (loadedDirectRequestId != id) updateLocation(forceReload = true)
++                    val matching = loadedDirectRequestId == id
++                    val modeReady = receiverContext.packageName != "android" || (systemHooksReady && settings.isHookedSystem)
++                    val code = if (!matching) 409 else if (loadedStarted && settings.isStarted && modeReady) 101 else 412
++                    reply.send(code, android.os.Bundle().apply { putString("request_id", id) })
++                } else if (intent?.action == LocationRefresh.ACTION) {
++                    val wasStarted=loadedStarted
++                    updateLocation(forceReload = true)
++                    val now=android.os.SystemClock.elapsedRealtime()
++                    if(receiverContext.packageName=="android"&&loadedStarted&&(!wasStarted||now-lastActiveServicePromotion>=30000)) {
++                        // An authorized module refresh only. System scope can promote the already-validated active engine
++                        // when Android restricts a background app's own FGS launch. Never changes coordinates or grants a lease.
++                        runCatching {
++                            receiverContext.startForegroundService(Intent().setClassName(BuildConfig.APPLICATION_ID,
++                                BuildConfig.APPLICATION_ID+".utils.MembershipHeartbeatService"))
++                            lastActiveServicePromotion=now
++                        }.onFailure { XposedBridge.log("GeoX: active service promotion unavailable: "+it.javaClass.simpleName) }
++                    }
++                }
++            }
++        }
++        val filter = IntentFilter(LocationRefresh.ACTION).apply { addAction(LocationRefresh.CONFIRM_ACTION); addAction(LocationRefresh.DIAGNOSTIC_ACTION) }
++        runCatching {
++            if (Build.VERSION.SDK_INT >= 33) {
++                receiverContext.registerReceiver(receiver, filter,
++                    LocationRefresh.SENDER_PERMISSION, Handler(worker.looper), Context.RECEIVER_EXPORTED)
++            } else {
++                receiverContext.registerReceiver(receiver, filter,
++                    LocationRefresh.SENDER_PERMISSION, Handler(worker.looper))
++            }
++            refreshRegistered = true
++            // The first clipboard event can beat receiver registration. Load the
++            // latest committed snapshot once so that an early refresh is not lost.
++            updateLocation(forceReload = true)
++        }.onFailure { worker.quitSafely() }
++    }
++
++    @Synchronized private fun markLocationRead() {
++        val trace = currentTrace ?: return
++        if (trace.id != consumedTraceId) {
++            consumedTraceId = trace.id
++            trace.mark("hook_first_read")
++        }
++    }
+@@ -37 +125,2 @@ object LocationHook {
+-    private fun updateLocation() {
++    @Synchronized
++    private fun updateLocation(forceReload: Boolean = false) {
+@@ -38,0 +128 @@ object LocationHook {
++            val snapshot = settings.locationSnapshot(forceReload)
+@@ -40,9 +130,28 @@ object LocationHook {
+-            val x = (rand.nextInt(50) - 15).toDouble()
+-            val y = (rand.nextInt(50) - 15).toDouble()
+-            val dlat = x / earth
+-            val dlng = y / (earth * cos(pi * settings.getLat / 180.0))
+-            newlat =
+-                if (settings.isRandomPosition) settings.getLat + (dlat * 180.0 / pi) else settings.getLat
+-            newlng =
+-                if (settings.isRandomPosition) settings.getLng + (dlng * 180.0 / pi) else settings.getLng
+-            accuracy = settings.accuracy!!.toFloat()
++            val baseLat = snapshot.latitude
++            val baseLng = snapshot.longitude
++
++            if (snapshot.allowRandom) {
++                val radiusMeters = snapshot.radiusMeters
++                val angle = rand.nextDouble() * 2.0 * pi
++                val distance = sqrt(rand.nextDouble()) * radiusMeters
++                val dlat = (distance * cos(angle)) / earth
++                val latCos = cos(pi * baseLat / 180.0)
++                val safeLatCos = if (abs(latCos) < 1e-6) 1e-6 else latCos
++                val dlng = (distance * sin(angle)) / (earth * safeLatCos)
++
++                newlat = baseLat + (dlat * 180.0 / pi)
++                newlng = baseLng + (dlng * 180.0 / pi)
++            } else {
++                newlat = baseLat
++                newlng = baseLng
++            }
++            accuracy = snapshot.accuracy
++            loadedStarted = snapshot.started && settings.isStarted
++            loadedDirectRequestId = snapshot.requestId
++            currentTrace = if (snapshot.traceId > 0 && snapshot.capturedAtMs > 0) ClipboardTrace(snapshot.traceId, snapshot.capturedAtMs) else null
++            currentTrace?.let { trace ->
++                if (trace.id != loadedTraceId) {
++                    loadedTraceId = trace.id
++                    trace.mark("hook_loaded")
++                }
++            }
+@@ -52 +161 @@ object LocationHook {
+-                .e(e, "Failed to get XposedSettings for %s", context.packageName)
++                .e(e, "Failed to read GeoX hook snapshot")
+@@ -57,0 +167,10 @@ object LocationHook {
++        (AndroidAppHelper.currentApplication() as? Context)?.let { ensureRefreshReceiver(it) }
++        if (lpparam.packageName != "android" && lpparam.packageName != BuildConfig.APPLICATION_ID) {
++            XposedHelpers.findAndHookMethod(android.app.Application::class.java, "attach", Context::class.java,
++                object : XC_MethodHook() {
++                    override fun afterHookedMethod(param: MethodHookParam) {
++                        (param.args.firstOrNull() as? Context)?.let { ensureRefreshReceiver(it) }
++                    }
++                })
++        }
++
+@@ -59,2 +178,12 @@ object LocationHook {
+-        if (lpparam.packageName == "android") { XposedBridge.log("Hooking system server")
+-        if (settings.isStarted && (settings.isHookedSystem && !ignorePkg.contains(lpparam.packageName))) {
++        if (lpparam.packageName == "android") {
++            // Register after ActivityManager is ready, including when Clipboard monitor is off.
++            runCatching {
++                val server = XposedHelpers.findClass("com.android.server.SystemServer", lpparam.classLoader)
++                XposedBridge.hookAllMethods(server, "startOtherServices", object : XC_MethodHook() {
++                    override fun afterHookedMethod(param: MethodHookParam) {
++                        runCatching { XposedHelpers.getObjectField(param.thisObject, "mSystemContext") as? Context }
++                            .getOrNull()?.let { ensureRefreshReceiver(it) }
++                    }
++                })
++            }
++        if (!ignorePkg.contains(lpparam.packageName)) {
+@@ -76,0 +206 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -78,0 +209 @@ object LocationHook {
++                            markLocationRead()
+@@ -99,0 +231 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -114,0 +247 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -130,0 +264 @@ object LocationHook {
++                            markLocationRead()
+@@ -136 +269,0 @@ object LocationHook {
+-                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
+@@ -160,0 +294 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -163 +297,2 @@ object LocationHook {
+-                                    location.latitude = newlat
++                                    markLocationRead()
++                            location.latitude = newlat
+@@ -182,0 +318 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -195,0 +332 @@ object LocationHook {
++                            if (!settings.isStarted || !settings.isHookedSystem) return
+@@ -211,0 +349 @@ object LocationHook {
++                            markLocationRead()
+@@ -217 +354,0 @@ object LocationHook {
+-                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
+@@ -228,0 +366 @@ object LocationHook {
++                systemHooksReady = true
+@@ -248,0 +387 @@ object LocationHook {
++                                    markLocationRead()
+@@ -262,0 +402 @@ object LocationHook {
++                                    markLocationRead()
+@@ -311,0 +452 @@ object LocationHook {
++                            markLocationRead()
+@@ -317 +457,0 @@ object LocationHook {
+-                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
+@@ -344,0 +485 @@ object LocationHook {
++                            markLocationRead()
+@@ -350 +490,0 @@ object LocationHook {
+-                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
+@@ -365,0 +506 @@ object LocationHook {
++
+diff --git a/app/src/legacy/java/io/github/phantom/gps/xposed/Xshare.kt b/app/src/legacy/java/io/github/phantom/gps/xposed/Xshare.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..2ec46da070040965b0b0c6e93c2039cf979c8ce6
+--- /dev/null
++++ b/app/src/legacy/java/io/github/phantom/gps/xposed/Xshare.kt
+@@ -0,0 +1,109 @@
++package io.github.phantom.gps.xposed
++
++import de.robv.android.xposed.XSharedPreferences
++import io.github.phantom.gps.BuildConfig
++import android.os.SystemClock
++
++class Xshare {
++
++    private val prefsName = "${BuildConfig.APPLICATION_ID}_prefs"
++    private val xPref: XSharedPreferences by lazy {
++        XSharedPreferences(BuildConfig.APPLICATION_ID, prefsName)
++    }
++
++    private var lastReloadUptimeMs: Long = 0
++
++    @Synchronized
++    private fun pref(): XSharedPreferences {
++        val now = SystemClock.elapsedRealtime()
++        // XSharedPreferences doesn't auto-update; reload throttled to keep hooks fast.
++        if (now - lastReloadUptimeMs >= 250) {
++            runCatching { xPref.reload() }
++            lastReloadUptimeMs = now
++        }
++        return xPref
++    }
++
++    @Synchronized
++    fun forceReload() {
++        runCatching { xPref.reload() }
++        lastReloadUptimeMs = SystemClock.elapsedRealtime()
++    }
++
++    @Synchronized
++    fun locationSnapshot(force: Boolean = false): io.github.phantom.gps.utils.HookLocationSnapshot {
++        if (force) forceReload()
++        return io.github.phantom.gps.utils.HookLocationSnapshot.from(pref().all)
++    }
++
++    fun clipboardTrace(): io.github.phantom.gps.utils.ClipboardTrace? {
++        val p = pref()
++        val id = p.getLong(io.github.phantom.gps.utils.LocationRefresh.TRACE_ID_PREF, 0)
++        val capturedAt = p.getLong(io.github.phantom.gps.utils.LocationRefresh.CAPTURED_AT_PREF, 0)
++        return if (id > 0 && capturedAt > 0) io.github.phantom.gps.utils.ClipboardTrace(id, capturedAt) else null
++    }
++
++    fun diagnosticState():android.os.Bundle {
++        forceReload()
++        val p=pref()
++        val token=p.getString("membership_lease", "").orEmpty()
++        val valid=io.github.phantom.gps.utils.MembershipLease.hookValid(token)
++        val parsed=io.github.phantom.gps.utils.MembershipLease.verifier.inspect(token)
++        val boot=io.github.phantom.gps.utils.MembershipLease.hookBootCount
++        val reason=when {
++            !p.contains("start")->"SNAPSHOT_MISSING"
++            token.isBlank()->"LEASE_MISSING"
++            parsed==null->"LEASE_INVALID"
++            boot<0->"BOOT_NOT_READY"
++            parsed.boot!=boot->"BOOT_MISMATCH"
++            !valid->"LEASE_TIME_INVALID"
++            !p.getBoolean("start",false)->"STOPPED"
++            else->"READY"
++        }
++        return android.os.Bundle().apply {
++            putString("reason",reason)
++            putBoolean("lease_valid",valid)
++            putBoolean("started",p.getBoolean("start",false))
++        }
++    }
++
++    val directRequestId: String get() = pref().getString("direct_request_id", "").orEmpty()
++
++    val isStarted : Boolean
++    get() = pref().let { it.getBoolean("start", false) && io.github.phantom.gps.utils.MembershipLease.hookValid(it.getString("membership_lease", "").orEmpty()) }
++
++    val getLat: Double get() {
++        val p = pref()
++        return if (p.contains("latitude_bits")) Double.fromBits(p.getLong("latitude_bits", 0)) else p.getFloat("latitude", 45F).toDouble()
++    }
++
++    val getLng: Double get() {
++        val p = pref()
++        return if (p.contains("longitude_bits")) Double.fromBits(p.getLong("longitude_bits", 0)) else p.getFloat("longitude", 0F).toDouble()
++    }
++
++    val isHookedSystem : Boolean
++    get() = pref().getBoolean(
++        "system_hooked",
++        true
++    )
++
++    val isRandomPosition :Boolean
++    get() = pref().getBoolean(
++        "random_position",
++        false
++    )
++
++    val randomRadiusMeters: String?
++    get() = pref().getString("random_radius_meters","10")
++
++    val accuracy : String?
++    get() = pref().getString("accuracy_level","10")
++
++    val isClipboardMonitorEnabled : Boolean
++    get() = pref().getBoolean(
++        "clipboard_monitor_enabled",
++        false
++    )
++
++}
 diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
-index 4e1cc601709afa5183eb5d6e01c3fd30f981f23b..5be7c73fa9e636810d25f7ff2a97ac4f5277b254 100644
+index 4e1cc601709afa5183eb5d6e01c3fd30f981f23b..24110a9271d6b832398fe7d80c829e773fcd3e8d 100644
 --- a/app/src/main/AndroidManifest.xml
 +++ b/app/src/main/AndroidManifest.xml
 @@ -12,0 +13,13 @@
@@ -1671,10 +2230,11 @@ index 4e1cc601709afa5183eb5d6e01c3fd30f981f23b..5be7c73fa9e636810d25f7ff2a97ac4f
 @@ -19 +35 @@
 -        android:roundIcon="@mipmap/ic_launcher"
 +        android:roundIcon="@mipmap/ic_launcher_round"
-@@ -30 +46 @@
+@@ -30 +46,2 @@
 -            android:name=".ui.MapActivity"
 +            android:name=".ui.ActivationActivity"
-@@ -37,0 +54,13 @@
++            android:windowSoftInputMode="adjustResize"
+@@ -37,0 +55,13 @@
 +        <activity
 +            android:name=".ui.LoginActivity"
 +            android:exported="false" />
@@ -1688,7 +2248,7 @@ index 4e1cc601709afa5183eb5d6e01c3fd30f981f23b..5be7c73fa9e636810d25f7ff2a97ac4f
 +        <service android:name=".utils.MembershipHeartbeatService" android:exported="false" android:foregroundServiceType="specialUse"><property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Maintain a user-started Xposed location override with STOP control and enforce signed membership leases"/></service>
 +        <!-- Binder transactions authenticate Full Lock; session capability is root-relay only. -->
 +        <service android:name=".utils.FullLockRelayService" android:exported="true" />
-@@ -42,0 +72,44 @@
+@@ -42,0 +73,44 @@
 +        <service
 +            android:name=".utils.ClipboardMonitorService"
 +            android:exported="false" />
@@ -1733,22 +2293,22 @@ index 4e1cc601709afa5183eb5d6e01c3fd30f981f23b..5be7c73fa9e636810d25f7ff2a97ac4f
 +            </intent-filter>
 +        </receiver>
 +
-@@ -47,3 +119,0 @@
+@@ -47,3 +120,0 @@
 -        <meta-data
 -            android:name="com.maplibre.AccessToken"
 -            android:value="REMOVED_LEGACY_SECRET" />
-@@ -79 +149 @@
+@@ -79 +150 @@
 -</manifest>
 \ No newline at end of file
 +</manifest>
 diff --git a/app/src/main/assets/xposed_init b/app/src/main/assets/xposed_init
-index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..85f00d5de5dba13c0b8975b2bb632c63c454a177 100644
+deleted file mode 100644
+index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..0000000000000000000000000000000000000000
 --- a/app/src/main/assets/xposed_init
-+++ b/app/src/main/assets/xposed_init
-@@ -1 +1 @@
++++ /dev/null
+@@ -1 +0,0 @@
 -io.github.jqssun.gpssetter.xposed.HookEntry
 \ No newline at end of file
-+io.github.phantom.gps.xposed.HookEntry
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/App.kt b/app/src/main/java/io/github/jqssun/gpssetter/App.kt
 deleted file mode 100644
 index 56ed3081fd2f37b4ade79d0fee2db27a06912728..0000000000000000000000000000000000000000
@@ -2347,10 +2907,10 @@ index c49507362245160560adc43d64d9f59889f18b75..00000000000000000000000000000000
 \ No newline at end of file
 diff --git a/app/src/main/java/io/github/phantom/gps/App.kt b/app/src/main/java/io/github/phantom/gps/App.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..80dce7442e14c163559642c5cbff51573ebbc26c
+index 0000000000000000000000000000000000000000..73412c3b50e6cbf0048249bf5df55a0ee2789a0b
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/App.kt
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,101 @@
 +package io.github.phantom.gps
 +
 +import androidx.appcompat.app.AppCompatDelegate
@@ -2383,6 +2943,7 @@ index 0000000000000000000000000000000000000000..80dce7442e14c163559642c5cbff5157
 +    val globalScope = CoroutineScope(Dispatchers.Default)
 +    @Volatile
 +    private var currentActivity: Activity? = null
++    private var startedActivity: Activity? = null
 +    private var reminderJob: Job? = null
 +
 +    companion object {
@@ -2403,13 +2964,14 @@ index 0000000000000000000000000000000000000000..80dce7442e14c163559642c5cbff5157
 +            return
 +        }
 +
++        io.github.phantom.gps.utils.HookPreferenceChannel.initialize(this)
 +        commonInit()
 +        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
 +
 +        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
 +            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
-+            override fun onActivityStarted(activity: Activity) = Unit
-+            override fun onActivityStopped(activity: Activity) = Unit
++            override fun onActivityStarted(activity: Activity) { startedActivity = activity }
++            override fun onActivityStopped(activity: Activity) { if (startedActivity === activity) startedActivity = null }
 +            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
 +            override fun onActivityDestroyed(activity: Activity) = Unit
 +
@@ -2434,6 +2996,7 @@ index 0000000000000000000000000000000000000000..80dce7442e14c163559642c5cbff5157
 +
 +        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
 +            override fun onStart(owner: LifecycleOwner) {
++                if (startedActivity is io.github.phantom.gps.ui.ActivationActivity) return
 +                if (LicenseStore.isLocked(this@App)) {
 +                    if (currentActivity !is LockedActivity) {
 +                        LicenseGuard.routeToRequiredScreen(this@App)
@@ -2573,81 +3136,122 @@ index ccd4d0ba21f278802fd8009f7ddde16ab501efd0..618da30537d0fc9f0035945c65e6fdae
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..6594a978eb0fa80c0d0d4ac139dca4865cd9643f
+index 0000000000000000000000000000000000000000..131d3f67a0f17ebc9db61efdc4fcf2de224c7d7b
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
-@@ -0,0 +1,72 @@
+@@ -0,0 +1,113 @@
 +package io.github.phantom.gps.ui
 +
 +import android.content.Intent
 +import android.net.Uri
 +import android.os.Bundle
 +import android.view.View
++import android.view.inputmethod.EditorInfo
++import android.view.inputmethod.InputMethodManager
 +import android.widget.*
 +import androidx.activity.viewModels
 +import androidx.appcompat.app.AppCompatActivity
++import androidx.core.view.isVisible
 +import io.github.phantom.gps.BuildConfig
 +import io.github.phantom.gps.R
 +import io.github.phantom.gps.utils.*
 +import java.text.SimpleDateFormat
 +import java.util.*
 +
-+/** Membership sign-in; no activation code input or legacy code submission. */
-+class ActivationActivity:AppCompatActivity() {
-+    private val model:MembershipLoginViewModel by viewModels()
-+    override fun onCreate(savedInstanceState:Bundle?) {
++class ActivationActivity : AppCompatActivity() {
++    private val model: MembershipLoginViewModel by viewModels()
++
++    override fun onCreate(savedInstanceState: Bundle?) {
 +        super.onCreate(savedInstanceState)
-+        if(!AppIntegrity.isSelfValid(this)){finish();return}
++        if (!AppIntegrity.isSelfValid(this)) {
++            finish()
++            return
++        }
 +        setContentView(R.layout.activity_member_login)
-+        val username=findViewById<EditText>(R.id.memberUsername)
-+        val password=findViewById<EditText>(R.id.memberPassword)
-+        val login=findViewById<Button>(R.id.memberLogin)
-+        val progress=findViewById<ProgressBar>(R.id.memberProgress)
-+        val error=findViewById<TextView>(R.id.memberError)
-+        val status=findViewById<TextView>(R.id.memberStatus)
-+        val logout=findViewById<Button>(R.id.memberLogout)
-+        val rememberedStore=RememberedLoginStore(this)
-+        val remember=findViewById<CheckBox>(R.id.memberRemember)
-+        val forget=findViewById<Button>(R.id.memberForget)
-+        remember.isChecked=rememberedStore.isEnabled()
-+        val remembered=rememberedStore.read()
-+        if(savedInstanceState==null){
-+            username.setText(remembered?.username?:MembershipAccount.username(this))
-+            if(remembered!=null)password.setText(remembered.password)
-+        }
-+        forget.visibility=if(remembered!=null)View.VISIBLE else View.GONE
-+        remember.setOnCheckedChangeListener {_,checked->
-+            runCatching{rememberedStore.setEnabled(checked)}.onFailure{Toast.makeText(this,"บันทึกตัวเลือกไม่สำเร็จ กรุณาลองใหม่",Toast.LENGTH_LONG).show()}
-+            if(!checked)forget.visibility=View.GONE
-+        }
++        val form = findViewById<View>(R.id.memberForm)
++        val restore = findViewById<View>(R.id.memberRestore)
++        val username = findViewById<EditText>(R.id.memberUsername)
++        val password = findViewById<EditText>(R.id.memberPassword)
++        val login = findViewById<Button>(R.id.memberLogin)
++        val progress = findViewById<ProgressBar>(R.id.memberProgress)
++        val error = findViewById<TextView>(R.id.memberError)
++        val status = findViewById<TextView>(R.id.memberStatus)
++        val logout = findViewById<Button>(R.id.memberLogout)
++        val register = findViewById<Button>(R.id.memberRegister)
++        val reset = findViewById<Button>(R.id.memberReset)
++        val remember = findViewById<CheckBox>(R.id.memberRemember)
++        val forget = findViewById<Button>(R.id.memberForget)
++        val store = RememberedLoginStore(this)
++        val remembered = store.read()
++        remember.isChecked = store.isEnabled()
++        if (savedInstanceState == null) username.setText(remembered?.username ?: MembershipAccount.username(this))
++        if (remembered != null) password.setText(remembered.password)
++        forget.isVisible = remembered != null
 +        forget.setOnClickListener {
-+            runCatching{rememberedStore.forget()}.onSuccess{remember.isChecked=false;username.text?.clear();password.text?.clear();forget.visibility=View.GONE}
-+                .onFailure{Toast.makeText(this,"ลืมบัญชีไม่สำเร็จ กรุณาลองใหม่",Toast.LENGTH_LONG).show()}
++            runCatching { store.forget() }.onSuccess {
++                remember.isChecked = false
++                username.text?.clear()
++                password.text?.clear()
++                forget.isVisible = false
++            }.onFailure { Toast.makeText(this, "ลืมบัญชีไม่สำเร็จ กรุณาลองใหม่", Toast.LENGTH_LONG).show() }
 +        }
-+        val showAccount=intent.getBooleanExtra("show_account",false)
-+        if(MembershipAccount.isSignedIn(this)) {
-+            val expiry=SimpleDateFormat("d MMM yyyy HH:mm",Locale("th","TH")).format(Date(MembershipAccount.expiresAt(this)))
-+            status.text="บัญชี ${MembershipAccount.username(this)}\nใช้ได้ถึง $expiry"
-+            logout.visibility=View.VISIBLE
-+        }
++
++        val showAccount = intent.getBooleanExtra("show_account", false)
 +        logout.setOnClickListener {
-+            if(runCatching{rememberedStore.forget()}.isFailure){Toast.makeText(this,"ลืมบัญชีไม่สำเร็จ กรุณาลองใหม่",Toast.LENGTH_LONG).show();return@setOnClickListener}
-+            LicenseGuard.clearLicenseAndDeactivate(this);recreate()
++            LicenseGuard.clearLicenseAndDeactivate(this)
++            startActivity(Intent(this, ActivationActivity::class.java)
++                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
++            finish()
 +        }
-+        findViewById<Button>(R.id.memberRegister).setOnClickListener {
-+            runCatching{startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(BuildConfig.PUBLIC_SITE_BASE_URL+"register.html")))}
++        register.setOnClickListener { openAccountPage("register.html") }
++        reset.setOnClickListener { openAccountPage("account.html#reset-password") }
++        val submit = {
++            getSystemService(InputMethodManager::class.java).hideSoftInputFromWindow(password.windowToken, 0)
++            model.login(username.text.toString(), password.text.toString(), remember.isChecked)
 +        }
-+        login.setOnClickListener {model.login(username.text.toString(),password.text.toString(),remember.isChecked)}
-+        model.uiState.observe(this){s->
-+            progress.visibility=if(s.busy)View.VISIBLE else View.GONE
-+            login.visibility=if(s.busy)View.GONE else View.VISIBLE
-+            username.isEnabled=!s.busy;password.isEnabled=!s.busy;logout.isEnabled=!s.busy;remember.isEnabled=!s.busy;forget.isEnabled=!s.busy
-+            error.text=s.error;error.visibility=if(s.error.isEmpty())View.GONE else View.VISIBLE
-+            if(s.success){password.text?.clear();if(s.notice.isNotBlank())Toast.makeText(this,s.notice,Toast.LENGTH_LONG).show();startActivity(Intent(this,MapActivity::class.java));finish()}
++        login.setOnClickListener { submit() }
++        password.setOnEditorActionListener { _, action, _ ->
++            if (action == EditorInfo.IME_ACTION_DONE && login.isEnabled) {
++                submit()
++                true
++            } else false
 +        }
-+        if(!showAccount)model.checkExisting()
++
++        if (!showAccount) model.checkExisting()
++        model.uiState.observe(this) { state ->
++            restore.isVisible = state.restoring || state.success
++            form.isVisible = !restore.isVisible
++            progress.isVisible = state.busy && !state.restoring
++            for (control in listOf(username, password, login, logout, remember, forget, register, reset)) {
++                control.isEnabled = !state.busy
++            }
++            login.text = if (state.busy) "กำลังเข้าสู่ระบบ…" else "เข้าสู่ระบบ"
++            error.text = state.error
++            error.isVisible = state.error.isNotEmpty()
++            val signedIn = MembershipAccount.isSignedIn(this)
++            status.isVisible = signedIn && showAccount
++            logout.isVisible = signedIn && (showAccount || state.error.isNotEmpty())
++            if (status.isVisible) {
++                val expiry = SimpleDateFormat("d MMM yyyy HH:mm", Locale("th", "TH"))
++                    .format(Date(MembershipAccount.expiresAt(this)))
++                status.text = "บัญชี ${MembershipAccount.username(this)}\nใช้ได้ถึง $expiry"
++            }
++            if (state.success) {
++                password.text?.clear()
++                if (state.notice.isNotBlank()) Toast.makeText(this, state.notice, Toast.LENGTH_LONG).show()
++                startActivity(Intent(this, MapActivity::class.java))
++                finish()
++            }
++        }
 +    }
-+    companion object {const val EXTRA_ACTIVATION_CODE="io.github.phantom.gps.extra.ACTIVATION_CODE"}
++
++    private fun openAccountPage(path: String) {
++        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PUBLIC_SITE_BASE_URL + path))) }
++    }
++
++    companion object {
++        const val EXTRA_ACTIVATION_CODE = "io.github.phantom.gps.extra.ACTIVATION_CODE"
++    }
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationUiState.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationUiState.kt
 new file mode 100644
@@ -3222,10 +3826,10 @@ index 0000000000000000000000000000000000000000..610e33609a6781da93f0f89994e8dadc
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt b/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..c72bf37ca9e445fc1fe0e2444a99ea6b24678a51
+index 0000000000000000000000000000000000000000..8e89bff5ef19b93794965ee6bca8eb5c7672eb46
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,39 @@
 +package io.github.phantom.gps.ui
 +
 +import android.app.Application
@@ -3234,15 +3838,21 @@ index 0000000000000000000000000000000000000000..c72bf37ca9e445fc1fe0e2444a99ea6b
 +import kotlinx.coroutines.launch
 +
 +class MembershipLoginViewModel(app:Application):AndroidViewModel(app) {
-+    data class State(val busy:Boolean=false,val success:Boolean=false,val error:String="",val notice:String="")
++    data class State(val busy:Boolean=false,val restoring:Boolean=false,val success:Boolean=false,val error:String="",val notice:String="")
 +    private val state=MutableLiveData(State())
 +    val uiState:LiveData<State> = state
 +    private var checked=false
 +    fun checkExisting() {
 +        if(checked)return;checked=true
 +        if(!MembershipAccount.isSignedIn(getApplication()))return
-+        state.value=State(busy=true)
-+        LicenseGuard.verifyNowForeground(getApplication()){ok->state.value=State(success=ok,error=if(ok)"" else "ตรวจสิทธิ์ไม่สำเร็จ กรุณาลองใหม่หรือเข้าสู่ระบบอีกครั้ง")}
++        state.value = State(busy = true, restoring = true)
++        viewModelScope.launch {
++            val app = getApplication<Application>()
++            val ok = LicenseGuard.verifyExistingSession(app)
++            if (ok) LicenseGuard.resumeMembershipServices(app)
++            val reason = LicenseStore.getLockReason(app)
++            state.value = State(success = ok, error = if (ok) "" else LicenseGuard.getUserFacingReason(app, reason))
++        }
 +    }
 +    fun login(username:String,password:String,remember:Boolean) {
 +        if(state.value?.busy==true)return
@@ -3252,7 +3862,7 @@ index 0000000000000000000000000000000000000000..c72bf37ca9e445fc1fe0e2444a99ea6b
 +            try{
 +                MembershipAccount.login(getApplication(),username,password)
 +                val remembered=runCatching{RememberedLoginStore(getApplication()).save(username,password,remember)}.isSuccess
-+                LicenseGuard.startHeartbeat(getApplication())
++                LicenseGuard.resumeMembershipServices(getApplication())
 +                state.value=State(success=true,notice=if(remembered)"" else "เข้าสู่ระบบสำเร็จ แต่จดจำบัญชีไม่สำเร็จ กรุณาลองเปิดตัวเลือกนี้ใหม่ภายหลัง")
 +            }
 +            catch(e:Exception){if(e is kotlinx.coroutines.CancellationException)throw e;state.value=State(error=MembershipAccount.message(e))}
@@ -3261,10 +3871,10 @@ index 0000000000000000000000000000000000000000..c72bf37ca9e445fc1fe0e2444a99ea6b
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..03ecb56014df4e422570d33bbbb8264472573d51
+index 0000000000000000000000000000000000000000..2532c738099b2f0cfcfe3dadca77091677403e42
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/SettingsActivity.kt
-@@ -0,0 +1,388 @@
+@@ -0,0 +1,387 @@
 +package io.github.phantom.gps.ui
 +
 +
@@ -3536,9 +4146,8 @@ index 0000000000000000000000000000000000000000..03ecb56014df4e422570d33bbbb82644
 +            }
 +
 +            findPreference<Preference>("membership_account")?.setOnPreferenceClickListener {
-+                MaterialAlertDialogBuilder(requireContext(),io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).setTitle("ออกจากระบบ?").setMessage("ข้อมูลบัญชีที่แอปจดจำจะถูกลบ")
++                MaterialAlertDialogBuilder(requireContext(),io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).setTitle("ออกจากระบบ?").setMessage("ข้อมูลที่เลือกจดจำจะใช้กรอกให้ในการเข้าสู่ระบบครั้งถัดไป")
 +                    .setNegativeButton("ยกเลิก", null).setPositiveButton("ออกจากระบบ") { _, _ ->
-+                        io.github.phantom.gps.utils.RememberedLoginStore(requireContext()).forget()
 +                        io.github.phantom.gps.utils.LicenseGuard.clearLicenseAndDeactivate(requireContext())
 +                        startActivity(Intent(requireContext(), ActivationActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
 +                    }.show()
@@ -5152,10 +5761,10 @@ index 0000000000000000000000000000000000000000..363d32453f64237a503dde1b8cbc6347
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/HookDiagnostics.kt b/app/src/main/java/io/github/phantom/gps/utils/HookDiagnostics.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..c6f541a698a22ff1e39a54128dac0226c51b8ceb
+index 0000000000000000000000000000000000000000..548cb4f5d6b67adec46a515952889dcc56799501
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/HookDiagnostics.kt
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,60 @@
 +package io.github.phantom.gps.utils
 +
 +import android.os.Bundle
@@ -5191,7 +5800,7 @@ index 0000000000000000000000000000000000000000..c6f541a698a22ff1e39a54128dac0226
 +                val text=when(reason){
 +                    "READY"->"อ่านค่าร่วมและสิทธิ์ผ่าน / คำสั่ง START เปิดอยู่ (ยังไม่ใช่หลักฐานว่าแอปอ่านพิกัดแล้ว)"
 +                    "STOPPED"->"อ่านค่าร่วมและสิทธิ์ผ่าน / คำสั่ง START ยังปิดอยู่"
-+                    "SNAPSHOT_MISSING"->"Hook โหลดแล้ว แต่ไม่พบค่าการทำงานในไฟล์ร่วม"
++                    "SNAPSHOT_MISSING"->"Hook โหลดแล้ว แต่ไม่พบสถานะที่ GeoX ส่งให้ Hook"
 +                    "LEASE_MISSING"->"Hook โหลดแล้ว แต่ยังอ่านสิทธิ์สมาชิกไม่ได้"
 +                    "LEASE_INVALID"->"Hook ตรวจลายเซ็นหรือโครงสร้างสิทธิ์ไม่ผ่าน"
 +                    "BOOT_NOT_READY"->"Hook ยังอ่านหมายเลขรอบเปิดเครื่องไม่ได้"
@@ -5201,7 +5810,11 @@ index 0000000000000000000000000000000000000000..c6f541a698a22ff1e39a54128dac0226
 +                    "SYSTEM_HOOKS_NOT_READY"->"ตัวรับโหลดแล้ว แต่ system hook ยังติดตั้งไม่ครบ"
 +                    else->"ตรวจ Hook ไม่สำเร็จ: $reason"
 +                }
-+                states.add("Hook ${data.getString("version","?")}: $text")
++                val coverage = if (data.containsKey("platform_hooks")) {
++                    "\nAndroid ${data.getInt("platform_hooks")} · Fused ${data.getInt("fused_hooks")}" +
++                        " · GNSS ${data.getInt("gnss_hooks")} · NMEA ${data.getInt("nmea_hooks")}"
++                } else ""
++                states.add("Hook ${data.getString("version","?")}: $text$coverage")
 +                dialog.setMessage(sharing+"\n\n"+states.joinToString("\n\n"))
 +            }
 +        }
@@ -6033,10 +6646,10 @@ index 0000000000000000000000000000000000000000..42c33415002004f2b24906ad517311ff
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..8489f7891b72a022c855752a930dfb19fd5c2010
+index 0000000000000000000000000000000000000000..3981e08294a4e0b3dbe6700f3f3bc4c3db0a7117
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-@@ -0,0 +1,182 @@
+@@ -0,0 +1,235 @@
 +package io.github.phantom.gps.utils
 +
 +import android.annotation.SuppressLint
@@ -6056,7 +6669,10 @@ index 0000000000000000000000000000000000000000..8489f7891b72a022c855752a930dfb19
 +
 +    var membershipLease: String
 +        get() = pref.getString("membership_lease", "").orEmpty()
-+        set(value) { pref.edit().putString("membership_lease", value).commit() }
++        set(value) {
++            if (BuildConfig.MODERN_XPOSED) saveHookSetting { putString("membership_lease", value) }
++            else pref.edit().putString("membership_lease", value).commit()
++        }
 +
 +    private const val START = "start"
 +    private const val LATITUDE = "latitude"
@@ -6070,13 +6686,37 @@ index 0000000000000000000000000000000000000000..8489f7891b72a022c855752a930dfb19
 +    private const val DISABLE_UPDATE = "update_disabled"
 +    private const val ENABLE_JOYSTICK = "joystick_enabled"
 +    private const val ENABLE_CLIPBOARD_MONITOR = "clipboard_monitor_enabled"
++    private val LOCATION_KEYS = listOf(START, LATITUDE, LONGITUDE, "latitude_bits", "longitude_bits",
++        "direct_request_id", LocationRefresh.TRACE_ID_PREF, LocationRefresh.CAPTURED_AT_PREF)
 +    private const val CLIPBOARD_AUTO_START = "clipboard_monitor_auto_start"
 +
 +
 +    @Volatile private var sharedHookPreferences = false
-+    val isHookSharingAvailable:Boolean get() { pref; return sharedHookPreferences }
++    val isHookSharingAvailable: Boolean
++        get() {
++            if (BuildConfig.MODERN_XPOSED) return HookPreferenceChannel.ready
++            pref
++            return sharedHookPreferences
++        }
++
++    @Synchronized
++    fun publishHookState(): Boolean = HookPreferenceChannel.publish(pref.all)
++
++    @Synchronized
++    private fun saveHookSetting(change: SharedPreferences.Editor.() -> Unit) {
++        val editor = pref.edit().apply(change)
++        if (BuildConfig.MODERN_XPOSED) {
++            editor.commit()
++            publishHookState()
++        } else {
++            editor.apply()
++        }
++    }
 +
 +    private val pref: SharedPreferences by lazy {
++        if (BuildConfig.MODERN_XPOSED) {
++            return@lazy gsApp.getSharedPreferences("${BuildConfig.APPLICATION_ID}_prefs", Context.MODE_PRIVATE)
++        }
 +        try {
 +            val prefsFile = "${BuildConfig.APPLICATION_ID}_prefs"
 +            gsApp.getSharedPreferences(
@@ -6111,19 +6751,19 @@ index 0000000000000000000000000000000000000000..8489f7891b72a022c855752a930dfb19
 +
 +    var isSystemHooked : Boolean
 +        get() = pref.getBoolean(HOOKED_SYSTEM, false)
-+        set(value) { pref.edit().putBoolean(HOOKED_SYSTEM,value).apply() }
++        set(value) { saveHookSetting { putBoolean(HOOKED_SYSTEM, value) } }
 +
 +    var isRandomPosition :Boolean
 +        get() = pref.getBoolean(RANDOM_POSITION, false)
-+        set(value) { pref.edit().putBoolean(RANDOM_POSITION, value).apply() }
++        set(value) { saveHookSetting { putBoolean(RANDOM_POSITION, value) } }
 +
 +    var randomRadiusMeters: String?
 +        get() = pref.getString(RANDOM_RADIUS_METERS, "10")
-+        set(value) { pref.edit().putString(RANDOM_RADIUS_METERS, value).apply() }
++        set(value) { saveHookSetting { putString(RANDOM_RADIUS_METERS, value) } }
 +
 +    var accuracy : String?
 +        get() = pref.getString(ACCURACY_SETTING,"10")
-+        set(value) { pref.edit().putString(ACCURACY_SETTING,value).apply()}
++        set(value) { saveHookSetting { putString(ACCURACY_SETTING, value) } }
 +
 +    var mapType : Int
 +        get() = pref.getInt(MAP_TYPE,1)
@@ -6143,7 +6783,7 @@ index 0000000000000000000000000000000000000000..8489f7891b72a022c855752a930dfb19
 +
 +    var isClipboardMonitorEnabled: Boolean
 +        get() = pref.getBoolean(ENABLE_CLIPBOARD_MONITOR, false)
-+        set(value) = pref.edit().putBoolean(ENABLE_CLIPBOARD_MONITOR, value).apply()
++        set(value) { saveHookSetting { putBoolean(ENABLE_CLIPBOARD_MONITOR, value) } }
 +
 +    var isClipboardAutoStart: Boolean
 +        get() = pref.getBoolean(CLIPBOARD_AUTO_START, true)
@@ -6169,6 +6809,10 @@ index 0000000000000000000000000000000000000000..8489f7891b72a022c855752a930dfb19
 +
 +    fun update(start:Boolean, la: Double, ln: Double) {
 +        runInBackground {
++            if (BuildConfig.MODERN_XPOSED) {
++                if (updateNow(start, la, ln)) LocationRefresh.send(gsApp)
++                return@runInBackground
++            }
 +            if(start&&!isHookSharingAvailable)return@runInBackground
 +            val prefEditor = pref.edit()
 +            prefEditor.putLong("latitude_bits", la.toBits())
@@ -6194,8 +6838,10 @@ index 0000000000000000000000000000000000000000..8489f7891b72a022c855752a930dfb19
 +     * Synchronous write for cross-process consumers (XSharedPreferences in Xposed).
 +     * Prefer this for "Start/Stop" actions where we want the hook to react immediately.
 +     */
++    @Synchronized
 +    fun updateNow(start: Boolean, la: Double, ln: Double, trace: ClipboardTrace? = null, requestId: String = ""): Boolean {
 +        if(start&&!isHookSharingAvailable)return false
++        val previous = if (BuildConfig.MODERN_XPOSED && start) pref.all else null
 +        val prefEditor = pref.edit()
 +        prefEditor.putLong("latitude_bits", la.toBits())
 +        prefEditor.putLong("longitude_bits", ln.toBits())
@@ -6206,6 +6852,15 @@ index 0000000000000000000000000000000000000000..8489f7891b72a022c855752a930dfb19
 +        prefEditor.putLong(LocationRefresh.TRACE_ID_PREF, trace?.id ?: 0)
 +        prefEditor.putLong(LocationRefresh.CAPTURED_AT_PREF, trace?.capturedAtMs ?: 0)
 +        val committed = prefEditor.commit()
++        if (BuildConfig.MODERN_XPOSED) {
++            val published = committed && publishHookState()
++            if (!published && previous != null) {
++                val restore = pref.edit()
++                for (key in LOCATION_KEYS) restore.putValue(key, previous[key])
++                restore.commit()
++            }
++            if (!published) return false
++        }
 +        if (committed) trace?.mark("committed")
 +        return committed
 +    }
@@ -6219,6 +6874,17 @@ index 0000000000000000000000000000000000000000..8489f7891b72a022c855752a930dfb19
 +
 +}
 +
++
++
++internal fun SharedPreferences.Editor.putValue(key: String, value: Any?) {
++    when (value) {
++        is Boolean -> putBoolean(key, value)
++        is Float -> putFloat(key, value)
++        is Long -> putLong(key, value)
++        is String -> putString(key, value)
++        null -> remove(key)
++    }
++}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/RelayLease.kt b/app/src/main/java/io/github/phantom/gps/utils/RelayLease.kt
 new file mode 100644
 index 0000000000000000000000000000000000000000..95f0776a24414cb41bc24e0ed62685ce0d40e330
@@ -6527,510 +7193,20 @@ index 8a60ae98b348c0a0563422826b681001391875de..9bec9b78cf4ec5d0e70da72eba0fb31a
 -}
 \ No newline at end of file
 +}
-diff --git a/app/src/main/java/io/github/phantom/gps/xposed/ClipboardHook.kt b/app/src/main/java/io/github/phantom/gps/xposed/ClipboardHook.kt
+diff --git a/app/src/main/res/color/geox_login_input_stroke.xml b/app/src/main/res/color/geox_login_input_stroke.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..ca1e24492563d7fc471ba2c9d0573ef3ba7c2be0
+index 0000000000000000000000000000000000000000..82a7fd9e1085c5f82871da3e89deaf39b1ce99f3
 --- /dev/null
-+++ b/app/src/main/java/io/github/phantom/gps/xposed/ClipboardHook.kt
-@@ -0,0 +1,123 @@
-+package io.github.phantom.gps.xposed
-+
-+import android.app.AndroidAppHelper
-+import android.content.ClipData
-+import android.content.Context
-+import android.content.Intent
-+import de.robv.android.xposed.XC_MethodHook
-+import de.robv.android.xposed.XposedBridge
-+import de.robv.android.xposed.XposedHelpers
-+import de.robv.android.xposed.callbacks.XC_LoadPackage
-+import io.github.phantom.gps.BuildConfig
-+import io.github.phantom.gps.utils.LocationActions
-+import io.github.phantom.gps.utils.ClipboardTrace
-+import io.github.phantom.gps.utils.ClipboardEventGate
-+import android.os.SystemClock
-+import java.util.concurrent.Executors
-+
-+object ClipboardHook {
-+
-+    private val settings = Xshare()
-+    private var initialized = false
-+    private val eventGate = ClipboardEventGate()
-+    private val dispatcher = Executors.newSingleThreadExecutor { task -> Thread(task, "Phantom-clipboard-dispatch").apply { isDaemon = true } }
-+
-+    fun initHooks(lpparam: XC_LoadPackage.LoadPackageParam) {
-+        if (lpparam.packageName != "android" || initialized) return
-+        initialized = true
-+
-+        val targets = listOf(
-+            "com.android.server.clipboard.ClipboardService",
-+            "com.android.server.clipboard.ClipboardService\$ClipboardImpl"
-+        )
-+
-+        var hookedCount = 0
-+        targets.forEach { className ->
-+            val targetClass = runCatching {
-+                XposedHelpers.findClass(className, lpparam.classLoader)
-+            }.getOrNull() ?: return@forEach
-+
-+            hookedCount += hookClipboardMethods(targetClass)
-+        }
-+
-+        if (hookedCount == 0) {
-+            XposedBridge.log("ClipboardHook: no compatible clipboard method found")
-+        } else {
-+            XposedBridge.log("ClipboardHook: hooked methods = $hookedCount")
-+        }
-+    }
-+
-+    private fun hookClipboardMethods(targetClass: Class<*>): Int {
-+        var count = 0
-+
-+        for (method in targetClass.declaredMethods) {
-+            if (method.name != "setPrimaryClip" && method.name != "setPrimaryClipAsPackage") continue
-+            if (method.parameterTypes.isEmpty()) continue
-+
-+            val clipArgIndex = method.parameterTypes.indexOfFirst {
-+                ClipData::class.java.isAssignableFrom(it)
-+            }
-+            if (clipArgIndex < 0) continue
-+
-+            runCatching {
-+                XposedBridge.hookMethod(method, object : XC_MethodHook() {
-+                    override fun afterHookedMethod(param: MethodHookParam) {
-+                        if (param.hasThrowable()) return
-+                        val capturedAtMs = SystemClock.elapsedRealtime()
-+                        if (!settings.isClipboardMonitorEnabled) return
-+                        val clip = param.args.getOrNull(clipArgIndex) as? ClipData ?: return
-+                        if (clip.itemCount <= 0) return
-+                        val item = clip.getItemAt(0)
-+                        val context = resolveContext(param)
-+                        val raw = item.text?.toString()
-+                            ?: context?.let { item.coerceToText(it)?.toString() }
-+                        val text = raw?.trim()
-+                        if (text.isNullOrEmpty()) return
-+                        if (!eventGate.accept(text, SystemClock.elapsedRealtime())) return
-+                        dispatcher.execute {
-+                            if (context != null) LocationHook.ensureRefreshReceiver(context)
-+                            dispatchClipboardText(context, text, capturedAtMs)
-+                        }
-+                    }
-+                })
-+                count += 1
-+            }.onFailure {
-+                XposedBridge.log("ClipboardHook: failed ${targetClass.name}#${method.name}: $it")
-+            }
-+        }
-+
-+        return count
-+    }
-+
-+    private fun dispatchClipboardText(context: Context?, text: String, capturedAtMs: Long) {
-+        val ctx = context ?: return
-+        ctx.sendBroadcast(Intent().apply {
-+            action = LocationActions.ACTION_CLIPBOARD_TEXT
-+            setClassName(
-+                BuildConfig.APPLICATION_ID,
-+                "${BuildConfig.APPLICATION_ID}.utils.ClipboardLocationReceiver"
-+            )
-+            addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
-+            addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
-+            putExtra(LocationActions.EXTRA_CLIPBOARD_TEXT, text)
-+            putExtra(ClipboardTrace.EXTRA_CAPTURED_AT, capturedAtMs)
-+        })
-+    }
-+
-+    private fun resolveContext(param: XC_MethodHook.MethodHookParam): Context? {
-+        (AndroidAppHelper.currentApplication() as? Context)?.let { return it }
-+        val thisObj = param.thisObject ?: return null
-+
-+        runCatching {
-+            XposedHelpers.getObjectField(thisObj, "mContext") as? Context
-+        }.getOrNull()?.let { return it }
-+
-+        runCatching {
-+            val outer = XposedHelpers.getObjectField(thisObj, "this$0")
-+            XposedHelpers.getObjectField(outer, "mContext") as? Context
-+        }.getOrNull()?.let { return it }
-+
-+        return null
-+    }
-+
-+}
-diff --git a/app/src/main/java/io/github/phantom/gps/xposed/HookEntry.kt b/app/src/main/java/io/github/phantom/gps/xposed/HookEntry.kt
++++ b/app/src/main/res/color/geox_login_input_stroke.xml
+@@ -0,0 +1 @@
++<selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_focused="true" android:color="#C7FF63" /><item android:color="#62747A" /></selector>
+diff --git a/app/src/main/res/color/geox_login_primary.xml b/app/src/main/res/color/geox_login_primary.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..9a663ac0de574fdf98c7180e815ae999ff22c4e6
+index 0000000000000000000000000000000000000000..510e7fd8f36bf5ec4437e1a8b5fc673f8d2c310d
 --- /dev/null
-+++ b/app/src/main/java/io/github/phantom/gps/xposed/HookEntry.kt
-@@ -0,0 +1,32 @@
-+package io.github.phantom.gps.xposed
-+
-+import android.app.AndroidAppHelper
-+import android.content.Context
-+import de.robv.android.xposed.IXposedHookLoadPackage
-+import de.robv.android.xposed.XC_MethodHook
-+import de.robv.android.xposed.XposedBridge
-+import de.robv.android.xposed.XposedHelpers
-+import de.robv.android.xposed.callbacks.XC_LoadPackage
-+import io.github.phantom.gps.BuildConfig
-+import io.github.phantom.gps.utils.AppIntegrity
-+
-+class HookEntry : IXposedHookLoadPackage {
-+
-+    override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-+        val ctx = runCatching { AndroidAppHelper.currentApplication() as? Context }.getOrNull()
-+        if (ctx != null && !AppIntegrity.isModuleApkValid(ctx)) {
-+            XposedBridge.log("GeoX: module signature mismatch - hooks disabled")
-+            return
-+        }
-+
-+        if (lpparam.packageName == BuildConfig.APPLICATION_ID) {
-+            XposedHelpers.findAndHookMethod("io.github.phantom.gps.ui.viewmodel.MainViewModel", lpparam.classLoader, "updateXposedState", object : XC_MethodHook() {
-+                override fun beforeHookedMethod(param: MethodHookParam) {
-+                    param.result = null
-+                }
-+            })
-+        }
-+        ClipboardHook.initHooks(lpparam)
-+        LocationHook.initHooks(lpparam)
-+    }
-+}
-diff --git a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-similarity index 64%
-rename from app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
-rename to app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-index 61ed6adaf6b92a8260ae655611f2391470833343..e3f480faba460a8831321c70f5d95c75b6438690 100644
---- a/app/src/main/java/io/github/jqssun/gpssetter/xposed/LocationHook.kt
-+++ b/app/src/main/java/io/github/phantom/gps/xposed/LocationHook.kt
-@@ -1 +1 @@
--package io.github.jqssun.gpssetter.xposed
-+package io.github.phantom.gps.xposed
-@@ -7,0 +8,7 @@ import android.content.Context
-+import android.content.BroadcastReceiver
-+import android.content.Intent
-+import android.content.IntentFilter
-+import android.os.Handler
-+import android.os.HandlerThread
-+import io.github.phantom.gps.utils.LocationRefresh
-+import io.github.phantom.gps.utils.ClipboardTrace
-@@ -17 +24 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
--import io.github.jqssun.gpssetter.BuildConfig
-+import io.github.phantom.gps.BuildConfig
-@@ -20,0 +28 @@ import java.util.*
-+import kotlin.math.abs
-@@ -21,0 +30,2 @@ import kotlin.math.cos
-+import kotlin.math.sin
-+import kotlin.math.sqrt
-@@ -32 +42,79 @@ object LocationHook {
--    private var mLastUpdated: Long = 0
-+    @Volatile private var mLastUpdated: Long = 0
-+    @Volatile private var refreshRegistered = false
-+    @Volatile private var currentTrace: ClipboardTrace? = null
-+    @Volatile private var loadedDirectRequestId: String = ""
-+    @Volatile private var loadedStarted: Boolean = false
-+    @Volatile private var systemHooksReady: Boolean = false
-+    private var loadedTraceId: Long = 0
-+    private var consumedTraceId: Long = 0
-+    private var lastActiveServicePromotion=0L
-+
-+    @Synchronized
-+    fun ensureRefreshReceiver(source: Context) {
-+        io.github.phantom.gps.utils.MembershipLease.initializeHookClock(source)
-+        if (refreshRegistered) return
-+        val receiverContext = source.applicationContext ?: source
-+        if (receiverContext.packageName == BuildConfig.APPLICATION_ID) return
-+        val worker = HandlerThread("Phantom-location-refresh").apply { start() }
-+        val receiver = object : BroadcastReceiver() {
-+            override fun onReceive(context: Context, intent: Intent?) {
-+                if (intent?.action == LocationRefresh.DIAGNOSTIC_ACTION) {
-+                    val id=intent.getStringExtra("query_id").orEmpty()
-+                    if(id.length !in 16..96)return
-+                    val reply=intent.getParcelableExtra<android.os.ResultReceiver>("reply") ?: return
-+                    val state=runCatching { settings.diagnosticState() }.getOrElse { android.os.Bundle().apply { putString("reason","DIAGNOSTIC_FAILED") } }
-+                    state.putString("query_id",id)
-+                    state.putString("package",receiverContext.packageName)
-+                    state.putString("version",BuildConfig.VERSION_NAME)
-+                    state.putBoolean("system_hooks_ready",systemHooksReady)
-+                    state.putBoolean("system_mode_enabled",settings.isHookedSystem)
-+                    reply.send(0,state)
-+                    XposedBridge.log("GeoX Hook diagnostic: package=${receiverContext.packageName} version=${BuildConfig.VERSION_NAME} reason=${state.getString("reason")}")
-+                } else if (intent?.action == LocationRefresh.CONFIRM_ACTION) {
-+                    val id = intent.getStringExtra("request_id").orEmpty()
-+                    val reply = intent.getParcelableExtra<android.os.ResultReceiver>("reply") ?: return
-+                    if (id.isBlank()) return
-+                    if (loadedDirectRequestId != id) updateLocation(forceReload = true)
-+                    val matching = loadedDirectRequestId == id
-+                    val modeReady = receiverContext.packageName != "android" || (systemHooksReady && settings.isHookedSystem)
-+                    val code = if (!matching) 409 else if (loadedStarted && settings.isStarted && modeReady) 101 else 412
-+                    reply.send(code, android.os.Bundle().apply { putString("request_id", id) })
-+                } else if (intent?.action == LocationRefresh.ACTION) {
-+                    val wasStarted=loadedStarted
-+                    updateLocation(forceReload = true)
-+                    val now=android.os.SystemClock.elapsedRealtime()
-+                    if(receiverContext.packageName=="android"&&loadedStarted&&(!wasStarted||now-lastActiveServicePromotion>=30000)) {
-+                        // An authorized module refresh only. System scope can promote the already-validated active engine
-+                        // when Android restricts a background app's own FGS launch. Never changes coordinates or grants a lease.
-+                        runCatching {
-+                            receiverContext.startForegroundService(Intent().setClassName(BuildConfig.APPLICATION_ID,
-+                                BuildConfig.APPLICATION_ID+".utils.MembershipHeartbeatService"))
-+                            lastActiveServicePromotion=now
-+                        }.onFailure { XposedBridge.log("GeoX: active service promotion unavailable: "+it.javaClass.simpleName) }
-+                    }
-+                }
-+            }
-+        }
-+        val filter = IntentFilter(LocationRefresh.ACTION).apply { addAction(LocationRefresh.CONFIRM_ACTION); addAction(LocationRefresh.DIAGNOSTIC_ACTION) }
-+        runCatching {
-+            if (Build.VERSION.SDK_INT >= 33) {
-+                receiverContext.registerReceiver(receiver, filter,
-+                    LocationRefresh.SENDER_PERMISSION, Handler(worker.looper), Context.RECEIVER_EXPORTED)
-+            } else {
-+                receiverContext.registerReceiver(receiver, filter,
-+                    LocationRefresh.SENDER_PERMISSION, Handler(worker.looper))
-+            }
-+            refreshRegistered = true
-+            // The first clipboard event can beat receiver registration. Load the
-+            // latest committed snapshot once so that an early refresh is not lost.
-+            updateLocation(forceReload = true)
-+        }.onFailure { worker.quitSafely() }
-+    }
-+
-+    @Synchronized private fun markLocationRead() {
-+        val trace = currentTrace ?: return
-+        if (trace.id != consumedTraceId) {
-+            consumedTraceId = trace.id
-+            trace.mark("hook_first_read")
-+        }
-+    }
-@@ -37 +125,2 @@ object LocationHook {
--    private fun updateLocation() {
-+    @Synchronized
-+    private fun updateLocation(forceReload: Boolean = false) {
-@@ -38,0 +128 @@ object LocationHook {
-+            val snapshot = settings.locationSnapshot(forceReload)
-@@ -40,9 +130,28 @@ object LocationHook {
--            val x = (rand.nextInt(50) - 15).toDouble()
--            val y = (rand.nextInt(50) - 15).toDouble()
--            val dlat = x / earth
--            val dlng = y / (earth * cos(pi * settings.getLat / 180.0))
--            newlat =
--                if (settings.isRandomPosition) settings.getLat + (dlat * 180.0 / pi) else settings.getLat
--            newlng =
--                if (settings.isRandomPosition) settings.getLng + (dlng * 180.0 / pi) else settings.getLng
--            accuracy = settings.accuracy!!.toFloat()
-+            val baseLat = snapshot.latitude
-+            val baseLng = snapshot.longitude
-+
-+            if (snapshot.allowRandom) {
-+                val radiusMeters = snapshot.radiusMeters
-+                val angle = rand.nextDouble() * 2.0 * pi
-+                val distance = sqrt(rand.nextDouble()) * radiusMeters
-+                val dlat = (distance * cos(angle)) / earth
-+                val latCos = cos(pi * baseLat / 180.0)
-+                val safeLatCos = if (abs(latCos) < 1e-6) 1e-6 else latCos
-+                val dlng = (distance * sin(angle)) / (earth * safeLatCos)
-+
-+                newlat = baseLat + (dlat * 180.0 / pi)
-+                newlng = baseLng + (dlng * 180.0 / pi)
-+            } else {
-+                newlat = baseLat
-+                newlng = baseLng
-+            }
-+            accuracy = snapshot.accuracy
-+            loadedStarted = snapshot.started && settings.isStarted
-+            loadedDirectRequestId = snapshot.requestId
-+            currentTrace = if (snapshot.traceId > 0 && snapshot.capturedAtMs > 0) ClipboardTrace(snapshot.traceId, snapshot.capturedAtMs) else null
-+            currentTrace?.let { trace ->
-+                if (trace.id != loadedTraceId) {
-+                    loadedTraceId = trace.id
-+                    trace.mark("hook_loaded")
-+                }
-+            }
-@@ -52 +161 @@ object LocationHook {
--                .e(e, "Failed to get XposedSettings for %s", context.packageName)
-+                .e(e, "Failed to read GeoX hook snapshot")
-@@ -57,0 +167,10 @@ object LocationHook {
-+        (AndroidAppHelper.currentApplication() as? Context)?.let { ensureRefreshReceiver(it) }
-+        if (lpparam.packageName != "android" && lpparam.packageName != BuildConfig.APPLICATION_ID) {
-+            XposedHelpers.findAndHookMethod(android.app.Application::class.java, "attach", Context::class.java,
-+                object : XC_MethodHook() {
-+                    override fun afterHookedMethod(param: MethodHookParam) {
-+                        (param.args.firstOrNull() as? Context)?.let { ensureRefreshReceiver(it) }
-+                    }
-+                })
-+        }
-+
-@@ -59,2 +178,12 @@ object LocationHook {
--        if (lpparam.packageName == "android") { XposedBridge.log("Hooking system server")
--        if (settings.isStarted && (settings.isHookedSystem && !ignorePkg.contains(lpparam.packageName))) {
-+        if (lpparam.packageName == "android") {
-+            // Register after ActivityManager is ready, including when Clipboard monitor is off.
-+            runCatching {
-+                val server = XposedHelpers.findClass("com.android.server.SystemServer", lpparam.classLoader)
-+                XposedBridge.hookAllMethods(server, "startOtherServices", object : XC_MethodHook() {
-+                    override fun afterHookedMethod(param: MethodHookParam) {
-+                        runCatching { XposedHelpers.getObjectField(param.thisObject, "mSystemContext") as? Context }
-+                            .getOrNull()?.let { ensureRefreshReceiver(it) }
-+                    }
-+                })
-+            }
-+        if (!ignorePkg.contains(lpparam.packageName)) {
-@@ -76,0 +206 @@ object LocationHook {
-+                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -78,0 +209 @@ object LocationHook {
-+                            markLocationRead()
-@@ -99,0 +231 @@ object LocationHook {
-+                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -114,0 +247 @@ object LocationHook {
-+                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -130,0 +264 @@ object LocationHook {
-+                            markLocationRead()
-@@ -136 +269,0 @@ object LocationHook {
--                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -160,0 +294 @@ object LocationHook {
-+                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -163 +297,2 @@ object LocationHook {
--                                    location.latitude = newlat
-+                                    markLocationRead()
-+                            location.latitude = newlat
-@@ -182,0 +318 @@ object LocationHook {
-+                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -195,0 +332 @@ object LocationHook {
-+                            if (!settings.isStarted || !settings.isHookedSystem) return
-@@ -211,0 +349 @@ object LocationHook {
-+                            markLocationRead()
-@@ -217 +354,0 @@ object LocationHook {
--                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -228,0 +366 @@ object LocationHook {
-+                systemHooksReady = true
-@@ -248,0 +387 @@ object LocationHook {
-+                                    markLocationRead()
-@@ -262,0 +402 @@ object LocationHook {
-+                                    markLocationRead()
-@@ -311,0 +452 @@ object LocationHook {
-+                            markLocationRead()
-@@ -317 +457,0 @@ object LocationHook {
--                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -344,0 +485 @@ object LocationHook {
-+                            markLocationRead()
-@@ -350 +490,0 @@ object LocationHook {
--                            XposedBridge.log("GS: lat: ${location.latitude}, lon: ${location.longitude}")
-@@ -365,0 +506 @@ object LocationHook {
-+
-diff --git a/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
-new file mode 100644
-index 0000000000000000000000000000000000000000..2ec46da070040965b0b0c6e93c2039cf979c8ce6
---- /dev/null
-+++ b/app/src/main/java/io/github/phantom/gps/xposed/Xshare.kt
-@@ -0,0 +1,109 @@
-+package io.github.phantom.gps.xposed
-+
-+import de.robv.android.xposed.XSharedPreferences
-+import io.github.phantom.gps.BuildConfig
-+import android.os.SystemClock
-+
-+class Xshare {
-+
-+    private val prefsName = "${BuildConfig.APPLICATION_ID}_prefs"
-+    private val xPref: XSharedPreferences by lazy {
-+        XSharedPreferences(BuildConfig.APPLICATION_ID, prefsName)
-+    }
-+
-+    private var lastReloadUptimeMs: Long = 0
-+
-+    @Synchronized
-+    private fun pref(): XSharedPreferences {
-+        val now = SystemClock.elapsedRealtime()
-+        // XSharedPreferences doesn't auto-update; reload throttled to keep hooks fast.
-+        if (now - lastReloadUptimeMs >= 250) {
-+            runCatching { xPref.reload() }
-+            lastReloadUptimeMs = now
-+        }
-+        return xPref
-+    }
-+
-+    @Synchronized
-+    fun forceReload() {
-+        runCatching { xPref.reload() }
-+        lastReloadUptimeMs = SystemClock.elapsedRealtime()
-+    }
-+
-+    @Synchronized
-+    fun locationSnapshot(force: Boolean = false): io.github.phantom.gps.utils.HookLocationSnapshot {
-+        if (force) forceReload()
-+        return io.github.phantom.gps.utils.HookLocationSnapshot.from(pref().all)
-+    }
-+
-+    fun clipboardTrace(): io.github.phantom.gps.utils.ClipboardTrace? {
-+        val p = pref()
-+        val id = p.getLong(io.github.phantom.gps.utils.LocationRefresh.TRACE_ID_PREF, 0)
-+        val capturedAt = p.getLong(io.github.phantom.gps.utils.LocationRefresh.CAPTURED_AT_PREF, 0)
-+        return if (id > 0 && capturedAt > 0) io.github.phantom.gps.utils.ClipboardTrace(id, capturedAt) else null
-+    }
-+
-+    fun diagnosticState():android.os.Bundle {
-+        forceReload()
-+        val p=pref()
-+        val token=p.getString("membership_lease", "").orEmpty()
-+        val valid=io.github.phantom.gps.utils.MembershipLease.hookValid(token)
-+        val parsed=io.github.phantom.gps.utils.MembershipLease.verifier.inspect(token)
-+        val boot=io.github.phantom.gps.utils.MembershipLease.hookBootCount
-+        val reason=when {
-+            !p.contains("start")->"SNAPSHOT_MISSING"
-+            token.isBlank()->"LEASE_MISSING"
-+            parsed==null->"LEASE_INVALID"
-+            boot<0->"BOOT_NOT_READY"
-+            parsed.boot!=boot->"BOOT_MISMATCH"
-+            !valid->"LEASE_TIME_INVALID"
-+            !p.getBoolean("start",false)->"STOPPED"
-+            else->"READY"
-+        }
-+        return android.os.Bundle().apply {
-+            putString("reason",reason)
-+            putBoolean("lease_valid",valid)
-+            putBoolean("started",p.getBoolean("start",false))
-+        }
-+    }
-+
-+    val directRequestId: String get() = pref().getString("direct_request_id", "").orEmpty()
-+
-+    val isStarted : Boolean
-+    get() = pref().let { it.getBoolean("start", false) && io.github.phantom.gps.utils.MembershipLease.hookValid(it.getString("membership_lease", "").orEmpty()) }
-+
-+    val getLat: Double get() {
-+        val p = pref()
-+        return if (p.contains("latitude_bits")) Double.fromBits(p.getLong("latitude_bits", 0)) else p.getFloat("latitude", 45F).toDouble()
-+    }
-+
-+    val getLng: Double get() {
-+        val p = pref()
-+        return if (p.contains("longitude_bits")) Double.fromBits(p.getLong("longitude_bits", 0)) else p.getFloat("longitude", 0F).toDouble()
-+    }
-+
-+    val isHookedSystem : Boolean
-+    get() = pref().getBoolean(
-+        "system_hooked",
-+        true
-+    )
-+
-+    val isRandomPosition :Boolean
-+    get() = pref().getBoolean(
-+        "random_position",
-+        false
-+    )
-+
-+    val randomRadiusMeters: String?
-+    get() = pref().getString("random_radius_meters","10")
-+
-+    val accuracy : String?
-+    get() = pref().getString("accuracy_level","10")
-+
-+    val isClipboardMonitorEnabled : Boolean
-+    get() = pref().getBoolean(
-+        "clipboard_monitor_enabled",
-+        false
-+    )
-+
-+}
++++ b/app/src/main/res/color/geox_login_primary.xml
+@@ -0,0 +1 @@
++<selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_enabled="false" android:color="#789A50" /><item android:color="#C7FF63" /></selector>
 diff --git a/app/src/main/res/drawable-nodpi/geox_brand_icon.png b/app/src/main/res/drawable-nodpi/geox_brand_icon.png
 new file mode 100644
 index 0000000000000000000000000000000000000000..faaf5fa103f51c4f495dec995abfd472c2230011
@@ -14031,6 +14207,92 @@ f&xGq|Da13%lc|7v@^H2n3i6?%pdk;JwFvn?@2A@w
 literal 0
 HcmV?d00001
 
+diff --git a/app/src/main/res/drawable/geox_login_background.xml b/app/src/main/res/drawable/geox_login_background.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..529dd0e6c325b78bf4c7a0ba310030254b72bf44
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_login_background.xml
+@@ -0,0 +1,2 @@
++<shape xmlns:android="http://schemas.android.com/apk/res/android"><gradient android:angle="45" android:startColor="#152821"
++    android:centerColor="#0B1017" android:endColor="#102025" /></shape>
+diff --git a/app/src/main/res/drawable/geox_login_card.xml b/app/src/main/res/drawable/geox_login_card.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..4a2cf646d6d43b8aa332f74f78a4a7a0c069b739
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_login_card.xml
+@@ -0,0 +1,2 @@
++<shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#EE122027" /><corners android:radius="22dp" />
++    <stroke android:width="1dp" android:color="#40545A" /></shape>
+diff --git a/app/src/main/res/drawable/geox_login_enter.xml b/app/src/main/res/drawable/geox_login_enter.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b8b2884f376de10a8e33d475892e869e2a755c3
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_login_enter.xml
+@@ -0,0 +1,4 @@
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
++    <path android:fillColor="@android:color/transparent" android:strokeColor="#C7FF63" android:strokeWidth="1.7"
++        android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M13,3h6a2,2 0,0 1,2 2v14a2,2 0,0 1,-2 2h-6 M3,12h12 M10,7l5,5l-5,5" />
++</vector>
+diff --git a/app/src/main/res/drawable/geox_login_horizon.xml b/app/src/main/res/drawable/geox_login_horizon.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..2b2fd1735251afd43ddde13780045187b4e0a60e
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_login_horizon.xml
+@@ -0,0 +1,4 @@
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="360dp" android:height="72dp" android:viewportWidth="360" android:viewportHeight="72">
++    <path android:fillColor="#351D4A34" android:pathData="M2,70 Q180,-20 358,70 L358,72 L2,72Z" />
++    <path android:strokeWidth="12" android:strokeColor="#143D592B" android:pathData="M2,70 Q180,-20 358,70" /> <path android:strokeWidth="7" android:strokeColor="#22567D38" android:pathData="M2,70 Q180,-20 358,70" /> <path android:strokeWidth="3" android:strokeColor="#608BB64D" android:pathData="M2,70 Q180,-20 358,70" /> <path android:strokeWidth="1" android:strokeColor="#C7FF63" android:pathData="M2,70 Q180,-20 358,70" /> <path android:fillColor="#42639761" android:pathData="M132,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M140,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M148,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M156,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M164,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M172,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M180,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M188,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M196,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M204,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M212,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M220,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M228,36h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M110,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M120,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M130,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M140,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M150,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M160,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M170,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M180,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M190,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M200,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M210,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M220,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M230,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M240,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M250,44h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M96,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M108,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M120,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M132,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M144,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M156,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M168,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M180,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M192,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M204,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M216,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M228,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M240,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M252,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M264,52h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M82,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M96,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M110,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M124,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M138,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M152,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M166,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M180,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M194,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M208,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M222,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M236,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M250,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M264,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M278,60h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M68,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M84,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M100,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M116,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M132,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M148,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M164,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M180,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M196,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M212,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M228,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M244,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M260,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M276,68h1v1h-1z" /> <path android:fillColor="#42639761" android:pathData="M292,68h1v1h-1z" />
++</vector>
+diff --git a/app/src/main/res/drawable/geox_login_lock.xml b/app/src/main/res/drawable/geox_login_lock.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..5cf6b8472c6e4a0d596fcede8bbe816b27438176
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_login_lock.xml
+@@ -0,0 +1,4 @@
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
++    <path android:fillColor="@android:color/transparent" android:strokeColor="#C7FF63" android:strokeWidth="1.7"
++        android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M6,10v-3a6,6 0,0 1,12 0v3 M4,10h16v11H4z M12,14v3" />
++</vector>
+diff --git a/app/src/main/res/drawable/geox_login_person.xml b/app/src/main/res/drawable/geox_login_person.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..1ee2018a710627aa21584e923b1837da650f789a
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_login_person.xml
+@@ -0,0 +1,4 @@
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
++    <path android:fillColor="@android:color/transparent" android:strokeColor="#C7FF63" android:strokeWidth="1.7"
++        android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M12,3a4,4 0,1 0,0 8a4,4 0,1 0,0 -8 M4,21v-2c0,-3 3,-5 8,-5s8,2 8,5v2z" />
++</vector>
+diff --git a/app/src/main/res/drawable/geox_login_pin.xml b/app/src/main/res/drawable/geox_login_pin.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..635c51975b7b78ad367c1d2189e582991aa5015b
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_login_pin.xml
+@@ -0,0 +1,4 @@
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
++    <path android:fillColor="@android:color/transparent" android:strokeColor="#C7FF63" android:strokeWidth="1.7"
++        android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M12,22C10,19 5,14 5,9a7,7 0,1 1,14 0C19,14 14,19 12,22z M12,6a3,3 0,1 0,0 6a3,3 0,1 0,0 -6" />
++</vector>
+diff --git a/app/src/main/res/drawable/geox_login_shield.xml b/app/src/main/res/drawable/geox_login_shield.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e1eb3a0c7490b56a36d1f50017dfe81e4328235
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_login_shield.xml
+@@ -0,0 +1,4 @@
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
++    <path android:fillColor="@android:color/transparent" android:strokeColor="#C7FF63" android:strokeWidth="1.7"
++        android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M12,2L21,6v6c0,5 -4,8 -9,10c-5,-2 -9,-5 -9,-10V6z M8,12l3,3l5,-5" />
++</vector>
+diff --git a/app/src/main/res/drawable/geox_login_web.xml b/app/src/main/res/drawable/geox_login_web.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..03fde21fe72fa9f889de81dab2bda01f5c57ef72
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_login_web.xml
+@@ -0,0 +1,4 @@
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
++    <path android:fillColor="@android:color/transparent" android:strokeColor="#C7FF63" android:strokeWidth="1.7"
++        android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M13,3h8v8 M21,3l-10,10 M9,5H4v15h15v-5" />
++</vector>
 diff --git a/app/src/main/res/drawable/geox_panel.xml b/app/src/main/res/drawable/geox_panel.xml
 new file mode 100644
 index 0000000000000000000000000000000000000000..44412a8c68d7eb7d5517ab0a5bf0841f83e8584b
@@ -14424,30 +14686,102 @@ index 054c97b2e62bc248b0485ae238bb60a05c95ff14..d13677f661d55f60415c964153221752
 \ No newline at end of file
 diff --git a/app/src/main/res/layout/activity_member_login.xml b/app/src/main/res/layout/activity_member_login.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..5a3ccc4e2b9dbcae52137d0a524974606bc924fb
+index 0000000000000000000000000000000000000000..fc4b5a8472c7b90cc2333289a954a3b8653e8232
 --- /dev/null
 +++ b/app/src/main/res/layout/activity_member_login.xml
-@@ -0,0 +1,20 @@
-+<?xml version="1.0" encoding="utf-8"?>
-+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="#101416">
-+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center_vertical" android:padding="28dp">
-+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GeoX" android:textSize="30sp" android:textStyle="bold" android:textColor="#C7F568" />
-+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="YOUR LOCATION. YOUR CONTROL." android:textSize="12sp" android:textColor="#C7F568" />
-+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="GeoX — เดิม PHANToM GPS" android:textSize="13sp" android:textColor="#9AA8A3" />
-+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="เข้าสู่ระบบสมาชิก
-+เริ่มสิทธิ์ 7 วันเมื่อเข้าแอปครั้งแรก ต่ออายุผ่านแอดมิน" android:textSize="16sp" android:textColor="#EFF5F0" />
-+<TextView android:id="@+id/memberStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textColor="#8AE6C3" />
-+<EditText android:id="@+id/memberUsername" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="24dp" android:hint="ชื่อผู้ใช้ หรือ Gmail" android:inputType="textVisiblePassword" android:autofillHints="username" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#9AA8A3" android:backgroundTint="#C7F568" />
-+<EditText android:id="@+id/memberPassword" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="12dp" android:hint="รหัสผ่าน GeoX" android:inputType="textPassword" android:autofillHints="password" android:saveEnabled="false" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#9AA8A3" android:backgroundTint="#C7F568" />
-+<CheckBox android:id="@+id/memberRemember" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="12dp" android:text="จดจำบัญชีในเครื่องนี้" android:textColor="#EFF5F0" android:buttonTint="#C7F568" />
-+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="บันทึกหลังเข้าสู่ระบบสำเร็จ เมื่อจำเป็นต้องเข้าสู่ระบบใหม่ แอปจะกรอกข้อมูลให้ โดยยังต้องตรวจสิทธิ์ตามปกติ" android:textSize="13sp" android:textColor="#9AA8A3" />
-+<Button android:id="@+id/memberForget" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ลืมบัญชีที่จดจำไว้" android:visibility="gone" />
-+<Button android:id="@+id/memberLogin" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="20dp" android:text="เข้าสู่ระบบ" android:backgroundTint="#C7F568" android:textColor="#101416" />
-+<ProgressBar android:id="@+id/memberProgress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="gone" />
-+<TextView android:id="@+id/memberError" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="#FFB5B5" android:visibility="gone" />
-+<Button android:id="@+id/memberRegister" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="สมัครสมาชิก / จัดการบัญชีบนเว็บ" />
-+<Button android:id="@+id/memberLogout" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ออกจากระบบและลืมบัญชี" android:visibility="gone" />
-+</LinearLayout></ScrollView>
+@@ -0,0 +1,92 @@
++<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
++    android:layout_width="match_parent" android:layout_height="match_parent"
++    android:fitsSystemWindows="true" android:background="@drawable/geox_login_background">
++    <ScrollView android:id="@+id/memberForm" android:layout_width="match_parent"
++        android:layout_height="match_parent" android:fillViewport="true" android:visibility="gone">
++        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
++            android:orientation="vertical" android:gravity="center_horizontal" android:paddingStart="18dp"
++            android:paddingEnd="18dp" android:paddingTop="20dp" android:paddingBottom="16dp"
++            android:focusableInTouchMode="true">
++            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GeoX" android:textSize="46sp" android:textColor="#C7FF63" android:gravity="center" android:textStyle="bold" />
++            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="YOUR LOCATION. YOUR CONTROL." android:textSize="12sp" android:textColor="#C7FF63" android:gravity="center" />
++            <FrameLayout android:layout_width="match_parent" android:layout_height="68dp"
++                android:layout_marginTop="12dp" android:importantForAccessibility="noHideDescendants">
++                <ImageView android:layout_width="match_parent" android:layout_height="match_parent"
++                    android:scaleType="fitXY" android:src="@drawable/geox_login_horizon" />
++                <ImageView android:layout_width="25dp" android:layout_height="25dp"
++                    android:layout_gravity="top|center_horizontal" android:layout_marginTop="4dp"
++                    android:src="@drawable/geox_login_pin" />
++            </FrameLayout>
++            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
++                android:orientation="vertical" android:padding="20dp" android:background="@drawable/geox_login_card">
++                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
++                    <ImageView android:layout_width="24dp" android:layout_height="24dp"
++                        android:src="@drawable/geox_login_shield" android:importantForAccessibility="no" />
++                    <View android:layout_width="1dp" android:layout_height="28dp" android:layout_marginHorizontal="12dp" android:background="#62747A" />
++                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
++                        android:text="เข้าสู่ระบบสมาชิก เริ่มสิทธิ์ 7 วันเมื่อเข้าแอปครั้งแรก ต่ออายุผ่านแอดมิน"
++                        android:textColor="#F5F7F8" android:textSize="13sp" />
++                </LinearLayout>
++                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" android:textSize="14sp" android:textColor="#C7FF63" android:id="@+id/memberStatus" android:visibility="gone" />
++                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ชื่อผู้ใช้ หรือ Gmail" android:textSize="15sp" android:textColor="#F5F7F8" android:layout_marginTop="14dp" android:drawablePadding="8dp" app:drawableStartCompat="@drawable/geox_login_person" />
++ <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
++    android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
++    app:hintEnabled="false" app:boxBackgroundColor="#111C24" app:boxStrokeColor="@color/geox_login_input_stroke"
++    app:boxCornerRadiusTopStart="11dp" app:boxCornerRadiusTopEnd="11dp"
++    app:boxCornerRadiusBottomStart="11dp" app:boxCornerRadiusBottomEnd="11dp" >
++    <com.google.android.material.textfield.TextInputEditText android:id="@+id/memberUsername" android:layout_width="match_parent"
++        android:layout_height="wrap_content" android:minHeight="54dp" android:hint="กรอกชื่อผู้ใช้ หรือ Gmail"
++        android:inputType="textVisiblePassword" android:autofillHints="username"
++        android:textColor="#F5F7F8" android:textColorHint="#A1ADB2" android:singleLine="true" android:imeOptions="actionNext" />
++ </com.google.android.material.textfield.TextInputLayout>
++                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="รหัสผ่าน GeoX" android:textSize="15sp" android:textColor="#F5F7F8" android:layout_marginTop="14dp" android:drawablePadding="8dp" app:drawableStartCompat="@drawable/geox_login_lock" />
++ <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
++    android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
++    app:hintEnabled="false" app:boxBackgroundColor="#111C24" app:boxStrokeColor="@color/geox_login_input_stroke"
++    app:boxCornerRadiusTopStart="11dp" app:boxCornerRadiusTopEnd="11dp"
++    app:boxCornerRadiusBottomStart="11dp" app:boxCornerRadiusBottomEnd="11dp" app:endIconMode="password_toggle" app:endIconTint="#A1ADB2">
++    <com.google.android.material.textfield.TextInputEditText android:id="@+id/memberPassword" android:layout_width="match_parent"
++        android:layout_height="wrap_content" android:minHeight="54dp" android:hint="กรอกรหัสผ่าน"
++        android:inputType="textPassword" android:autofillHints="password"
++        android:textColor="#F5F7F8" android:textColorHint="#A1ADB2" android:singleLine="true" android:saveEnabled="false" android:imeOptions="actionDone" />
++ </com.google.android.material.textfield.TextInputLayout>
++                <CheckBox android:id="@+id/memberRemember" android:layout_width="match_parent"
++                    android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="8dp"
++                    android:text="จดจำบัญชีในเครื่องนี้" android:buttonTint="#C7FF63" android:textColor="#F5F7F8" />
++                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="บันทึกหลังเข้าสู่ระบบสำเร็จ เมื่อต้องเข้าสู่ระบบใหม่ แอปจะกรอกข้อมูลให้ โดยยังต้องตรวจสิทธิ์ตามปกติ" android:textSize="12sp" android:textColor="#A1ADB2"  />
++                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" android:textSize="14sp" android:textColor="#FFB5B5" android:id="@+id/memberError" android:layout_marginTop="8dp" android:accessibilityLiveRegion="polite" android:visibility="gone" />
++                <com.google.android.material.button.MaterialButton android:id="@+id/memberLogin"
++                    android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp"
++                    android:layout_marginTop="12dp" android:text="เข้าสู่ระบบ" android:textSize="17sp" android:textStyle="bold"
++                    android:textColor="#0B1017" app:backgroundTint="@color/geox_login_primary" app:cornerRadius="17dp"
++                    app:icon="@drawable/geox_login_enter" app:iconTint="#0B1017" app:iconGravity="textStart" />
++                <com.google.android.material.progressindicator.CircularProgressIndicator android:id="@+id/memberProgress" android:visibility="gone"
++        android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center"
++        android:indeterminate="true" app:indicatorSize="26dp" app:indicatorColor="#C7FF63" />
++                <com.google.android.material.button.MaterialButton android:id="@+id/memberRegister"
++     style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent"
++     android:layout_height="wrap_content" android:minHeight="48dp" android:text="สมัครสมาชิก / จัดการบัญชีบนเว็บ"
++     android:textAllCaps="false" android:layout_marginTop="6dp" android:textColor="#C7FF63" app:cornerRadius="17dp" app:strokeColor="#C7FF63" app:icon="@drawable/geox_login_web" app:iconTint="#C7FF63" app:iconSize="18dp" app:iconGravity="textStart" />
++                <com.google.android.material.button.MaterialButton android:id="@+id/memberLogout"
++     style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent"
++     android:layout_height="wrap_content" android:minHeight="48dp" android:text="ออกจากระบบ"
++     android:textAllCaps="false" android:visibility="gone" />
++            </LinearLayout>
++            <com.google.android.material.button.MaterialButton android:id="@+id/memberReset"
++     style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent"
++     android:layout_height="wrap_content" android:minHeight="48dp" android:text="ลืมรหัสผ่าน?"
++     android:textAllCaps="false" android:textColor="#C7FF63" />
++            <com.google.android.material.button.MaterialButton android:id="@+id/memberForget"
++     style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent"
++     android:layout_height="wrap_content" android:minHeight="48dp" android:text="ลืมบัญชีที่จดจำไว้"
++     android:textAllCaps="false" android:textColor="#A1ADB2" android:visibility="gone" />
++        </LinearLayout>
++    </ScrollView>
++    <LinearLayout android:id="@+id/memberRestore" android:layout_width="match_parent" android:layout_height="wrap_content"
++        android:layout_gravity="center" android:orientation="vertical" android:gravity="center" android:padding="24dp" android:visibility="gone">
++        <com.google.android.material.progressindicator.CircularProgressIndicator 
++        android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center"
++        android:indeterminate="true" app:indicatorSize="48dp" app:indicatorColor="#C7FF63" />
++        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="กำลังตรวจสอบบัญชี GeoX" android:textSize="15sp" android:textColor="#F5F7F8" android:gravity="center" android:layout_marginTop="16dp" android:accessibilityLiveRegion="polite" />
++    </LinearLayout>
++</FrameLayout>
 diff --git a/app/src/main/res/layout/drawer_header.xml b/app/src/main/res/layout/drawer_header.xml
 index 64bc3f68ebede8422f4ed0ebb9f665f6f3c56b72..06874407e7a70a5b7cae2159a6f3c85db335a724 100644
 --- a/app/src/main/res/layout/drawer_header.xml
@@ -21670,7 +22004,7 @@ index 0000000000000000000000000000000000000000..b853a8d2452fe340b2e07d1899f3437e
 +    </device-transfer>
 +</data-extraction-rules>
 diff --git a/app/src/main/res/xml/preferences.xml b/app/src/main/res/xml/preferences.xml
-index fabf1050343e8e29653fb416f06b5c06054115ed..036802b281c7705100bdf1c9d8770b2c0368ebdd 100644
+index fabf1050343e8e29653fb416f06b5c06054115ed..3917c0c6fb2f2c71d18547d1ac5e708f6de75a2d 100644
 --- a/app/src/main/res/xml/preferences.xml
 +++ b/app/src/main/res/xml/preferences.xml
 @@ -5,0 +6 @@
@@ -21765,7 +22099,7 @@ index fabf1050343e8e29653fb416f06b5c06054115ed..036802b281c7705100bdf1c9d8770b2c
 @@ -71 +136 @@
 -</PreferenceScreen>
 \ No newline at end of file
-+<Preference android:key="hook_diagnostics" android:title="ตรวจ Hook ในแอปเป้าหมาย" android:summary="ตรวจการโหลดโมดูล การอ่านค่าร่วม และสิทธิ์ โดยไม่เปลี่ยนตำแหน่ง"/><Preference android:key="membership_account" android:title="ออกจากระบบ" android:summary="ออกจากบัญชีและลืมข้อมูลเข้าสู่ระบบที่บันทึกไว้"/></PreferenceScreen>
++<Preference android:key="hook_diagnostics" android:title="ตรวจ Hook ในแอปเป้าหมาย" android:summary="ตรวจการโหลดโมดูล การอ่านค่าร่วม และสิทธิ์ โดยไม่เปลี่ยนตำแหน่ง"/><Preference android:key="membership_account" android:title="ออกจากระบบ" android:summary="ออกจากบัญชีสมาชิก"/></PreferenceScreen>
 diff --git a/app/src/main/resources/META-INF/yukihookapi_init b/app/src/main/resources/META-INF/yukihookapi_init
 index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..85f00d5de5dba13c0b8975b2bb632c63c454a177 100644
 --- a/app/src/main/resources/META-INF/yukihookapi_init
@@ -21774,6 +22108,630 @@ index b1942b16ba64dc4280520f7a63ca3d4e2e360e1b..85f00d5de5dba13c0b8975b2bb632c63
 -io.github.jqssun.gpssetter.xposed.HookEntry
 \ No newline at end of file
 +io.github.phantom.gps.xposed.HookEntry
+diff --git a/app/src/modern/AndroidManifest.xml b/app/src/modern/AndroidManifest.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..a478c52e5742091c1c5e5e024d170f3695787184
+--- /dev/null
++++ b/app/src/modern/AndroidManifest.xml
+@@ -0,0 +1,14 @@
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:tools="http://schemas.android.com/tools">
++    <application android:description="@string/xposed_desc">
++        <meta-data android:name="xposedmodule" tools:node="remove" />
++        <meta-data android:name="xposeddescription" tools:node="remove" />
++        <meta-data android:name="xposedminversion" tools:node="remove" />
++        <meta-data android:name="xposedsharedprefs" tools:node="remove" />
++        <meta-data android:name="xposedscope" tools:node="remove" />
++        <provider android:name="io.github.libxposed.service.XposedProvider"
++            android:authorities="${applicationId}.XposedService"
++            android:exported="true"
++            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
++    </application>
++</manifest>
+diff --git a/app/src/modern/java/io/github/phantom/gps/utils/HookPreferenceChannel.kt b/app/src/modern/java/io/github/phantom/gps/utils/HookPreferenceChannel.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..2e7450d823b8bdb6bc2724a2975fd6414161c726
+--- /dev/null
++++ b/app/src/modern/java/io/github/phantom/gps/utils/HookPreferenceChannel.kt
+@@ -0,0 +1,52 @@
++package io.github.phantom.gps.utils
++
++import android.content.Context
++import android.content.SharedPreferences
++import android.util.Log
++import io.github.libxposed.service.XposedService
++import io.github.libxposed.service.XposedServiceHelper
++import io.github.phantom.gps.gsApp
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.launch
++
++internal object HookPreferenceChannel : XposedServiceHelper.OnServiceListener {
++    const val GROUP = "geox_hook_state"
++    @Volatile private var connection: Connection? = null
++    @Volatile private var published: Connection? = null
++    val ready: Boolean get() = connection?.let { it === published } == true
++    private data class Connection(val service: XposedService, val prefs: SharedPreferences)
++
++    fun initialize(context: Context) {
++        XposedServiceHelper.registerListener(this)
++    }
++
++    override fun onServiceBind(service: XposedService) {
++        val bound = runCatching {
++            if (service.apiVersion < 102) return
++            Connection(service, service.getRemotePreferences(GROUP))
++        }.getOrElse {
++            Log.w("GeoX", "Remote preferences unavailable", it)
++            return
++        }
++        connection = bound
++        gsApp.globalScope.launch(Dispatchers.IO) {
++            if (PrefManager.publishHookState()) LocationRefresh.send(gsApp)
++        }
++    }
++
++    override fun onServiceDied(service: XposedService) {
++        if (connection?.service === service) connection = null
++    }
++
++    fun publish(values: Map<String, *>): Boolean {
++        val bound = connection ?: return false
++        val committed = runCatching {
++            bound.prefs.edit()
++                .putString(RemoteHookSnapshot.KEY, RemoteHookSnapshot.encode(values))
++                .commit()
++        }.getOrDefault(false)
++        if (connection !== bound) return false
++        published = bound.takeIf { committed }
++        return committed
++    }
++}
+diff --git a/app/src/modern/java/io/github/phantom/gps/utils/RemoteHookSnapshot.kt b/app/src/modern/java/io/github/phantom/gps/utils/RemoteHookSnapshot.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e459838579a633d0632a6f504f4b1ae7d6efb17
+--- /dev/null
++++ b/app/src/modern/java/io/github/phantom/gps/utils/RemoteHookSnapshot.kt
+@@ -0,0 +1,34 @@
++package io.github.phantom.gps.utils
++
++import org.json.JSONObject
++
++/** A single remote preference value preserves the coordinates, lease and request ID as one update. */
++internal object RemoteHookSnapshot {
++    const val KEY = "snapshot_v1"
++    private val flags = listOf("start", "system_hooked", "random_position", "clipboard_monitor_enabled")
++    private val longs = listOf("latitude_bits", "longitude_bits", LocationRefresh.TRACE_ID_PREF,
++        LocationRefresh.CAPTURED_AT_PREF)
++    private val floats = listOf("latitude", "longitude")
++    private val strings = listOf("direct_request_id", "membership_lease", "random_radius_meters", "accuracy_level")
++    private val keys = flags + longs + floats + strings
++
++    fun encode(values: Map<String, *>): String {
++        val snapshot = JSONObject()
++        for (key in keys) {
++            val value = values[key] ?: continue
++            if (value is Float && !value.isFinite()) continue
++            snapshot.put(key, value)
++        }
++        return snapshot.toString()
++    }
++
++    fun decode(encoded: String): Map<String, Any> {
++        val snapshot = JSONObject(encoded)
++        return buildMap {
++            for (key in flags) if (snapshot.has(key)) put(key, snapshot.getBoolean(key))
++            for (key in longs) if (snapshot.has(key)) put(key, snapshot.getLong(key))
++            for (key in floats) if (snapshot.has(key)) put(key, snapshot.getDouble(key).toFloat())
++            for (key in strings) if (snapshot.has(key)) put(key, snapshot.getString(key))
++        }
++    }
++}
+diff --git a/app/src/modern/java/io/github/phantom/gps/xposed/GnssSimulation.kt b/app/src/modern/java/io/github/phantom/gps/xposed/GnssSimulation.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..b2f2ac459b22619adf98ee5c561215286e8caef7
+--- /dev/null
++++ b/app/src/modern/java/io/github/phantom/gps/xposed/GnssSimulation.kt
+@@ -0,0 +1,43 @@
++package io.github.phantom.gps.xposed
++
++import java.time.Instant
++import java.time.ZoneOffset
++import java.time.format.DateTimeFormatter
++import java.util.Locale
++import kotlin.math.abs
++import kotlin.math.roundToLong
++
++internal object GnssSimulation {
++    val satellites = listOf(3, 7, 11, 14, 19, 22, 26, 30)
++    private val utcTime = DateTimeFormatter.ofPattern("HHmmss.SSS", Locale.US).withZone(ZoneOffset.UTC)
++    private val utcDate = DateTimeFormatter.ofPattern("ddMMyy", Locale.US).withZone(ZoneOffset.UTC)
++
++    private fun coordinate(value: Double, width: Int): String {
++        val unitsPerDegree = 600000L
++        val units = (abs(value) * unitsPerDegree).roundToLong()
++        return String.format(Locale.US, "%0${width}d%07.4f", units / unitsPerDegree,
++            (units % unitsPerDegree) / 10000.0)
++    }
++
++    fun sentence(original: String, timeMs: Long, lat: Double, lon: Double): String? {
++        val header = original.substringBefore(',').removePrefix("$")
++        if (header.length != 5 || header.any { it !in 'A'..'Z' }) return null
++        val instant = Instant.ofEpochMilli(timeMs)
++        val time = utcTime.format(instant)
++        val date = utcDate.format(instant)
++        val latitude = coordinate(lat, 2)
++        val longitude = coordinate(lon, 3)
++        val northSouth = if (lat < 0) "S" else "N"
++        val eastWest = if (lon < 0) "W" else "E"
++        val position = "$latitude,$northSouth,$longitude,$eastWest"
++        val data = when (header.takeLast(3)) {
++            "GGA" -> "$time,$position,1,08,1.0,0.0,M,0.0,M,,"
++            "RMC" -> "$time,A,$position,0.0,0.0,$date,,,A"
++            "GLL" -> "$position,$time,A,A"
++            else -> return null
++        }
++        val body = "${header},${data}"
++        val checksum = body.fold(0) { sum, character -> sum xor character.code }
++        return String.format(Locale.US, "$%s*%02X\r\n", body, checksum)
++    }
++}
+diff --git a/app/src/modern/java/io/github/phantom/gps/xposed/ModernHookEntry.kt b/app/src/modern/java/io/github/phantom/gps/xposed/ModernHookEntry.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9d335f33cfe6a10006ab8d5e5c47121462ce313
+--- /dev/null
++++ b/app/src/modern/java/io/github/phantom/gps/xposed/ModernHookEntry.kt
+@@ -0,0 +1,399 @@
++package io.github.phantom.gps.xposed
++
++import android.app.Application
++import android.content.BroadcastReceiver
++import android.content.ClipData
++import android.content.Context
++import android.content.Intent
++import android.content.IntentFilter
++import android.content.SharedPreferences
++import android.location.GnssStatus
++import android.location.Location
++import android.location.LocationManager
++import android.os.Build
++import android.os.Bundle
++import android.os.Handler
++import android.os.HandlerThread
++import android.os.ResultReceiver
++import android.os.SystemClock
++import android.util.Log
++import androidx.annotation.RequiresApi
++import io.github.libxposed.api.XposedInterface
++import io.github.libxposed.api.XposedModule
++import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
++import io.github.libxposed.api.XposedModuleInterface.SystemServerStartingParam
++import io.github.phantom.gps.BuildConfig
++import io.github.phantom.gps.utils.AppIntegrity
++import io.github.phantom.gps.utils.ClipboardEventGate
++import io.github.phantom.gps.utils.ClipboardTrace
++import io.github.phantom.gps.utils.HookLocationSnapshot
++import io.github.phantom.gps.utils.HookPreferenceChannel
++import io.github.phantom.gps.utils.LocationActions
++import io.github.phantom.gps.utils.LocationRefresh
++import io.github.phantom.gps.utils.MembershipLease
++import io.github.phantom.gps.utils.RemoteHookSnapshot
++import java.lang.reflect.Method
++import java.lang.reflect.Modifier
++import kotlin.math.PI
++import kotlin.math.abs
++import kotlin.math.cos
++import kotlin.math.sin
++import kotlin.math.sqrt
++import kotlin.random.Random
++
++class ModernHookEntry : XposedModule() {
++    private data class Fix(val snapshot: HookLocationSnapshot, val lat: Double, val lon: Double)
++    private data class State(val fix: Fix?, val systemMode: Boolean, val clipboard: Boolean, val reason: String)
++
++    @Volatile private var context: Context? = null
++    @Volatile private var receiverRegistered = false
++    @Volatile private var platformHooks = 0
++    @Volatile private var fusedHooks = 0
++    @Volatile private var gnssHooks = 0
++    @Volatile private var nmeaHooks = 0
++    @Volatile private var integrityValid = false
++    private var preferences: SharedPreferences? = null
++    private var encodedSnapshot: String? = null
++    private var snapshotValues: Map<String, Any> = emptyMap()
++    private var sampledAt = -1000L
++    private var state = State(null, false, false, "SNAPSHOT_MISSING")
++    private var promotedAt = -30000L
++    private val clipboardGate = ClipboardEventGate()
++    private val clipboardWorker by lazy { HandlerThread("GeoX-clipboard").apply { start() } }
++    private var consumedTrace = 0L
++
++    override fun onPackageReady(param: PackageReadyParam) {
++        if (!param.isFirstPackage || param.packageName == BuildConfig.APPLICATION_ID) return
++        val loader = param.classLoader
++        methods(Application::class.java, "attach") { chain ->
++            val result = chain.proceed()
++            (chain.args.firstOrNull() as? Context)?.let(::attachContext)
++            result
++        }
++        runCatching {
++            val thread = Class.forName("android.app.ActivityThread")
++            (thread.getDeclaredMethod("currentApplication").invoke(null) as? Context)?.let(::attachContext)
++        }
++        if (param.packageName == "com.google.android.gms") {
++            // Change serialized locations in system mode, leaving Play Services' internal calculations alone.
++            fusedHooks += methods(Location::class.java, "writeToParcel") { chain ->
++                val fix = activeFix(systemOnly = true)
++                val original = chain.thisObject as? Location
++                if (fix == null || original == null) chain.proceed()
++                else chain.proceedWith(replace(original, fix))
++            }
++            return
++        }
++        installClientLocation(loader)
++        installGnss(loader, system = false)
++    }
++
++    override fun onSystemServerStarting(param: SystemServerStartingParam) {
++        val loader = param.classLoader
++        methods(loader, "com.android.server.SystemServer", "startOtherServices") { chain ->
++            val result = chain.proceed()
++            field(chain.thisObject, "mSystemContext")?.let { if (it is Context) attachContext(it) }
++            result
++        }
++        for (name in listOf("com.android.server.location.LocationManagerService", "com.android.server.LocationManagerService")) {
++            platformHooks += transformResults(loader, name, true, "getLastLocation")
++        }
++        platformHooks += transformArguments(loader, "android.location.ILocationListener\$Stub\$Proxy", true, "onLocationChanged")
++        platformHooks += transformArguments(loader, "android.location.ILocationCallback\$Stub\$Proxy", true, "onLocation")
++        // LocationResult is also the source of the last location used for PendingIntent delivery.
++        platformHooks += transformResults(loader, "android.location.LocationResult", true, "getLastLocation", "asList")
++        installGnss(loader, system = true)
++        installClipboard(loader)
++    }
++
++    private fun installClientLocation(loader: ClassLoader) {
++        for (getter in listOf("getLatitude", "getLongitude", "getAccuracy")) {
++            platformHooks += methods(Location::class.java, getter) { chain ->
++                val fix = activeFix() ?: return@methods chain.proceed()
++                markConsumed(fix)
++                when (getter) {
++                    "getLatitude" -> fix.lat
++                    "getLongitude" -> fix.lon
++                    else -> fix.snapshot.accuracy
++                }
++            }
++        }
++        platformHooks += transformResults(loader, LocationManager::class.java.name, false, "getLastKnownLocation")
++        // Incoming Android Location parcels include the fixes returned in GMS last/current-location Tasks.
++        platformHooks += methods(Location.CREATOR.javaClass, "createFromParcel") { chain ->
++            transform(chain.proceed(), systemOnly = false)
++        }
++        fusedHooks += transformResults(loader, "com.google.android.gms.location.LocationResult",
++            false, "getLastLocation", "getLocations")
++    }
++
++    private fun installGnss(loader: ClassLoader, system: Boolean) {
++        val nmeaClasses = if (system) listOf("android.location.IGnssNmeaListener\$Stub\$Proxy",
++            "android.location.IGnssStatusListener\$Stub\$Proxy")
++        else listOf("android.location.LocationManager\$GnssNmeaTransport",
++            "android.location.LocationManager\$GnssStatusListenerTransport")
++        for (name in nmeaClasses) {
++            nmeaHooks += methods(loader, name, "onNmeaReceived") { chain ->
++                val fix = activeFix(systemOnly = system) ?: return@methods chain.proceed()
++                val args = chain.args.toTypedArray()
++                val index = args.indexOfFirst { it is String }
++                if (index < 0) return@methods chain.proceed()
++                val timestamp = args.firstOrNull { it is Long } as? Long ?: System.currentTimeMillis()
++                args[index] = GnssSimulation.sentence(args[index] as String, timestamp, fix.lat, fix.lon)
++                    ?: return@methods null
++                chain.proceed(args)
++            }
++        }
++        if (Build.VERSION.SDK_INT >= 30) {
++            val status = if (system) "android.location.IGnssStatusListener\$Stub\$Proxy"
++                else "android.location.LocationManager\$GnssStatusTransport"
++            gnssHooks += methods(loader, status, "onSvStatusChanged") { chain ->
++                val args = chain.args.toTypedArray()
++                val index = args.indexOfFirst { it is GnssStatus }
++                if (index < 0 || activeFix(systemOnly = system) == null) return@methods chain.proceed()
++                args[index] = syntheticStatus
++                chain.proceed(args)
++            }
++        }
++    }
++
++    private val syntheticStatus: GnssStatus by lazy { buildSatelliteStatus() }
++
++    @RequiresApi(30)
++    private fun buildSatelliteStatus(): GnssStatus {
++        val builder = GnssStatus.Builder()
++        for ((index, svid) in GnssSimulation.satellites.withIndex()) {
++            builder.addSatellite(GnssStatus.CONSTELLATION_GPS, svid, 29f + index, 20f + 6 * index,
++                42f * index, true, true, true, true, 1575.42e6f, false, 0f)
++        }
++        return builder.build()
++    }
++
++    private fun installClipboard(loader: ClassLoader) {
++        for (name in listOf("com.android.server.clipboard.ClipboardService",
++            "com.android.server.clipboard.ClipboardService\$ClipboardImpl")) {
++            methods(loader, name, "setPrimaryClip", "setPrimaryClipAsPackage") { chain ->
++                val result = chain.proceed()
++                if (!readState().clipboard) return@methods result
++                val clip = chain.args.firstOrNull { it is ClipData } as? ClipData ?: return@methods result
++                val source = context ?: (field(chain.thisObject, "mContext") as? Context)
++                    ?: (field(field(chain.thisObject, "this\$0"), "mContext") as? Context)
++                    ?: return@methods result
++                if (clip.itemCount == 0) return@methods result
++                val item = clip.getItemAt(0)
++                val text = (item.text?.toString() ?: item.uri?.toString())?.trim().orEmpty()
++                val capturedAt = SystemClock.elapsedRealtime()
++                if (text.isEmpty() || !clipboardGate.accept(text, capturedAt)) return@methods result
++                Handler(clipboardWorker.looper).post {
++                    attachContext(source)
++                    source.sendBroadcast(Intent(LocationActions.ACTION_CLIPBOARD_TEXT)
++                        .setClassName(BuildConfig.APPLICATION_ID, BuildConfig.APPLICATION_ID + ".utils.ClipboardLocationReceiver")
++                        .addFlags(Intent.FLAG_RECEIVER_FOREGROUND or Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
++                        .putExtra(LocationActions.EXTRA_CLIPBOARD_TEXT, text)
++                        .putExtra(ClipboardTrace.EXTRA_CAPTURED_AT, capturedAt))
++                }
++                result
++            }
++        }
++    }
++
++    @Synchronized
++    private fun attachContext(source: Context) {
++        if (receiverRegistered) return
++        val ctx = source.applicationContext ?: source
++        if (ctx.packageName == BuildConfig.APPLICATION_ID) return
++        integrityValid = AppIntegrity.isModuleApkValid(ctx)
++        if (!integrityValid) return
++        context = ctx
++        MembershipLease.initializeHookClock(ctx)
++        val worker = HandlerThread("GeoX-modern-refresh").apply { start() }
++        val filter = IntentFilter(LocationRefresh.ACTION).apply {
++            addAction(LocationRefresh.CONFIRM_ACTION)
++            addAction(LocationRefresh.DIAGNOSTIC_ACTION)
++        }
++        val receiver = object : BroadcastReceiver() {
++            override fun onReceive(context: Context, intent: Intent) {
++                val current = readState(force = true)
++                when (intent.action) {
++                    LocationRefresh.ACTION -> promoteIfActive(ctx, current)
++                    LocationRefresh.CONFIRM_ACTION -> {
++                        val id = intent.getStringExtra("request_id")?.takeIf { it.isNotBlank() } ?: return
++                        val reply = intent.getParcelableExtra<ResultReceiver>("reply") ?: return
++                        confirm(ctx, id, reply, Handler(worker.looper), attempts = 4)
++                    }
++                    LocationRefresh.DIAGNOSTIC_ACTION -> {
++                        val id = intent.getStringExtra("query_id")?.takeIf { it.length in 16..96 } ?: return
++                        val reply = intent.getParcelableExtra<ResultReceiver>("reply") ?: return
++                        reply.send(0, Bundle().apply {
++                            putString("query_id", id)
++                            putString("package", ctx.packageName)
++                            putString("version", BuildConfig.VERSION_NAME)
++                            putString("reason", current.reason)
++                            putBoolean("system_mode_enabled", current.systemMode)
++                            putBoolean("system_hooks_ready", platformHooks > 0)
++                            putInt("platform_hooks", platformHooks)
++                            putInt("fused_hooks", fusedHooks)
++                            putInt("gnss_hooks", gnssHooks)
++                            putInt("nmea_hooks", nmeaHooks)
++                        })
++                    }
++                }
++            }
++        }
++        runCatching {
++            if (Build.VERSION.SDK_INT >= 33) ctx.registerReceiver(receiver, filter, LocationRefresh.SENDER_PERMISSION,
++                Handler(worker.looper), Context.RECEIVER_EXPORTED)
++            else ctx.registerReceiver(receiver, filter, LocationRefresh.SENDER_PERMISSION, Handler(worker.looper))
++            receiverRegistered = true
++        }.onFailure { worker.quitSafely() }
++    }
++
++    private fun confirm(ctx: Context, id: String, reply: ResultReceiver, handler: Handler, attempts: Int) {
++        val current = readState(force = true)
++        val ready = when (ctx.packageName) {
++            "android" -> current.systemMode && platformHooks > 0
++            "com.google.android.gms" -> current.systemMode && fusedHooks > 0
++            else -> platformHooks + fusedHooks > 0
++        }
++        val requestId = current.fix?.snapshot?.requestId
++        if (ready && requestId != id && attempts > 0) {
++            // The preference notification can arrive after the app's confirmation broadcast.
++            handler.postDelayed({ confirm(ctx, id, reply, handler, attempts - 1) }, 35)
++            return
++        }
++        val code = when {
++            !ready || requestId == null -> 412
++            requestId != id -> 409
++            else -> 101
++        }
++        reply.send(code, Bundle().apply { putString("request_id", id) })
++    }
++
++    private fun promoteIfActive(ctx: Context, current: State) {
++        if (ctx.packageName != "android" || current.fix == null) return
++        val now = SystemClock.elapsedRealtime()
++        if (now - promotedAt < 30000) return
++        runCatching {
++            ctx.startForegroundService(Intent().setClassName(BuildConfig.APPLICATION_ID,
++                BuildConfig.APPLICATION_ID + ".utils.MembershipHeartbeatService"))
++            promotedAt = now
++        }
++    }
++
++    @Synchronized
++    private fun readState(force: Boolean = false): State {
++        val now = SystemClock.elapsedRealtime()
++        if (!force && now - sampledAt < 100) return state
++        sampledAt = now
++        val values = runCatching {
++            val prefs = preferences ?: getRemotePreferences(HookPreferenceChannel.GROUP).also { preferences = it }
++            val encoded = prefs.getString(RemoteHookSnapshot.KEY, null)
++            if (encoded != encodedSnapshot) {
++                snapshotValues = encoded?.let(RemoteHookSnapshot::decode) ?: emptyMap()
++                encodedSnapshot = encoded
++            }
++            snapshotValues
++        }.getOrElse {
++            preferences = null
++            return State(null, false, false, "SNAPSHOT_MISSING").also { state = it }
++        }
++        val snapshot = HookLocationSnapshot.from(values)
++        val lease = values["membership_lease"] as? String ?: ""
++        val reason = when {
++            !values.containsKey("start") -> "SNAPSHOT_MISSING"
++            lease.isBlank() -> "LEASE_MISSING"
++            !integrityValid || !MembershipLease.hookValid(lease) -> "LEASE_TIME_INVALID"
++            !snapshot.started -> "STOPPED"
++            snapshot.latitude !in -90.0..90.0 || snapshot.longitude !in -180.0..180.0 ||
++                !snapshot.accuracy.isFinite() || snapshot.accuracy < 0f -> "SNAPSHOT_INVALID"
++            else -> "READY"
++        }
++        val fix = if (reason == "READY") state.fix?.takeIf { it.snapshot == snapshot } ?: buildFix(snapshot) else null
++        state = State(fix, values["system_hooked"] == true,
++            integrityValid && values["clipboard_monitor_enabled"] == true, reason)
++        return state
++    }
++
++    private fun buildFix(snapshot: HookLocationSnapshot): Fix {
++        if (!snapshot.allowRandom || !snapshot.radiusMeters.isFinite()) return Fix(snapshot, snapshot.latitude, snapshot.longitude)
++        val radians = PI / 180.0
++        // Every hooked process derives the same offset for a given committed snapshot.
++        val random = Random(snapshot.latitude.toBits() xor snapshot.longitude.toBits() xor snapshot.traceId)
++        val angle = random.nextDouble(2 * PI)
++        val distance = sqrt(random.nextDouble()) * snapshot.radiusMeters / 6378137.0 / radians
++        val lat = (snapshot.latitude + distance * cos(angle)).coerceIn(-90.0, 90.0)
++        val cosLat = abs(cos(snapshot.latitude * radians)).coerceAtLeast(1e-6)
++        val lon = snapshot.longitude + distance * sin(angle) / cosLat
++        return Fix(snapshot, lat, ((lon + 180.0) % 360.0 + 360.0) % 360.0 - 180.0)
++    }
++
++    private fun activeFix(systemOnly: Boolean = false): Fix? =
++        readState().let { if (!systemOnly || it.systemMode) it.fix else null }
++
++    @Synchronized
++    private fun markConsumed(fix: Fix) {
++        val snapshot = fix.snapshot
++        if (snapshot.traceId <= 0 || snapshot.capturedAtMs <= 0 || consumedTrace == snapshot.traceId) return
++        consumedTrace = snapshot.traceId
++        ClipboardTrace(snapshot.traceId, snapshot.capturedAtMs).mark("hook_first_read")
++    }
++
++    private fun replace(original: Location, fix: Fix): Location {
++        markConsumed(fix)
++        return Location(original).apply {
++            latitude = fix.lat
++            longitude = fix.lon
++            accuracy = fix.snapshot.accuracy
++            altitude = 0.0
++            speed = 0f
++            bearing = 0f
++            extras = null
++        }
++    }
++
++    private fun transform(value: Any?, systemOnly: Boolean): Any? {
++        val fix = activeFix(systemOnly) ?: return value
++        return transform(value, fix)
++    }
++
++    private fun transform(value: Any?, fix: Fix): Any? = when (value) {
++        is Location -> replace(value, fix)
++        is List<*> -> if (value.isNotEmpty() && value.all { it is Location }) value.map { replace(it as Location, fix) } else value
++        else -> value
++    }
++
++    private fun transformResults(loader: ClassLoader, type: String, system: Boolean, vararg names: String): Int =
++        methods(loader, type, *names) { chain -> transform(chain.proceed(), system) }
++
++    private fun transformArguments(loader: ClassLoader, type: String, system: Boolean, vararg names: String): Int =
++        methods(loader, type, *names) { chain ->
++            val fix = activeFix(systemOnly = system) ?: return@methods chain.proceed()
++            val args = chain.args.map { transform(it, fix) }.toTypedArray()
++            chain.proceed(args)
++        }
++
++    private fun methods(loader: ClassLoader, name: String, vararg names: String,
++                        interceptor: (XposedInterface.Chain) -> Any?): Int {
++        val type = runCatching { Class.forName(name, false, loader) }.getOrNull() ?: return 0
++        return methods(type, *names, interceptor = interceptor)
++    }
++
++    private fun methods(type: Class<*>, vararg names: String,
++                        interceptor: (XposedInterface.Chain) -> Any?): Int {
++        val candidates = runCatching { type.declaredMethods }.getOrNull() ?: return 0
++        return candidates.count { method: Method ->
++            method.name in names && !method.isBridge && !Modifier.isAbstract(method.modifiers) && runCatching {
++                hook(method).setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE).intercept(interceptor)
++            }.onFailure {
++                log(Log.WARN, "GeoX", "Could not hook ${type.name}.${method.name}", it)
++            }.isSuccess
++        }
++    }
++
++    private fun field(value: Any?, name: String): Any? {
++        if (value == null) return null
++        return runCatching {
++            value.javaClass.getDeclaredField(name).apply { isAccessible = true }.get(value)
++        }.getOrNull()
++    }
++}
+diff --git a/app/src/modern/resources/META-INF/xposed/java_init.list b/app/src/modern/resources/META-INF/xposed/java_init.list
+new file mode 100644
+index 0000000000000000000000000000000000000000..ed36902bb143234e7044ceeabd1b918a651c5b3e
+--- /dev/null
++++ b/app/src/modern/resources/META-INF/xposed/java_init.list
+@@ -0,0 +1 @@
++io.github.phantom.gps.xposed.ModernHookEntry
+diff --git a/app/src/modern/resources/META-INF/xposed/module.prop b/app/src/modern/resources/META-INF/xposed/module.prop
+new file mode 100644
+index 0000000000000000000000000000000000000000..526e732863696456653596993bda5ddb00f616ba
+--- /dev/null
++++ b/app/src/modern/resources/META-INF/xposed/module.prop
+@@ -0,0 +1,3 @@
++minApiVersion=102
++targetApiVersion=102
++staticScope=false
+diff --git a/app/src/modern/resources/META-INF/xposed/scope.list b/app/src/modern/resources/META-INF/xposed/scope.list
+new file mode 100644
+index 0000000000000000000000000000000000000000..1cbad3d0ad7ad4233636bf78271d2d3317a3a6d1
+--- /dev/null
++++ b/app/src/modern/resources/META-INF/xposed/scope.list
+@@ -0,0 +1,2 @@
++android
++com.google.android.gms
+diff --git a/app/src/modernTest/java/io/github/phantom/gps/xposed/GnssSimulationTest.kt b/app/src/modernTest/java/io/github/phantom/gps/xposed/GnssSimulationTest.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..884c8359392eefcecb1fe1ac52c4da36c22e0c9e
+--- /dev/null
++++ b/app/src/modernTest/java/io/github/phantom/gps/xposed/GnssSimulationTest.kt
+@@ -0,0 +1,22 @@
++package io.github.phantom.gps.xposed
++
++import org.junit.Assert.*
++import org.junit.Test
++
++class GnssSimulationTest {
++    @Test fun positionSentencesHaveValidChecksumsAndHemisphere() {
++        for (type in listOf("GGA", "RMC", "GLL")) {
++            val output = GnssSimulation.sentence("\$GP$type,old", 0, -13.5, -100.25)!!
++            assertTrue(output.contains("1330.0000,S,10015.0000,W"))
++            val body = output.substringAfter('$').substringBefore('*')
++            val checksum = body.fold(0) { value, character -> value xor character.code }
++            assertEquals(checksum, output.substringAfter('*').trim().toInt(16))
++        }
++        assertNull(GnssSimulation.sentence("\$PTEST,private", 0, 13.5, 100.25))
++    }
++
++    @Test fun roundingCarriesIntoDegreesWithoutGeneratingSixtyMinutes() {
++        val output = GnssSimulation.sentence("\$GPGGA,old", 0, 12.999999999, 179.999999999)!!
++        assertTrue(output.contains("1300.0000,N,18000.0000,E"))
++    }
++}
 diff --git a/app/src/test/java/io/github/phantom/gps/ui/ActivationUiStateTest.kt b/app/src/test/java/io/github/phantom/gps/ui/ActivationUiStateTest.kt
 new file mode 100644
 index 0000000000000000000000000000000000000000..5daff7608f2bc98f64508ae24b071dc184c27ade

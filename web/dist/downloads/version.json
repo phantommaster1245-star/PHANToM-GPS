@@ -1,15 +1,15 @@
 {
   "packageName": "io.github.phantom.gps",
-  "version": "v0.1.04",
-  "versionCode": 25,
-  "filename": "PHANToM-GPS-v0.1.04.apk",
-  "sha256": "3ac8705159ea49d1f9ad2082e3301864c0ba114988acb642fe074f43241226ee",
-  "bytes": 4317525,
-  "publishedAt": "2026-11-06T08:07:49.109506+00:00",
+  "version": "v0.1.07",
+  "versionCode": 28,
+  "filename": "PHANToM-GPS-v0.1.07.apk",
+  "sha256": "8397887bfeb8629ebafc607947816564275fde9a6ad2a84e5dd637b3732ddda6",
+  "bytes": 4328427,
+  "publishedAt": "2026-11-07T10:47:10.728085+00:00",
   "changes": [
-    "เข้าสู่ระบบด้วยชื่อผู้ใช้ หรือ Gmail พร้อมรหัสผ่านเดิมได้",
-    "สมัครด้วยรหัสผ่านตั้งแต่ 6 ตัวอักษร รองรับตัวเลขล้วน",
-    "เพิ่มหน้ารายชื่อสมาชิกสำหรับแอดมิน ค้นหาด้วยชื่อผู้ใช้หรือ Gmail",
-    "ปรับ popup และเมนูเลือกค่าใน Settings ให้เป็นธีม GeoX เดียวกัน"
+    "GeoX Modern ใช้ libxposed API 102 และ Remote Preferences",
+    "รองรับ Android Location, Fused Location และ GNSS/NMEA ในช่องทางที่ทดสอบ",
+    "หน้าล็อกอินใหม่ พร้อมวงกลมโหลดระหว่างตรวจบัญชีเดิม",
+    "ออกจากระบบแล้วเก็บบัญชีที่เลือกจดจำไว้ เปลี่ยนข้อมูลเมื่อเข้าสู่ระบบสำเร็จ"
   ]
 }
