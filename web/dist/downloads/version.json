@@ -1,15 +1,15 @@
 {
   "packageName": "io.github.phantom.gps",
-  "version": "v0.1.11",
-  "versionCode": 32,
-  "filename": "PHANToM-GPS-v0.1.11.apk",
-  "sha256": "4c03c28976908499e35890b6a66ca6c027bbff2337d1a4195ab4447c47ead44c",
-  "bytes": 4332727,
-  "publishedAt": "2026-11-08T10:17:11.473Z",
+  "version": "v0.1.12",
+  "versionCode": 33,
+  "filename": "PHANToM-GPS-v0.1.12.apk",
+  "sha256": "b46760436279bbaf1ddbefd6ed38b86d8f0f9629138c9cd950b58dea623b59ae",
+  "bytes": 4332887,
+  "publishedAt": "2026-11-08T10:55:09.250Z",
   "changes": [
-    "Random Location: continuous bounded drift updated every second with InstantSync",
-    "Joystick: consistent time-based movement with serialized location updates up to 5 Hz",
-    "Continuous location refresh runs while the user-started service is active",
-    "Retains existing LSPosed modern hooks and signing certificate for in-place updates"
+    "Seamless Authentication: open the map immediately for existing signed-in sessions",
+    "Check account and membership lease in the background with a small Checking spinner in the map header",
+    "Keep START protected by a valid local signed lease; route invalid sessions to Login or Locked",
+    "Continue InstantSync, continuous Random Location and improved Joystick from v0.1.11"
   ]
 }

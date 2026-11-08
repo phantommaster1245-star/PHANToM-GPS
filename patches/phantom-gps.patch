@@ -1,5 +1,5 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..8a431e756eef7b3bce22f4daef8160ff8f393167 100644
+index d211674657a4308ba7437287558c90117ce56c75..5aad63d7efa4f111b16b5278f96377359b613276 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
@@ -7,7 +7,7 @@ index d211674657a4308ba7437287558c90117ce56c75..8a431e756eef7b3bce22f4daef8160ff
 @@ -10 +11,27 @@ plugins {
 -def tagName = '0.0.6'
 +def modernXposed = providers.gradleProperty('geoxModern').orNull == 'true'
-+def tagName = '0.1.11'
++def tagName = '0.1.12'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -41,7 +41,7 @@ index d211674657a4308ba7437287558c90117ce56c75..8a431e756eef7b3bce22f4daef8160ff
 +        applicationId "io.github.phantom.gps"
 @@ -18 +45,3 @@ android {
 -        versionCode 6
-+        versionCode 32
++        versionCode 33
 +        buildConfigField "boolean", "MODERN_XPOSED", modernXposed.toString()
 +        buildConfigField "boolean", "INSTANTSYNC_EXPERIMENT", modernXposed.toString()
 @@ -20 +49,3 @@ android {
@@ -885,10 +885,10 @@ index 0000000000000000000000000000000000000000..13d6c5a695ebd5445ab90bc8a1b1c658
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..e10f4d018f438e39065e0f7cd32191c37a3b3057
+index 0000000000000000000000000000000000000000..6e8a7bff2910e155d7e6759bd85dddbc1d065089
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,115 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Activity
@@ -900,6 +900,8 @@ index 0000000000000000000000000000000000000000..e10f4d018f438e39065e0f7cd32191c3
 +import io.github.phantom.gps.ui.ActivationActivity
 +import io.github.phantom.gps.ui.LockedActivity
 +import kotlinx.coroutines.*
++import kotlinx.coroutines.flow.MutableStateFlow
++import kotlinx.coroutines.flow.asStateFlow
 +import kotlinx.coroutines.sync.Mutex
 +import kotlinx.coroutines.sync.withLock
 +
@@ -910,9 +912,19 @@ index 0000000000000000000000000000000000000000..e10f4d018f438e39065e0f7cd32191c3
 +    @Deprecated("Register/login with the membership account")
 +    fun activate(context: Context, activationCode: String, onResult: (ActivationResult)->Unit) { onResult(ActivationResult(false,"กรุณาเข้าสู่ระบบด้วยบัญชีสมาชิก")) }
 +    private var foregroundChecks:Job?=null
++    private val _foregroundVerifying = MutableStateFlow(false)
++    val foregroundVerifying = _foregroundVerifying.asStateFlow()
++    private var foregroundVerifyJob:Job?=null
 +    fun onAppForeground(context: Context) {
 +        if(!MembershipAccount.isSignedIn(context)) return
-+        verifyNowForeground(context)
++        if(foregroundVerifyJob?.isActive != true) {
++            // Authentication runs behind the map; critical actions still require a valid signed lease.
++            _foregroundVerifying.value = true
++            foregroundVerifyJob = scope.launch {
++                try { check(context.applicationContext, true) }
++                finally { _foregroundVerifying.value = false }
++            }
++        }
 +        resumeMembershipServices(context)
 +    }
 +    fun resumeMembershipServices(context: Context) {
@@ -3269,10 +3281,10 @@ index ccd4d0ba21f278802fd8009f7ddde16ab501efd0..618da30537d0fc9f0035945c65e6fdae
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..309a03c2b30dd851bd3e2e438a3c862918aa59ff
+index 0000000000000000000000000000000000000000..8f49b5476e5f7b5a174b041422d2f423e77d5f62
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
-@@ -0,0 +1,118 @@
+@@ -0,0 +1,127 @@
 +package io.github.phantom.gps.ui
 +
 +import android.content.Intent
@@ -3297,6 +3309,15 @@ index 0000000000000000000000000000000000000000..309a03c2b30dd851bd3e2e438a3c8629
 +    override fun onCreate(savedInstanceState: Bundle?) {
 +        super.onCreate(savedInstanceState)
 +        if (!AppIntegrity.isSelfValid(this)) {
++            finish()
++            return
++        }
++        // Reopening an existing signed-in session should display the map immediately.
++        // Verification continues in the background and never bypasses local lease gating.
++        if (!intent.getBooleanExtra("show_account", false) &&
++            MembershipAccount.isSignedIn(this) && !LicenseStore.isLocked(this)) {
++            startActivity(Intent(this, MapActivity::class.java)
++                .putExtra(BaseMapActivity.EXTRA_SEAMLESS_AUTH, true))
 +            finish()
 +            return
 +        }
@@ -3466,10 +3487,10 @@ index 0000000000000000000000000000000000000000..93a7599c72678d96d94be268647e3dc7
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-similarity index 55%
+similarity index 52%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce63354a7a187 100644
+index 84f61ea4a62c3086df23447da30a593cddcd347a..8f6561b292421bf456088d7d26da1482e110b33e 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
 @@ -1 +1 @@
@@ -3508,18 +3529,27 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 +import io.github.phantom.gps.utils.PrefManager
 +import io.github.phantom.gps.utils.NotificationIntents
 +import io.github.phantom.gps.utils.ext.*
-@@ -62,2 +72,5 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -52,0 +63 @@ import kotlinx.coroutines.channels.awaitClose
++import kotlinx.coroutines.flow.collect
+@@ -61,3 +72,11 @@ abstract class BaseMapActivity: AppCompatActivity() {
+-
 -    protected var lat by Delegates.notNull<Double>()
 -    protected var lon by Delegates.notNull<Double>()
++    companion object { const val EXTRA_SEAMLESS_AUTH = "io.github.phantom.gps.extra.SEAMLESS_AUTH" }
++    private val seamlessStartup by lazy {
++        intent.getBooleanExtra(EXTRA_SEAMLESS_AUTH, false) &&
++            io.github.phantom.gps.utils.MembershipAccount.isSignedIn(this) &&
++            !io.github.phantom.gps.utils.LicenseStore.isLocked(this)
++    }
 +    private var coordinatesReady = false
 +    protected var lat: Double = 0.0
 +        set(value) { field = value; updateLocationChrome() }
 +    protected var lon: Double = 0.0
 +        set(value) { field = value; coordinatesReady = true; updateLocationChrome() }
-@@ -68 +81 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -68 +87 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    protected val update by lazy { viewModel.getAvailableUpdate() }
 +    private var shownUpdateVersion: String? = null
-@@ -74,0 +88,43 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -74,0 +94,43 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +    private val NOTIFICATION_PERMISSION_ID = 43
 +
 +    private val locationActionReceiver = object : BroadcastReceiver() {
@@ -3563,40 +3593,59 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 +            }
 +        }
 +    }
-@@ -94 +150,9 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -94 +156,11 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        enableEdgeToEdge(navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT))
 +        if (!AppIntegrity.isSelfValid(this)) {
 +            finish()
 +            return
 +        }
-+        if (LicenseGuard.routeToRequiredScreen(this)) {
++        // Only an existing signed-in session may show the map before online renewal.
++        // All location-changing operations retain their independent signed-lease guard.
++        if (!seamlessStartup && LicenseGuard.routeToRequiredScreen(this)) {
 +            finish()
 +            return
 +        }
 +        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.rgb(16,20,22)), navigationBarStyle = SystemBarStyle.dark(Color.rgb(16,20,22)))
-@@ -97,3 +161,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -97,3 +169,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        lifecycleScope.launchWhenCreated {
 -            setContentView(binding.root)
 -        }
 +        setContentView(binding.root)
 +        setupMapInsets()
-@@ -109,0 +173,77 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -109,0 +181,98 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +        ensureNotificationPermission()
 +    }
 +
 +    private var membershipUiJob: Job? = null
++    private var verificationUiJob: Job? = null
 +    override fun onResume() {
 +        super.onResume()
++        verificationUiJob?.cancel()
++        verificationUiJob = lifecycleScope.launch {
++            LicenseGuard.foregroundVerifying.collect { checking ->
++                if (!checking && seamlessStartup &&
++                    !LicenseGuard.isLocallyAllowedForCriticalAction(this@BaseMapActivity)) {
++                    if (LicenseGuard.routeToRequiredScreen(this@BaseMapActivity)) finish()
++                } else {
++                    updateLocationChrome()
++                }
++            }
++        }
 +        viewModel.updateXposedState()
 +        membershipUiJob?.cancel()
 +        membershipUiJob = lifecycleScope.launch {
 +            while (isActive) { updateMemberDetails(); delay(60000) }
 +        }
 +    }
-+    override fun onPause() { membershipUiJob?.cancel(); super.onPause() }
++    override fun onPause() {
++        membershipUiJob?.cancel()
++        verificationUiJob?.cancel()
++        super.onPause()
++    }
 +
 +    override fun onStart() {
 +        super.onStart()
++        if (seamlessStartup) LicenseGuard.onAppForeground(this)
 +        val filter = android.content.IntentFilter().apply {
 +            addAction(LocationActions.ACTION_LOCATION_STARTED)
 +            addAction(LocationActions.ACTION_LOCATION_STOPPED)
@@ -3655,17 +3704,21 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 +
 +    protected fun updateLocationChrome() {
 +        updateMemberDetails()
-+        binding.startButton.isEnabled = coordinatesReady
-+        if(!PrefManager.isHookSharingAvailable)binding.locationStatus.text="LSPosed?"
++        binding.startButton.isEnabled = coordinatesReady &&
++            LicenseGuard.isLocallyAllowedForCriticalAction(this)
++        val checking = LicenseGuard.foregroundVerifying.value
++        binding.authSpinner.visibility = if(checking) View.VISIBLE else View.GONE
++        if(checking) binding.locationStatus.text = "Checking"
++        else if(!PrefManager.isHookSharingAvailable)binding.locationStatus.text="LSPosed?"
 +        else binding.locationStatus.setText(if (PrefManager.isStarted) R.string.geox_active else R.string.geox_ready)
-@@ -126,0 +267 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -126,0 +296 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +                updateMemberDetails()
-@@ -131 +272,3 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -131 +301,3 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        binding.container.setDrawerListener(mDrawerToggle)
 +        mDrawerToggle.drawerArrowDrawable.color = Color.rgb(239,245,240)
 +        binding.container.addDrawerListener(mDrawerToggle)
 +        mDrawerToggle.syncState()
-@@ -136,7 +278,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -136,7 +307,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        binding.mapContainer.map.setOnApplyWindowInsetsListener { _, insets ->
 -            val topInset: Int = insets.systemWindowInsetTop
 -            val bottomInset: Int = insets.systemWindowInsetBottom
@@ -3673,14 +3726,14 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 -            insets.consumeSystemWindowInsets()
 -        }
 -
-@@ -160,0 +297 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -160,0 +326 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +                                            io.github.phantom.gps.utils.LocationNotification.show(this@BaseMapActivity,getInput,lat,lon)
-@@ -181,3 +318 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -181,3 +347 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -                R.id.get_favorite -> {
 -                    openFavoriteListDialog()
 -                }
 +
-@@ -196,12 +331,12 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -196,12 +360,12 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    private fun checkModuleEnabled(){
 -        viewModel.isXposed.observe(this) { isXposed ->
 -            xposedDialog?.dismiss()
@@ -3705,14 +3758,14 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 +                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
 +                    NOTIFICATION_PERMISSION_ID
 +                )
-@@ -209,0 +345,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -209,0 +374,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +        if (PrefManager.isClipboardMonitorEnabled) {
 +            ClipboardMonitorService.ensureRunning(this)
 +        }
 +        if (!PrefManager.isClipboardMonitorEnabled) {
 +            stopService(Intent(this, ClipboardMonitorService::class.java))
 +        }
-@@ -212,3 +353,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -212,3 +382,6 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    override fun onResume() {
 -        super.onResume()
 -        viewModel.updateXposedState()
@@ -3722,15 +3775,15 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 +        viewModel.isXposed.observe(this) { injected ->
 +            binding.toolbar.contentDescription = if(injected) "GeoX: พบ Hook ในโปรเซสแอป" else "GeoX: ตรวจ Hook ของแอปเป้าหมายได้ใน Settings"
 +        }
-@@ -218,2 +362,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -218,2 +391,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        alertDialog = MaterialAlertDialogBuilder(this)
 -        layoutInflater.inflate(R.layout.about,null).apply {
 +        alertDialog = MaterialAlertDialogBuilder(this,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog)
 +        android.view.LayoutInflater.from(alertDialog.context).inflate(R.layout.about,null).apply {
-@@ -233 +377 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -233 +406 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        alertDialog =  MaterialAlertDialogBuilder(this).apply {
 +        alertDialog =  MaterialAlertDialogBuilder(this,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).apply {
-@@ -253,5 +397,4 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -253,5 +426,4 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    private fun openFavoriteListDialog() {
 -        getAllUpdatedFavList()
 -        alertDialog = MaterialAlertDialogBuilder(this)
@@ -3740,23 +3793,23 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 +        if (favoriteListJob == null) getAllUpdatedFavList()
 +        alertDialog = MaterialAlertDialogBuilder(this,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog)
 +        val view = android.view.LayoutInflater.from(alertDialog.context).inflate(R.layout.fav,null)
-@@ -259,0 +403 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -259,0 +432 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +        rcv.layoutParams.height = minOf((resources.displayMetrics.heightPixels * 0.43).toInt(), (340 * resources.displayMetrics.density).toInt())
-@@ -260,0 +405,3 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -260,0 +434,3 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +        view.findViewById<View>(R.id.close_favorites).setOnClickListener { dialog.dismiss() }
 +        view.findViewById<View>(R.id.add_favorite).isEnabled = coordinatesReady
 +        view.findViewById<View>(R.id.add_favorite).setOnClickListener { dialog.dismiss(); addFavoriteDialog() }
-@@ -275,0 +423,4 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -275,0 +452,4 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +        dialog.window?.apply {
 +            setBackgroundDrawableResource(android.R.color.transparent)
 +            setLayout((resources.displayMetrics.widthPixels * 0.92f).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
 +        }
-@@ -278,0 +430 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -278,0 +459 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +    private var favoriteListJob: Job? = null
-@@ -280 +432 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -280 +461 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        lifecycleScope.launch {
 +        favoriteListJob = lifecycleScope.launch {
-@@ -291,46 +443,13 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -291,46 +472,13 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    private fun checkUpdates(){
 -        lifecycleScope.launchWhenResumed {
 -            viewModel.update.collect{
@@ -3816,11 +3869,11 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 +                                runCatching {
 +                                    startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(update.releaseUrl)))
 +                                }.onFailure { Toast.makeText(this@BaseMapActivity, R.string.app_update_failed, Toast.LENGTH_LONG).show() }
-@@ -338,2 +457 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -338,2 +486 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -                            else -> {}
 -                        }
 +                            .setNegativeButton(R.string.update_later, null).show()
-@@ -342,8 +459,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -342,8 +488,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -                update?.let { it ->
 -                    viewModel.startDownload(getActivityInstance(), it)
 -                } ?: run {
@@ -3829,10 +3882,10 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 -            }.run {
 -                dialog = create()
 -                dialog.show()
-@@ -352,2 +461,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -352,2 +490,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        dialog = alertDialog.create()
 -        dialog.show()
-@@ -385,13 +493,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -385,13 +522,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    protected fun showStartNotification(address: String){
 -        notificationsChannel.showNotification(this){
 -            it.setSmallIcon(R.drawable.ic_stop)
@@ -3848,7 +3901,7 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 -        notificationsChannel.cancelAllNotifications(this)
 +    protected open fun onLocationStopped() {
 +        // Subclasses can override to update map marker state when stopped externally.
-@@ -480,2 +577,8 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -480,2 +606,8 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
 -            getLastLocation()
 +        if (requestCode == PERMISSION_ID) {
@@ -3859,7 +3912,7 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce633
 +            if (PrefManager.isClipboardMonitorEnabled) {
 +                ClipboardMonitorService.ensureRunning(this)
 +            }
-@@ -490,0 +594 @@ sealed class SearchProgress {
+@@ -490,0 +623 @@ sealed class SearchProgress {
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt
 new file mode 100644
@@ -14918,10 +14971,10 @@ index 0000000000000000000000000000000000000000..fd2dd3f458fd832253d11b32caa564e1
 +
 +</LinearLayout>
 diff --git a/app/src/main/res/layout/activity_map.xml b/app/src/main/res/layout/activity_map.xml
-index 054c97b2e62bc248b0485ae238bb60a05c95ff14..d13677f661d55f60415c964153221752dc2bc32b 100644
+index 054c97b2e62bc248b0485ae238bb60a05c95ff14..fc410dec5778c4e59b32181e99d9a5fc5567ebe4 100644
 --- a/app/src/main/res/layout/activity_map.xml
 +++ b/app/src/main/res/layout/activity_map.xml
-@@ -1,149 +1,21 @@
+@@ -1,149 +1,24 @@
 -<?xml version="1.0" encoding="utf-8"?>
 -<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
 -    android:layout_width="match_parent"
@@ -15082,7 +15135,10 @@ index 054c97b2e62bc248b0485ae238bb60a05c95ff14..d13677f661d55f60415c964153221752
 +<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GeoX" android:textSize="24sp" android:textStyle="bold" android:textColor="#EFF5F0"/>
 +<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="LOCATION CONTROL" android:textSize="8sp" android:letterSpacing="0.12" android:textColor="#9AA8A3"/>
 +</LinearLayout>
-+<TextView android:id="@+id/location_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="10dp" android:paddingVertical="6dp" android:background="@drawable/geox_status" android:text="@string/geox_ready" android:textSize="12sp" android:textColor="#C7F568" android:accessibilityLiveRegion="polite"/>
++<LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:background="@drawable/geox_status" android:paddingHorizontal="10dp" android:paddingVertical="6dp">
++<ProgressBar android:id="@+id/auth_spinner" style="?android:attr/progressBarStyleSmall" android:layout_width="14dp" android:layout_height="14dp" android:layout_marginEnd="6dp" android:indeterminate="true" android:indeterminateTint="#C7F568" android:visibility="gone"/>
++<TextView android:id="@+id/location_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/geox_ready" android:textSize="12sp" android:textColor="#C7F568" android:accessibilityLiveRegion="polite"/>
++</LinearLayout>
 +</LinearLayout>
 +</com.google.android.material.appbar.MaterialToolbar>
 +<LinearLayout android:id="@+id/map_actions" android:layout_width="52dp" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:layout_above="@id/location_dock" android:layout_marginEnd="16dp" android:layout_marginBottom="52dp" android:orientation="vertical">
