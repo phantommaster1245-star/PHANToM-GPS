@@ -1,15 +1,13 @@
 {
   "packageName": "io.github.phantom.gps",
-  "version": "v0.1.07",
-  "versionCode": 28,
-  "filename": "PHANToM-GPS-v0.1.07.apk",
-  "sha256": "8397887bfeb8629ebafc607947816564275fde9a6ad2a84e5dd637b3732ddda6",
-  "bytes": 4328427,
-  "publishedAt": "2026-11-07T10:47:10.728085+00:00",
+  "version": "v0.1.08",
+  "versionCode": 29,
+  "filename": "PHANToM-GPS-v0.1.08.apk",
+  "sha256": "738cd5418c53b3f3ea58f8007594206ffb67ea9545234fd7d2e4617d3cc52c82",
+  "bytes": 4328031,
+  "publishedAt": "2026-11-08T04:57:54.945Z",
   "changes": [
-    "GeoX ใช้ libxposed API 102 และ Remote Preferences",
-    "รองรับ Android Location, Fused Location และ GNSS/NMEA ในช่องทางที่ทดสอบ",
-    "หน้าล็อกอินใหม่ พร้อมวงกลมโหลดระหว่างตรวจบัญชีเดิม",
-    "ออกจากระบบแล้วเก็บบัญชีที่เลือกจดจำไว้ เปลี่ยนข้อมูลเมื่อเข้าสู่ระบบสำเร็จ"
+    "อัปเดต GeoX เป็นรุ่น 0.1.08 Modern",
+    "ปรับปรุงแอปจากรุ่น 0.1.07 โดยคงแพ็กเกจและลายเซ็นเดิมสำหรับติดตั้งทับ"
   ]
 }
