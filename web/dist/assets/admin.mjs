@@ -20,5 +20,60 @@ $('refresh').addEventListener('click',()=>{$('query').value='';load();});$('more
 $('search').addEventListener('submit',async event=>{event.preventDefault();if(busy||!authorized)return;const query=$('query').value.trim();if(!query){load();return;}const generation=epoch;setBusy(true);message('กำลังค้นหา…');try{const m=await call('adminMemberFind',{query});if(generation!==epoch)return;serverOffset=m.serverNowMs-Date.now();rows=[m];cursor=null;render();message('');}catch(e){if(generation===epoch){rows=[];cursor=null;render();message(errorText(e),true);}}finally{setBusy(false);}});
 async function manage(action,days){if(busy||!selected||!authorized)return;const request={uid:selected.uid,action,days,reason:$('reason').value.trim()},fingerprint=JSON.stringify(request);if(!pending||pending.fingerprint!==fingerprint)pending={fingerprint,requestId:crypto.randomUUID()};const generation=epoch;setBusy(true);message('กำลังบันทึก…',false,'action-message');try{const r=await call('adminMemberManage',{...request,requestId:pending.requestId});if(generation!==epoch)return;serverOffset=r.serverNowMs-Date.now();Object.assign(selected,r);detail();render();pending=null;message('บันทึกแล้ว',false,'action-message');}catch(e){if(generation===epoch)message(errorText(e),true,'action-message');}finally{setBusy(false);}}
 $('extend').addEventListener('click',()=>manage('extend',Number($('days').value)));$('reduce').addEventListener('click',()=>{const n=Number($('reduce-days').value);if(!Number.isInteger(n)||n<1||n>36500){message('กรอกจำนวนวันเต็ม 1–36500',true,'action-message');return;}manage('reduce',n);});$('ban').addEventListener('click',()=>manage(selected?.disabled?'unban':'ban',0));
-async function checkAdmin(user){const generation=++epoch;authorized=false;rows=[];cursor=null;selected=null;pending=null;$('dashboard').hidden=true;$('member-dialog').close();render();$('logout').hidden=!user;$('login').hidden=!!user?.emailVerified;$('identity').textContent=user?.email||'เข้าสู่ระบบด้วย Google สำหรับแอดมินที่ได้รับอนุญาต';if(!user)return;try{await call('adminMemberIdentity');if(generation!==epoch)return;authorized=true;$('dashboard').hidden=false;busy=false;await load();}catch(e){if(generation===epoch)message(errorText(e),true);}}
+let policyRevision = null;
+function renderPolicy({ policy, releases }) {
+ for (const channel of ['modern', 'legacy']) {
+  const select = $('min-' + channel);
+  select.replaceChildren(new Option('ไม่กำหนดขั้นต่ำ', '0'));
+  for (const release of releases.filter(r => r.channel === channel).sort((a,b) => b.versionCode-a.versionCode)) {
+   select.add(new Option(release.version, String(release.versionCode)));
+  }
+  if (!Array.from(select.options).some(option => Number(option.value) === policy[channel])) {
+   select.add(new Option('รุ่นที่ตั้งไว้ (' + policy[channel] + ')', String(policy[channel])));
+  }
+  select.value = String(policy[channel]);
+ }
+ $('block-unreported').checked = policy.blockUnreported;
+ policyRevision = policy.revision;
+}
+async function loadPolicy(generation) {
+ const controls = $('version-policy-controls'), status = $('version-policy-status');
+ controls.disabled = true;
+ status.textContent = 'กำลังโหลดนโยบาย…';
+ try {
+  const result = await call('adminAppVersionPolicy', { action: 'read' });
+  if (generation !== epoch || !authorized) return;
+  renderPolicy(result);
+  status.textContent = '';
+  controls.disabled = false;
+ } catch {
+  if (generation === epoch) status.textContent = 'โหลดนโยบายไม่สำเร็จ กรุณาโหลดหน้าใหม่';
+ }
+}
+$('version-policy').addEventListener('submit', async event => {
+ event.preventDefault();
+ const controls = $('version-policy-controls'), status = $('version-policy-status');
+ if (!authorized || policyRevision === null || controls.disabled) return;
+ const generation = epoch;
+ controls.disabled = true;
+ status.textContent = 'กำลังบันทึก…';
+ try {
+  const result = await call('adminAppVersionPolicy', {
+   action: 'save', revision: policyRevision, modern: Number($('min-modern').value),
+   legacy: Number($('min-legacy').value), blockUnreported: $('block-unreported').checked
+  });
+  if (generation !== epoch) return;
+  renderPolicy(result);
+  status.textContent = 'บันทึกนโยบายแล้ว';
+ } catch (error) {
+  if (generation !== epoch) return;
+  if (error?.details?.code === 'POLICY_CHANGED') {
+   await loadPolicy(generation);
+   if (generation === epoch) status.textContent = 'นโยบายถูกแก้ไขจากอีกหน้าต่าง ตรวจค่าล่าสุดก่อนบันทึกใหม่';
+  } else status.textContent = 'บันทึกไม่สำเร็จ กรุณาตรวจสอบรุ่นที่เลือกและลองใหม่';
+ } finally {
+  if (generation === epoch && authorized) controls.disabled = false;
+ }
+});
+async function checkAdmin(user){const generation=++epoch;authorized=false;rows=[];cursor=null;selected=null;pending=null;$('dashboard').hidden=true;$('member-dialog').close();render();$('logout').hidden=!user;$('login').hidden=!!user?.emailVerified;$('identity').textContent=user?.email||'เข้าสู่ระบบด้วย Google สำหรับแอดมินที่ได้รับอนุญาต';if(!user)return;try{await call('adminMemberIdentity');if(generation!==epoch)return;authorized=true;$('dashboard').hidden=false;busy=false;await Promise.all([load(),loadPolicy(generation)]);}catch(e){if(generation===epoch)message(errorText(e),true);}}
 try{await setPersistence(auth,browserSessionPersistence);onAuthStateChanged(auth,checkAdmin);}catch(e){message('เปิดสถานะเข้าสู่ระบบไม่ได้ กรุณาใช้ Chrome หรือ Safari',true);}

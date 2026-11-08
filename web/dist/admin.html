@@ -1,5 +1,21 @@
 <!doctype html>
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>รายชื่อสมาชิก | GeoX Admin</title><link rel="icon" href="assets/geox-icon.png"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/precision.css"><link rel="stylesheet" href="assets/member.css"><link rel="stylesheet" href="assets/admin.css"><script type="module" src="assets/admin.mjs"></script></head>
 <body class="canvas" data-design="b"><header class="g-nav"><a class="g-brand" href="./"><img src="assets/geox-icon.png" alt="" width="33" height="33">GeoX Admin</a><a href="account.html">บัญชีของฉัน</a></header><main class="admin-wrap"><p class="eyebrow">MEMBERS</p><h1>รายชื่อสมาชิก</h1><p id="identity">เข้าสู่ระบบด้วย Google สำหรับแอดมินที่ได้รับอนุญาต</p><button id="login" type="button">เข้าสู่ระบบแอดมินด้วย Google</button><button id="logout" type="button" class="secondary" hidden>ออกจากระบบ</button><p id="message" role="status" aria-live="polite"></p>
-<section id="dashboard" hidden><form id="search"><label for="query">ค้นหาด้วยชื่อผู้ใช้ หรือ Gmail เต็ม</label><div class="admin-search"><input id="query" autocomplete="off" maxlength="254" placeholder="ชื่อผู้ใช้ หรือ name@gmail.com"><button type="submit">ค้นหา</button><button id="refresh" type="button" class="secondary">รายชื่อทั้งหมด / โหลดใหม่</button></div></form><p id="count" aria-live="polite"></p><div class="member-table"><table><thead><tr><th>ชื่อผู้ใช้ / Gmail</th><th>สถานะ</th><th>เวลาคงเหลือ</th><th>วันสิ้นสุด</th><th>จัดการ</th></tr></thead><tbody id="members"></tbody></table></div><button id="more" type="button" hidden>โหลดสมาชิกเพิ่ม</button></section>
+<section id="dashboard" hidden>
+<details class="member-card version-policy-card">
+  <summary>รุ่น GeoX ขั้นต่ำ</summary>
+  <p>เลือกรุ่นขั้นต่ำที่อนุญาตให้เข้าสู่ระบบและต่ออายุสิทธิ์ แยกตามประเภท APK</p>
+  <form id="version-policy">
+    <fieldset id="version-policy-controls" disabled>
+      <label for="min-modern">Modern</label>
+      <select id="min-modern" aria-label="รุ่น Modern ขั้นต่ำ"><option value="0">ไม่กำหนดขั้นต่ำ</option></select>
+      <label for="min-legacy">Legacy</label>
+      <select id="min-legacy" aria-label="รุ่น Legacy ขั้นต่ำ"><option value="0">ไม่กำหนดขั้นต่ำ</option></select>
+      <label><input id="block-unreported" type="checkbox"> ระงับ APK เก่าที่ไม่ส่งเลขรุ่น</label>
+      <p>APK เก่าอาจแสดงข้อความตรวจสิทธิ์ไม่ผ่าน สวิตช์นี้มีผลกับ APK ทุกประเภทที่ไม่ส่งเลขรุ่น เปิดเมื่อผู้ใช้มีรุ่นใหม่ที่รองรับเครื่องให้ดาวน์โหลดแล้ว</p>
+      <button type="submit">บันทึกนโยบาย</button>
+    </fieldset>
+    <p id="version-policy-status" role="status"></p>
+  </form>
+</details><form id="search"><label for="query">ค้นหาด้วยชื่อผู้ใช้ หรือ Gmail เต็ม</label><div class="admin-search"><input id="query" autocomplete="off" maxlength="254" placeholder="ชื่อผู้ใช้ หรือ name@gmail.com"><button type="submit">ค้นหา</button><button id="refresh" type="button" class="secondary">รายชื่อทั้งหมด / โหลดใหม่</button></div></form><p id="count" aria-live="polite"></p><div class="member-table"><table><thead><tr><th>ชื่อผู้ใช้ / Gmail</th><th>สถานะ</th><th>เวลาคงเหลือ</th><th>วันสิ้นสุด</th><th>จัดการ</th></tr></thead><tbody id="members"></tbody></table></div><button id="more" type="button" hidden>โหลดสมาชิกเพิ่ม</button></section>
 <dialog id="member-dialog" aria-labelledby="detail-title"><form method="dialog"><button class="secondary close-dialog" aria-label="ปิดรายละเอียด">ปิด</button></form><h2 id="detail-title">จัดการสมาชิก</h2><p id="detail" class="status"></p><label for="days">เพิ่มเวลา</label><select id="days"><option value="1">1 วัน</option><option value="7" selected>7 วัน</option><option value="30">30 วัน</option></select><button id="extend" type="button">เพิ่มเวลา</button><label for="reduce-days">จำนวนวันที่ต้องการลด</label><input id="reduce-days" type="number" min="1" max="36500" step="1" value="1"><small>ลดได้จนเหลืออย่างน้อย 1 ชั่วโมง หากยังไม่เข้าแอปจะลดเฉพาะวันสะสม</small><button id="reduce" type="button" class="secondary">ลดเวลา</button><label for="reason">เหตุผล / หมายเหตุ</label><textarea id="reason" rows="2" maxlength="500"></textarea><button id="ban" type="button" class="secondary">แบนบัญชี</button><p id="action-message" role="status" aria-live="polite"></p></dialog></main></body></html>

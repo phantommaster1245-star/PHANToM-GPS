@@ -306,13 +306,13 @@
     },
     {
       "path": "web/dist/account.html",
-      "bytes": 9291,
-      "sha256": "9b8a47e1632ed1e256ec1a0a29a012894100664e5d4ec8c95c482d41f708fbfd"
+      "bytes": 9365,
+      "sha256": "8b1192851382acd6570bd8b22d5f55c8d42981fc94bc328998fa29bf3cd73fa5"
     },
     {
       "path": "web/dist/admin.html",
-      "bytes": 3543,
-      "sha256": "97aa74f5713a18db76c74f35cb6c6bdf694f4ae71d3d27270888baf644465029"
+      "bytes": 5112,
+      "sha256": "286a7145ed2b8745bdb268f38e02a7258a15474008950f9ca55406f1507faf3b"
     },
     {
       "path": "web/dist/assets/LICENSE.txt",
@@ -321,13 +321,13 @@
     },
     {
       "path": "web/dist/assets/admin.css",
-      "bytes": 1645,
-      "sha256": "b62f7ae4f6193cc736fe5e9ab497edf653a5d173c0b1c8a292265654e18a59e7"
+      "bytes": 1891,
+      "sha256": "2ff94eddb2836250b6acc3c2998f4cabde8720fe9a4cf7e256091fe15cf5c701"
     },
     {
       "path": "web/dist/assets/admin.mjs",
-      "bytes": 8170,
-      "sha256": "780ec4d1deca848c71ff7516285b9b485db89c0f96e420d266672a1672515fd5"
+      "bytes": 10996,
+      "sha256": "7342cdc2f0686c6456afc2e1e34952a2230c41de1b5d283aa2b7954125bcd22b"
     },
     {
       "path": "web/dist/assets/download.mjs",
@@ -366,8 +366,13 @@
     },
     {
       "path": "web/dist/assets/member.mjs",
-      "bytes": 17058,
-      "sha256": "c59bce992fc11228f4cea83d739997ed406fb1a08cb3f5ec44127cefa4c82126"
+      "bytes": 16742,
+      "sha256": "9520695f3125f733abba94f768d75746c72e86b5c37157bb1f52f54d9edf2bc4"
+    },
+    {
+      "path": "web/dist/assets/password-recovery.mjs",
+      "bytes": 4600,
+      "sha256": "a3b6d28cb065dfc78832f9ed402a1738f45232adfe47158c8d9c3712e5e6cf72"
     },
     {
       "path": "web/dist/assets/phantom-icon.png",
@@ -396,8 +401,8 @@
     },
     {
       "path": "web/dist/download.html",
-      "bytes": 6430,
-      "sha256": "8194553314a7fb27381cd5ef80ed7f50e48a212e50a4892a8adcf9ba23602337"
+      "bytes": 6753,
+      "sha256": "f5b58d1a2fc125e2c6b692ebc318cb2443acc0d97b41594815d243f5620f67bf"
     },
     {
       "path": "web/dist/downloads/PHANToM-GPS-v0.0.16.apk",
@@ -450,6 +455,11 @@
       "sha256": "8397887bfeb8629ebafc607947816564275fde9a6ad2a84e5dd637b3732ddda6"
     },
     {
+      "path": "web/dist/downloads/channels.json",
+      "bytes": 125,
+      "sha256": "37ad6c450771e44a94cae49f813dd90b89a73cbec2406c763c96d2bf99659312"
+    },
+    {
       "path": "web/dist/downloads/version.json",
       "bytes": 894,
       "sha256": "6e754c6d2b8ef79733d3f26a3069f32f561ddbdf6b1ff883fb575411c8ccd20c"
@@ -461,8 +471,13 @@
     },
     {
       "path": "web/dist/register.html",
-      "bytes": 9276,
-      "sha256": "3c4960dcab6cda7b41d1e11e25003d480dfc42d6457d26535510bcfec1cb1c35"
+      "bytes": 9252,
+      "sha256": "e9bed0ed20a62b6c297c20e869c611e439d42b3099e9c9429ddd8d8eb2929a07"
+    },
+    {
+      "path": "web/dist/reset-password.html",
+      "bytes": 1900,
+      "sha256": "ab8fc1d00346805bc366ff26d6f6706da84cafb10ca8a5a28348aa5ed67ea974"
     },
     {
       "path": "web/tests/membership.test.mjs",

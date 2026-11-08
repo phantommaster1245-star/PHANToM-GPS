@@ -1,5 +1,5 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js';
-import {getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut,EmailAuthProvider,linkWithCredential,updatePassword,reauthenticateWithPopup,reload,getIdToken,sendPasswordResetEmail,setPersistence,browserSessionPersistence} from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js';
+import {getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut,EmailAuthProvider,linkWithCredential,updatePassword,reauthenticateWithPopup,reload,getIdToken,setPersistence,browserSessionPersistence} from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js';
 import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-functions.js';
 import {firebaseConfig} from './firebase-config.mjs';
 import {refreshMemberCount} from './member-count.mjs';
@@ -83,7 +83,7 @@ $('signup-form').addEventListener('submit',async event=>{event.preventDefault();
  }catch(e){message(errorText(e),true);}finally{setBusy(false);}
 });
 $('logout').addEventListener('click',async()=>{if(busy)return;setBusy(true);try{await signOut(auth);$('new-password').value='';$('confirm-password').value='';}catch(e){message(errorText(e),true);}finally{setBusy(false);}});
-$('reset-password').addEventListener('click',async()=>{if(busy||!auth.currentUser?.email)return;setBusy(true);try{await sendPasswordResetEmail(auth,auth.currentUser.email);message('ส่งอีเมลตั้งรหัสผ่านใหม่แล้ว กรุณาตรวจกล่องจดหมาย');}catch(e){message(errorText(e),true);}finally{setBusy(false);}});
+$('reset-password').addEventListener('click',()=>{if(!busy)location.assign('reset-password.html');});
 $('admin-search').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;currentMember=null;pendingRenewal=null;$('admin-result').hidden=true;setBusy(true);try{currentMember=await call('adminMemberFind',{query:$('member-email').value.trim()});$('admin-result').hidden=false;$('admin-result').textContent=currentMember.username+'\n'+currentMember.email+'\n'+(currentMember.firstLoginAtMs==null?'ยังไม่เข้าแอป มีวันต่ออายุรอ '+currentMember.prepaidDays+' วัน':'หมดอายุ: '+new Date(currentMember.expiresAtMs).toLocaleString('th-TH'));$('admin-result').textContent+='\nสถานะ: '+(currentMember.disabled?'ถูกแบน':'ปกติ')+'\nเหตุผลแบน: '+(currentMember.banReason||'—');message('',false,'admin-message');}catch(e){message(errorText(e),true,'admin-message');}finally{setBusy(false);}});
 async function manageMember(action,days=7){
  if(busy||!currentMember)return;
