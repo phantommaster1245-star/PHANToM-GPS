@@ -1,18 +1,16 @@
 <!doctype html>
-<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>รายชื่อสมาชิก | GeoX Admin</title><link rel="icon" href="assets/geox-icon.png"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/precision.css"><link rel="stylesheet" href="assets/member.css"><link rel="stylesheet" href="assets/admin.css"><script type="module" src="assets/admin.mjs"></script></head>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>รายชื่อสมาชิก | GeoX Admin</title><link rel="icon" href="assets/geox-icon.png"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/precision.css"><link rel="stylesheet" href="assets/member.css"><link rel="stylesheet" href="assets/admin.css"><script type="module" src="assets/admin.mjs?v=geox-version-policy-2"></script></head>
 <body class="canvas" data-design="b"><header class="g-nav"><a class="g-brand" href="./"><img src="assets/geox-icon.png" alt="" width="33" height="33">GeoX Admin</a><a href="account.html">บัญชีของฉัน</a></header><main class="admin-wrap"><p class="eyebrow">MEMBERS</p><h1>รายชื่อสมาชิก</h1><p id="identity">เข้าสู่ระบบด้วย Google สำหรับแอดมินที่ได้รับอนุญาต</p><button id="login" type="button">เข้าสู่ระบบแอดมินด้วย Google</button><button id="logout" type="button" class="secondary" hidden>ออกจากระบบ</button><p id="message" role="status" aria-live="polite"></p>
 <section id="dashboard" hidden>
 <details class="member-card version-policy-card">
   <summary>รุ่น GeoX ขั้นต่ำ</summary>
-  <p>เลือกรุ่นขั้นต่ำที่อนุญาตให้เข้าสู่ระบบและต่ออายุสิทธิ์ แยกตามประเภท APK</p>
+  <p>เลือกรุ่นขั้นต่ำที่อนุญาตให้เข้าสู่ระบบและต่ออายุสิทธิ์</p>
   <form id="version-policy">
     <fieldset id="version-policy-controls" disabled>
-      <label for="min-modern">Modern</label>
-      <select id="min-modern" aria-label="รุ่น Modern ขั้นต่ำ"><option value="0">ไม่กำหนดขั้นต่ำ</option></select>
-      <label for="min-legacy">Legacy</label>
-      <select id="min-legacy" aria-label="รุ่น Legacy ขั้นต่ำ"><option value="0">ไม่กำหนดขั้นต่ำ</option></select>
+      <label for="minimum-version">เวอร์ชันขั้นต่ำ</label>
+      <select id="minimum-version"><option value="0">ไม่กำหนดขั้นต่ำ</option></select>
       <label><input id="block-unreported" type="checkbox"> ระงับ APK เก่าที่ไม่ส่งเลขรุ่น</label>
-      <p>APK เก่าอาจแสดงข้อความตรวจสิทธิ์ไม่ผ่าน สวิตช์นี้มีผลกับ APK ทุกประเภทที่ไม่ส่งเลขรุ่น เปิดเมื่อผู้ใช้มีรุ่นใหม่ที่รองรับเครื่องให้ดาวน์โหลดแล้ว</p>
+      <p>APK เก่าอาจแสดงข้อความตรวจสิทธิ์ไม่ผ่าน สวิตช์นี้มีผลกับ APK ที่ไม่ส่งเลขรุ่นทุกตัว เปิดเมื่อผู้ใช้มีรุ่นใหม่ที่รองรับเครื่องให้ดาวน์โหลดแล้ว</p>
       <button type="submit">บันทึกนโยบาย</button>
     </fieldset>
     <p id="version-policy-status" role="status"></p>

@@ -7,7 +7,7 @@
   "bytes": 4328427,
   "publishedAt": "2026-11-07T10:47:10.728085+00:00",
   "changes": [
-    "GeoX Modern ใช้ libxposed API 102 และ Remote Preferences",
+    "GeoX ใช้ libxposed API 102 และ Remote Preferences",
     "รองรับ Android Location, Fused Location และ GNSS/NMEA ในช่องทางที่ทดสอบ",
     "หน้าล็อกอินใหม่ พร้อมวงกลมโหลดระหว่างตรวจบัญชีเดิม",
     "ออกจากระบบแล้วเก็บบัญชีที่เลือกจดจำไว้ เปลี่ยนข้อมูลเมื่อเข้าสู่ระบบสำเร็จ"

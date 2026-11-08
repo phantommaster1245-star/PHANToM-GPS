@@ -311,8 +311,8 @@
     },
     {
       "path": "web/dist/admin.html",
-      "bytes": 5112,
-      "sha256": "286a7145ed2b8745bdb268f38e02a7258a15474008950f9ca55406f1507faf3b"
+      "bytes": 4868,
+      "sha256": "d3ae4add5186bb6fdf8de49fb9e812468dab8617260646f338e5fbc5b21e6732"
     },
     {
       "path": "web/dist/assets/LICENSE.txt",
@@ -326,8 +326,8 @@
     },
     {
       "path": "web/dist/assets/admin.mjs",
-      "bytes": 10996,
-      "sha256": "7342cdc2f0686c6456afc2e1e34952a2230c41de1b5d283aa2b7954125bcd22b"
+      "bytes": 10929,
+      "sha256": "430bb226db70e9995836b37c3f47775dce00dd9563a0d5c2b4881f6f394d7f78"
     },
     {
       "path": "web/dist/assets/download.mjs",
@@ -401,8 +401,8 @@
     },
     {
       "path": "web/dist/download.html",
-      "bytes": 6753,
-      "sha256": "f5b58d1a2fc125e2c6b692ebc318cb2443acc0d97b41594815d243f5620f67bf"
+      "bytes": 6423,
+      "sha256": "0ceeed88fda1cd02f79bd30b1e9e0396fe94ce7dac5c79484ff73a8c64b7be48"
     },
     {
       "path": "web/dist/downloads/PHANToM-GPS-v0.0.16.apk",
@@ -456,13 +456,13 @@
     },
     {
       "path": "web/dist/downloads/channels.json",
-      "bytes": 125,
-      "sha256": "37ad6c450771e44a94cae49f813dd90b89a73cbec2406c763c96d2bf99659312"
+      "bytes": 45,
+      "sha256": "467d39c5791d477fcaf100715490e45ea19a9f552ba42da3cf2b273172abcb1a"
     },
     {
       "path": "web/dist/downloads/version.json",
-      "bytes": 894,
-      "sha256": "6e754c6d2b8ef79733d3f26a3069f32f561ddbdf6b1ff883fb575411c8ccd20c"
+      "bytes": 887,
+      "sha256": "f4477197857331d21bf2488035cf8ff2b1bd18e3f38167f9d81377462701f950"
     },
     {
       "path": "web/dist/index.html",

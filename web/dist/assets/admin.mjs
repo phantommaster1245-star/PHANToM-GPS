@@ -22,17 +22,15 @@ async function manage(action,days){if(busy||!selected||!authorized)return;const 
 $('extend').addEventListener('click',()=>manage('extend',Number($('days').value)));$('reduce').addEventListener('click',()=>{const n=Number($('reduce-days').value);if(!Number.isInteger(n)||n<1||n>36500){message('กรอกจำนวนวันเต็ม 1–36500',true,'action-message');return;}manage('reduce',n);});$('ban').addEventListener('click',()=>manage(selected?.disabled?'unban':'ban',0));
 let policyRevision = null;
 function renderPolicy({ policy, releases }) {
- for (const channel of ['modern', 'legacy']) {
-  const select = $('min-' + channel);
-  select.replaceChildren(new Option('ไม่กำหนดขั้นต่ำ', '0'));
-  for (const release of releases.filter(r => r.channel === channel).sort((a,b) => b.versionCode-a.versionCode)) {
-   select.add(new Option(release.version, String(release.versionCode)));
-  }
-  if (!Array.from(select.options).some(option => Number(option.value) === policy[channel])) {
-   select.add(new Option('รุ่นที่ตั้งไว้ (' + policy[channel] + ')', String(policy[channel])));
-  }
-  select.value = String(policy[channel]);
+ const select = $('minimum-version');
+ select.replaceChildren(new Option('ไม่กำหนดขั้นต่ำ', '0'));
+ for (const release of [...releases].sort((a, b) => b.versionCode - a.versionCode)) {
+  select.add(new Option(release.version, String(release.versionCode)));
  }
+ if (!Array.from(select.options).some(option => Number(option.value) === policy.minimumVersionCode)) {
+  select.add(new Option('รุ่นที่ตั้งไว้ (' + policy.minimumVersionCode + ')', String(policy.minimumVersionCode)));
+ }
+ select.value = String(policy.minimumVersionCode);
  $('block-unreported').checked = policy.blockUnreported;
  policyRevision = policy.revision;
 }
@@ -59,8 +57,8 @@ $('version-policy').addEventListener('submit', async event => {
  status.textContent = 'กำลังบันทึก…';
  try {
   const result = await call('adminAppVersionPolicy', {
-   action: 'save', revision: policyRevision, modern: Number($('min-modern').value),
-   legacy: Number($('min-legacy').value), blockUnreported: $('block-unreported').checked
+   action: 'save', revision: policyRevision, minimumVersionCode: Number($('minimum-version').value),
+   blockUnreported: $('block-unreported').checked
   });
   if (generation !== epoch) return;
   renderPolicy(result);
