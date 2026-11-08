@@ -1,5 +1,5 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..693408d8091a805763fc37e1fd9035563988d6f8 100644
+index d211674657a4308ba7437287558c90117ce56c75..196f8c6247c808d410cfa48bda3f70878826b26b 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
@@ -7,7 +7,7 @@ index d211674657a4308ba7437287558c90117ce56c75..693408d8091a805763fc37e1fd903556
 @@ -10 +11,27 @@ plugins {
 -def tagName = '0.0.6'
 +def modernXposed = providers.gradleProperty('geoxModern').orNull == 'true'
-+def tagName = '0.1.09'
++def tagName = '0.1.10'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -39,19 +39,20 @@ index d211674657a4308ba7437287558c90117ce56c75..693408d8091a805763fc37e1fd903556
 @@ -15 +42 @@ android {
 -        applicationId "io.github.jqssun.gpssetter"
 +        applicationId "io.github.phantom.gps"
-@@ -18 +45,2 @@ android {
+@@ -18 +45,3 @@ android {
 -        versionCode 6
-+        versionCode 30
++        versionCode 31
 +        buildConfigField "boolean", "MODERN_XPOSED", modernXposed.toString()
-@@ -20 +48,3 @@ android {
++        buildConfigField "boolean", "INSTANTSYNC_EXPERIMENT", modernXposed.toString()
+@@ -20 +49,3 @@ android {
 -        // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 +        buildConfigField "String", "PUBLIC_SITE_BASE_URL", "\"https://geox-azure.vercel.app/\""
 +        buildConfigField "String", "MEMBERSHIP_PUBLIC_KEY", "\"MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAxhthf2a1Y4w5zsEGJ9WXRwX4ZgN2KQnXHQTf5UIPs2cu5QDdwHVkBkLNRDWHPSqggjB/uIsdav07K2NG841iq9gU7YQX5Gfxz1UrzgnF14JHSzNTWJhjA6Mo9Ta0OB1TzKWPp3PM2b308rJLNQEs/h0hSihzZmI8Y72s+/yJArkxvEW+IapcIk3Kt/uEskmg0PiOc6tLTl1SV/o+QGp46A9d/eRwKafG2av6onreSdXEM6wYWXcJ4mN3vT9FUg3MynO7aLydcGLsbwYQJJiFGbaTibGwVlNTaD00OQvmf3LoKFHdPbRlK7uDjyiiXrRX+Cg1XkiU/vLg/ywVedIHuMtWoy78FVj2wYq8hALuvt2GCWvHe6irk6/V44QMvtHaT0imAtHgWx9ybgJAfW0mClTWHLIIs5GXVLqB9FfQllUAXYuAFBlqmm0ki/kU6Vt2iuxfa5VOw90m2pHWe8pQD6FTy9YmmJ39dSwtEiGsRsMRpVl6nuofCQ7zPHQVj/HzAgMBAAE=\""
 +        testInstrumentationRunner "io.github.phantom.gps.test.MembershipTestRunner"
-@@ -21,0 +52,2 @@ android {
+@@ -21,0 +53,2 @@ android {
 +        buildConfigField("String", "GITHUB_RELEASES_API_BASE", "\"https://api.github.com/repos/phantommaster1245-star/PHANToM-GPS/\"")
 +        buildConfigField("String", "GITHUB_RELEASES_PAGE", "\"https://github.com/phantommaster1245-star/PHANToM-GPS/releases\"")
-@@ -39,7 +71,11 @@ android {
+@@ -39,7 +72,11 @@ android {
 -            def keystoreProperties = new Properties()
 -            keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 -
@@ -70,7 +71,7 @@ index d211674657a4308ba7437287558c90117ce56c75..693408d8091a805763fc37e1fd903556
 +                    storePassword keystoreProperties['storePassword']
 +                }
 +            }
-@@ -54 +90,6 @@ android {
+@@ -54 +91,6 @@ android {
 -            signingConfig signingConfigs.release
 +            def activeSigningConfig = signingConfigs.release.storeFile ? signingConfigs.release : signingConfigs.debug
 +            signingConfig activeSigningConfig
@@ -78,17 +79,17 @@ index d211674657a4308ba7437287558c90117ce56c75..693408d8091a805763fc37e1fd903556
 +            def cert = certSha256FromSigningConfig(activeSigningConfig)
 +            if (!cert) throw new GradleException("Release signing certificate is required for integrity checks")
 +            buildConfigField "String", "SIGNING_CERT_SHA256", "\"${cert}\""
-@@ -57,0 +99,3 @@ android {
+@@ -57,0 +100,3 @@ android {
 +            // Used for runtime anti-tamper checks (re-signing / repackaging will change this).
 +            def cert = certSha256FromSigningConfig(signingConfigs.findByName("debug"))
 +            buildConfigField "String", "SIGNING_CERT_SHA256", "\"${cert}\""
-@@ -74,5 +117,0 @@ android {
+@@ -74,5 +118,0 @@ android {
 -        foss {
 -            dimension "version"
 -            // versionNameSuffix "-foss"
 -            isDefault true
 -        }
-@@ -85 +124,13 @@ android {
+@@ -85 +125,13 @@ android {
 -    namespace 'io.github.jqssun.gpssetter'
 +    sourceSets {
 +        main {
@@ -103,7 +104,7 @@ index d211674657a4308ba7437287558c90117ce56c75..693408d8091a805763fc37e1fd903556
 +        }
 +    }
 +    namespace 'io.github.phantom.gps'
-@@ -88,0 +140,11 @@ dependencies {
+@@ -88,0 +141,11 @@ dependencies {
 +    testImplementation 'junit:junit:4.13.2'
 +    androidTestImplementation 'androidx.test:runner:1.6.2'
 +    androidTestImplementation 'androidx.test:rules:1.6.1'
@@ -115,7 +116,7 @@ index d211674657a4308ba7437287558c90117ce56c75..693408d8091a805763fc37e1fd903556
 +    fullImplementation 'com.google.firebase:firebase-functions'
 +    fullImplementation 'com.google.firebase:firebase-functions-ktx:21.2.1'
 +    fullImplementation 'androidx.work:work-runtime-ktx:2.9.0'
-@@ -92 +154,7 @@ dependencies {
+@@ -92 +155,7 @@ dependencies {
 -    compileOnly 'com.github.deltazefiro:XposedBridge:main-SNAPSHOT'
 +    if (modernXposed) {
 +        compileOnly 'io.github.libxposed:api:102.0.0'
@@ -124,16 +125,16 @@ index d211674657a4308ba7437287558c90117ce56c75..693408d8091a805763fc37e1fd903556
 +    } else {
 +        compileOnly 'com.github.deltazefiro:XposedBridge:main-SNAPSHOT'
 +    }
-@@ -95,6 +162,0 @@ dependencies {
+@@ -95,6 +163,0 @@ dependencies {
 -    // use microg (apache 2.0) and maplibre (bsd 2-clause)
 -    fossImplementation 'org.microg.gms:play-services-location:0.3.6.244735'
 -    fossImplementation ('org.maplibre.gl:android-sdk:11.8.2') 
 -    /* {
 -        exclude group: 'com.google.android.gms'
 -    } */
-@@ -116,0 +179 @@ dependencies {
+@@ -116,0 +180 @@ dependencies {
 +    implementation "androidx.lifecycle:lifecycle-process:2.7.0"
-@@ -130 +193,2 @@ dependencies {
+@@ -130 +194,2 @@ dependencies {
 -}
 \ No newline at end of file
 +}
@@ -22517,12 +22518,105 @@ index 0000000000000000000000000000000000000000..b2f2ac459b22619adf98ee5c56121528
 +        return String.format(Locale.US, "$%s*%02X\r\n", body, checksum)
 +    }
 +}
+diff --git a/app/src/modern/java/io/github/phantom/gps/xposed/InstantLocationDispatcher.kt b/app/src/modern/java/io/github/phantom/gps/xposed/InstantLocationDispatcher.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..97fffd0d2c98d1b07fd83d3ae323001f0767506e
+--- /dev/null
++++ b/app/src/modern/java/io/github/phantom/gps/xposed/InstantLocationDispatcher.kt
+@@ -0,0 +1,87 @@
++package io.github.phantom.gps.xposed
++
++import android.location.Location
++import android.location.LocationListener
++import android.os.Handler
++import android.os.Looper
++import android.os.SystemClock
++import android.util.Log
++import java.lang.ref.WeakReference
++import java.lang.reflect.Modifier
++
++/**
++ * Private opt-in experiment. Captures active *callback* registrations only;
++ * never alters the target application's database or invokes its network APIs.
++ * GeoX's normal read-time hooks remain the fallback.
++ */
++internal class InstantLocationDispatcher {
++    private data class Subscriber(
++        val callback: WeakReference<Any>,
++        val kind: Kind,
++        val handler: Handler
++    )
++    private enum class Kind { PLATFORM, FUSED }
++
++    private val subscribers = mutableListOf<Subscriber>()
++    private val mainHandler = Handler(Looper.getMainLooper())
++    private var lastGeneration: String? = null
++
++    @Synchronized
++    fun record(callback: Any, fused: Boolean, looper: Looper? = null) {
++        val kind = if (fused) Kind.FUSED else Kind.PLATFORM
++        subscribers.removeAll { it.callback.get() == null || it.callback.get() === callback }
++        if (subscribers.size >= 64) subscribers.removeAt(0)
++        subscribers += Subscriber(WeakReference(callback), kind,
++            if (looper != null) Handler(looper) else mainHandler)
++    }
++
++    @Synchronized
++    fun forget(callback: Any) {
++        subscribers.removeAll { it.callback.get() == null || it.callback.get() === callback }
++    }
++
++    @Synchronized fun clearGeneration() { lastGeneration = null }
++
++    fun dispatch(latitude: Double, longitude: Double, accuracy: Float, generation: String): Int {
++        if (!latitude.isFinite() || !longitude.isFinite() ||
++            latitude !in -90.0..90.0 || longitude !in -180.0..180.0 ||
++            !accuracy.isFinite() || accuracy < 0f) return 0
++        val current: List<Subscriber>
++        synchronized(this) {
++            if (lastGeneration == generation) return 0
++            // Do not drop the final pin move of a rapid gesture.
++            lastGeneration = generation
++            subscribers.removeAll { it.callback.get() == null }
++            current = subscribers.toList()
++        }
++        current.forEach { subscriber ->
++            subscriber.handler.post {
++                val callback = subscriber.callback.get() ?: return@post
++                val fix = Location("gps").apply {
++                    this.latitude = latitude
++                    this.longitude = longitude
++                    this.accuracy = accuracy
++                    this.time = System.currentTimeMillis()
++                    this.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
++                }
++                runCatching {
++                    when (subscriber.kind) {
++                        Kind.PLATFORM -> (callback as LocationListener).onLocationChanged(fix)
++                        Kind.FUSED -> sendFused(callback, fix)
++                    }
++                }.onFailure { Log.w("GeoX-InstantSync", "Callback dispatch failed", it) }
++            }
++        }
++        return current.size
++    }
++
++    private fun sendFused(callback: Any, location: Location) {
++        val resultType = Class.forName("com.google.android.gms.location.LocationResult",
++            false, callback.javaClass.classLoader)
++        val factory = resultType.getMethod("create", List::class.java)
++        check(Modifier.isStatic(factory.modifiers))
++        val result = factory.invoke(null, listOf(location))
++        val method = callback.javaClass.getMethod("onLocationResult", resultType)
++        method.invoke(callback, result)
++    }
++}
 diff --git a/app/src/modern/java/io/github/phantom/gps/xposed/ModernHookEntry.kt b/app/src/modern/java/io/github/phantom/gps/xposed/ModernHookEntry.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..c9d335f33cfe6a10006ab8d5e5c47121462ce313
+index 0000000000000000000000000000000000000000..8ff9f1339a7c2266fc049628da8c4a6a2aec8ba1
 --- /dev/null
 +++ b/app/src/modern/java/io/github/phantom/gps/xposed/ModernHookEntry.kt
-@@ -0,0 +1,399 @@
+@@ -0,0 +1,451 @@
 +package io.github.phantom.gps.xposed
 +
 +import android.app.Application
@@ -22586,6 +22680,7 @@ index 0000000000000000000000000000000000000000..c9d335f33cfe6a10006ab8d5e5c47121
 +    private val clipboardGate = ClipboardEventGate()
 +    private val clipboardWorker by lazy { HandlerThread("GeoX-clipboard").apply { start() } }
 +    private var consumedTrace = 0L
++    private val instantDispatcher by lazy { InstantLocationDispatcher() }
 +
 +    override fun onPackageReady(param: PackageReadyParam) {
 +        if (!param.isFirstPackage || param.packageName == BuildConfig.APPLICATION_ID) return
@@ -22610,6 +22705,7 @@ index 0000000000000000000000000000000000000000..c9d335f33cfe6a10006ab8d5e5c47121
 +            return
 +        }
 +        installClientLocation(loader)
++        if (BuildConfig.INSTANTSYNC_EXPERIMENT) installInstantSyncRegistrations(loader)
 +        installGnss(loader, system = false)
 +    }
 +
@@ -22650,6 +22746,53 @@ index 0000000000000000000000000000000000000000..c9d335f33cfe6a10006ab8d5e5c47121
 +        }
 +        fusedHooks += transformResults(loader, "com.google.android.gms.location.LocationResult",
 +            false, "getLastLocation", "getLocations")
++    }
++
++    private fun installInstantSyncRegistrations(loader: ClassLoader) {
++        // Capture only callbacks which the app itself registered successfully.
++        methods(LocationManager::class.java, "requestLocationUpdates") { chain ->
++            val result = chain.proceed()
++            val listener = chain.args.firstOrNull { it is android.location.LocationListener }
++            if (listener != null) {
++                instantDispatcher.record(listener, false, chain.args.filterIsInstance<android.os.Looper>().firstOrNull())
++            }
++            result
++        }
++        methods(LocationManager::class.java, "removeUpdates") { chain ->
++            chain.args.filterIsInstance<android.location.LocationListener>()
++                .forEach(instantDispatcher::forget)
++            chain.proceed()
++        }
++        val fusedClient = "com.google.android.gms.location.FusedLocationProviderClient"
++        methods(loader, fusedClient, "requestLocationUpdates") { chain ->
++            val result = chain.proceed()
++            val callback = chain.args.firstOrNull { isFusedLocationCallback(it) }
++            if (callback != null) {
++                instantDispatcher.record(callback, true, chain.args.filterIsInstance<android.os.Looper>().firstOrNull())
++            }
++            result
++        }
++        methods(loader, fusedClient, "removeLocationUpdates") { chain ->
++            chain.args.filter { isFusedLocationCallback(it) }.forEach(instantDispatcher::forget)
++            chain.proceed()
++        }
++    }
++
++    private fun isFusedLocationCallback(value: Any?): Boolean {
++        var type = value?.javaClass
++        while (type != null) {
++            if (type.name == "com.google.android.gms.location.LocationCallback") return true
++            type = type.superclass
++        }
++        return false
++    }
++
++    private fun pushInstantSnapshot(current: State) {
++        val fix = current.fix ?: run { instantDispatcher.clearGeneration(); return }
++        val generation = listOf(fix.lat, fix.lon, fix.snapshot.requestId,
++            fix.snapshot.traceId, fix.snapshot.started).joinToString(":")
++        val count = instantDispatcher.dispatch(fix.lat, fix.lon, fix.snapshot.accuracy, generation)
++        if (count > 0) log(Log.INFO, "GeoX-InstantSync", "Scheduled $count callbacks")
 +    }
 +
 +    private fun installGnss(loader: ClassLoader, system: Boolean) {
@@ -22740,7 +22883,10 @@ index 0000000000000000000000000000000000000000..c9d335f33cfe6a10006ab8d5e5c47121
 +            override fun onReceive(context: Context, intent: Intent) {
 +                val current = readState(force = true)
 +                when (intent.action) {
-+                    LocationRefresh.ACTION -> promoteIfActive(ctx, current)
++                    LocationRefresh.ACTION -> {
++                        if (BuildConfig.INSTANTSYNC_EXPERIMENT && ctx.packageName != "android") pushInstantSnapshot(current)
++                        promoteIfActive(ctx, current)
++                    }
 +                    LocationRefresh.CONFIRM_ACTION -> {
 +                        val id = intent.getStringExtra("request_id")?.takeIf { it.isNotBlank() } ?: return
 +                        val reply = intent.getParcelableExtra<ResultReceiver>("reply") ?: return

@@ -1,15 +1,15 @@
 {
   "packageName": "io.github.phantom.gps",
-  "version": "v0.1.09",
-  "versionCode": 30,
-  "filename": "PHANToM-GPS-v0.1.09.apk",
-  "sha256": "d308e5db7dce1c1e5d9762721d2a2cab16817b7ff84dc2d18d3d4a7ad7303b96",
+  "version": "v0.1.10",
+  "versionCode": 31,
+  "filename": "PHANToM-GPS-v0.1.10.apk",
+  "sha256": "10571da2d97a08515e3998f3f884abed3d61440edfda5deffc16fe163ff3ce27",
   "bytes": 4332727,
-  "publishedAt": "2026-11-08T05:30:39.325Z",
+  "publishedAt": "2026-11-08T07:22:01.405Z",
   "changes": [
-    "ปรับหน้าต่าง Favorites ให้เข้ากับธีม GeoX สีเขียวนีออน",
-    "ขยายพื้นที่แตะตำแหน่งโปรดให้เต็มแถว โดยไม่ขึ้นอยู่กับความยาวชื่อ",
-    "จัดไอคอนลบไว้ด้านขวาให้ตรงกันทุกแถว และตัดชื่อยาวด้วยจุดไข่ปลา",
-    "เพิ่มปุ่มปิดและจัดปุ่มเพิ่มตำแหน่งโปรดให้กดง่ายขึ้น"
+    "GeoX InstantSync: อัปเดตตำแหน่งผ่าน Location Callback ทันทีเมื่อเปลี่ยนหมุด",
+    "รองรับ Android LocationListener และ Fused LocationCallback ใน LSPosed 2.2.1 (Modern API 102)",
+    "ปรับการตอบสนองของแอปแผนที่โดยคงระบบ Hook เดิมเป็นทางเลือกสำรอง",
+    "ปรับเวอร์ชันจาก 0.1.10-test เป็น 0.1.10 สำหรับติดตั้งทับโดยใช้ลายเซ็นเดิม"
   ]
 }
