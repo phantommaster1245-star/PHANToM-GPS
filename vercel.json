@@ -14,7 +14,7 @@
       ]
     },
     {
-      "source": "/downloads/:file(.*\\.apk)",
+      "source": "/downloads/PHANToM-GPS-:version(v[0-9]+\\.[0-9]+\\.[0-9]+).apk",
       "headers": [
         {
           "key": "Content-Type",
@@ -22,7 +22,7 @@
         },
         {
           "key": "Content-Disposition",
-          "value": "attachment"
+          "value": "attachment; filename=\"GeoX-:version.apk\""
         },
         {
           "key": "Cache-Control",

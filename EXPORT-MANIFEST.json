@@ -291,8 +291,8 @@
     },
     {
       "path": "vercel.json",
-      "bytes": 766,
-      "sha256": "42c2a947502b2a3c8136333c8f8fa745bd4b37f00b42b1ca9c21dce887b98a7f"
+      "bytes": 834,
+      "sha256": "3cb00cb350df4ad6d9d41a81f999f8ea908597b4b1954390d6cc26faf0857baa"
     },
     {
       "path": "web/.gitignore",
@@ -331,8 +331,8 @@
     },
     {
       "path": "web/dist/assets/download.mjs",
-      "bytes": 2715,
-      "sha256": "e4725caebbdeb68d7db2a94b10a32c718b93ba9a15048c5c7ab33ddc49b3c932"
+      "bytes": 2762,
+      "sha256": "12714e8fedd071a3f71f901d914594c73aa631dc15847114400ff6dcb3a18f65"
     },
     {
       "path": "web/dist/assets/firebase-config.mjs",
@@ -401,8 +401,8 @@
     },
     {
       "path": "web/dist/download.html",
-      "bytes": 6423,
-      "sha256": "0ceeed88fda1cd02f79bd30b1e9e0396fe94ce7dac5c79484ff73a8c64b7be48"
+      "bytes": 6439,
+      "sha256": "d9e21c4fdee05949924a0f47dba970c5cd4d884626fc741c7864079c587116f4"
     },
     {
       "path": "web/dist/downloads/PHANToM-GPS-v0.0.16.apk",
