@@ -43,4 +43,4 @@ Public website download updated to GeoX 0.0.18 on 2026-11-05, authorized by the 
 
 2026-11-06: Public download is GeoX 0.0.22 with monochrome Favorites icon and targeted hook diagnostics.
 
-2026-11-06: Current public release is GeoX 0.1.02 (code23); future numbering continues 0.1.03, 0.1.04. Preserve the leading zero. See VERSIONING.md.
+2026-11-08: Public release is GeoX 0.1.09 Modern (code 30). Favorites now has full-row selection, aligned delete actions and a responsive neon-lime popup. See VERSIONING.md.

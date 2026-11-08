@@ -1,5 +1,5 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..bb5fa0f8ed0bb3a6cea9d023705b85d677419e9e 100644
+index d211674657a4308ba7437287558c90117ce56c75..693408d8091a805763fc37e1fd9035563988d6f8 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
@@ -7,7 +7,7 @@ index d211674657a4308ba7437287558c90117ce56c75..bb5fa0f8ed0bb3a6cea9d023705b85d6
 @@ -10 +11,27 @@ plugins {
 -def tagName = '0.0.6'
 +def modernXposed = providers.gradleProperty('geoxModern').orNull == 'true'
-+def tagName = '0.1.07'
++def tagName = '0.1.09'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -41,7 +41,7 @@ index d211674657a4308ba7437287558c90117ce56c75..bb5fa0f8ed0bb3a6cea9d023705b85d6
 +        applicationId "io.github.phantom.gps"
 @@ -18 +45,2 @@ android {
 -        versionCode 6
-+        versionCode 28
++        versionCode 30
 +        buildConfigField "boolean", "MODERN_XPOSED", modernXposed.toString()
 @@ -20 +48,3 @@ android {
 -        // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -884,10 +884,10 @@ index 0000000000000000000000000000000000000000..13d6c5a695ebd5445ab90bc8a1b1c658
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..86a1addd45538fd7e0092575a9888b4c5c01e1b9
+index 0000000000000000000000000000000000000000..e10f4d018f438e39065e0f7cd32191c37a3b3057
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
-@@ -0,0 +1,102 @@
+@@ -0,0 +1,103 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Activity
@@ -953,7 +953,7 @@ index 0000000000000000000000000000000000000000..86a1addd45538fd7e0092575a9888b4c
 +        try { MembershipAccount.renew(context);unlock(context);true }
 +        catch(e:Exception) {
 +            if(e is CancellationException)throw e
-+            val permanent=MembershipAccount.errorCode(e) in setOf("SESSION_REPLACED","MEMBERSHIP_EXPIRED","MEMBER_DISABLED","MEMBER_NOT_FOUND","LOGIN_REQUIRED","UNAUTHENTICATED")
++            val permanent=MembershipAccount.errorCode(e) in setOf("UPGRADE_REQUIRED","SESSION_REPLACED","MEMBERSHIP_EXPIRED","MEMBER_DISABLED","MEMBER_NOT_FOUND","LOGIN_REQUIRED","UNAUTHENTICATED")
 +            if(!permanent && MembershipLease.valid(context))return@withLock true
 +            PrefManager.membershipLease=""
 +            lock(context,MembershipAccount.errorCode(e),!permanent,launchUi,notify);false
@@ -982,6 +982,7 @@ index 0000000000000000000000000000000000000000..86a1addd45538fd7e0092575a9888b4c
 +        if(launchUi&&isForeground())routeToRequiredScreen(context)
 +    }
 +    fun getUserFacingReason(context: Context,reason:String):String = when(reason) {
++        "UPGRADE_REQUIRED" -> "GeoX รุ่นนี้ต่ำกว่ารุ่นขั้นต่ำ กรุณาอัปเดตก่อนใช้งาน"
 +        "MEMBERSHIP_EXPIRED"->"สิทธิ์ 7 วันหมดอายุ กรุณาติดต่อแอดมินเพื่อต่ออายุ"
 +        "SESSION_REPLACED"->"บัญชีนี้ถูกใช้งานบนเครื่องอื่นแล้ว"
 +        "MEMBER_DISABLED"->"บัญชีถูกระงับ กรุณาติดต่อแอดมิน"
@@ -1318,10 +1319,10 @@ index 0000000000000000000000000000000000000000..cf57d652a4f1108adeb40f631e0a8e1d
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/MembershipAccount.kt b/app/src/full/java/io/github/phantom/gps/utils/MembershipAccount.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..ef3582a5917ef5810d1b1f15978445df28fcce9e
+index 0000000000000000000000000000000000000000..e62c26df7ba91dd8b00be345542e53df4e5d4031
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/MembershipAccount.kt
-@@ -0,0 +1,88 @@
+@@ -0,0 +1,97 @@
 +package io.github.phantom.gps.utils
 +
 +import android.content.Context
@@ -1343,8 +1344,17 @@ index 0000000000000000000000000000000000000000..ef3582a5917ef5810d1b1f15978445df
 +    fun isSignedIn(c: Context) = auth.currentUser != null && sessionId(c).isNotEmpty()
 +    fun username(c: Context) = prefs(c).getString("username", "").orEmpty()
 +    fun expiresAt(c: Context) = prefs(c).getLong("expires", 0)
-+    private fun input(c: Context): MutableMap<String, Any> = mutableMapOf("deviceId" to DeviceIdProvider.getDeviceId(),
-+        "bootCount" to MembershipLease.bootCount(c), "elapsedMs" to SystemClock.elapsedRealtime(), "packageName" to BuildConfig.APPLICATION_ID)
++    private fun versionInput() = mapOf(
++        "appVersionCode" to BuildConfig.VERSION_CODE,
++        "releaseChannel" to if (BuildConfig.MODERN_XPOSED) "modern" else "legacy"
++    )
++
++    suspend fun checkVersion() {
++        call("memberAppPolicy", versionInput())
++    }
++
++    private fun input(c: Context): MutableMap<String, Any> = mutableMapOf<String, Any>("deviceId" to DeviceIdProvider.getDeviceId(),
++        "bootCount" to MembershipLease.bootCount(c), "elapsedMs" to SystemClock.elapsedRealtime(), "packageName" to BuildConfig.APPLICATION_ID).apply { putAll(versionInput()) }
 +    suspend fun login(c: Context, username: String, password: String) {
 +        check(AppIntegrity.isSelfValid(c))
 +        val result = call("memberLogin", mapOf("username" to username.trim(), "password" to password))
@@ -2907,7 +2917,7 @@ index c49507362245160560adc43d64d9f59889f18b75..00000000000000000000000000000000
 \ No newline at end of file
 diff --git a/app/src/main/java/io/github/phantom/gps/App.kt b/app/src/main/java/io/github/phantom/gps/App.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..73412c3b50e6cbf0048249bf5df55a0ee2789a0b
+index 0000000000000000000000000000000000000000..13a87f4b45781a9b64162a5526a202d6106141c0
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/App.kt
 @@ -0,0 +1,101 @@
@@ -2998,7 +3008,7 @@ index 0000000000000000000000000000000000000000..73412c3b50e6cbf0048249bf5df55a0e
 +            override fun onStart(owner: LifecycleOwner) {
 +                if (startedActivity is io.github.phantom.gps.ui.ActivationActivity) return
 +                if (LicenseStore.isLocked(this@App)) {
-+                    if (currentActivity !is LockedActivity) {
++                    if (startedActivity !is LockedActivity) {
 +                        LicenseGuard.routeToRequiredScreen(this@App)
 +                    }
 +                    return
@@ -3013,10 +3023,10 @@ index 0000000000000000000000000000000000000000..73412c3b50e6cbf0048249bf5df55a0e
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/adapter/FavListAdapter.kt b/app/src/main/java/io/github/phantom/gps/adapter/FavListAdapter.kt
-similarity index 93%
+similarity index 85%
 rename from app/src/main/java/io/github/jqssun/gpssetter/adapter/FavListAdapter.kt
 rename to app/src/main/java/io/github/phantom/gps/adapter/FavListAdapter.kt
-index 1851614a8685de6a20ab36ffe57cb0399cb8256c..2e77b354c11afd37ef054fe4a05a664473b9f9cd 100644
+index 1851614a8685de6a20ab36ffe57cb0399cb8256c..64f95e698dce2c265159a30a462872a469e73431 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/adapter/FavListAdapter.kt
 +++ b/app/src/main/java/io/github/phantom/gps/adapter/FavListAdapter.kt
 @@ -1 +1 @@
@@ -3027,7 +3037,14 @@ index 1851614a8685de6a20ab36ffe57cb0399cb8256c..2e77b354c11afd37ef054fe4a05a6644
 -import io.github.jqssun.gpssetter.room.Favorite
 +import io.github.phantom.gps.R
 +import io.github.phantom.gps.room.Favorite
-@@ -62 +62 @@ class FavListAdapter(
+@@ -30 +30,2 @@ class FavListAdapter(
+-            address.setOnClickListener {
++            itemView.contentDescription = "เลือกตำแหน่ง ${favorite.address}"
++            itemView.setOnClickListener {
+@@ -38 +39 @@ class FavListAdapter(
+-            return oldItem.address == newItem.address
++            return oldItem.id == newItem.id
+@@ -62 +63 @@ class FavListAdapter(
 -}
 \ No newline at end of file
 +}
@@ -3136,10 +3153,10 @@ index ccd4d0ba21f278802fd8009f7ddde16ab501efd0..618da30537d0fc9f0035945c65e6fdae
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..131d3f67a0f17ebc9db61efdc4fcf2de224c7d7b
+index 0000000000000000000000000000000000000000..309a03c2b30dd851bd3e2e438a3c862918aa59ff
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/ActivationActivity.kt
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,118 @@
 +package io.github.phantom.gps.ui
 +
 +import android.content.Intent
@@ -3204,7 +3221,7 @@ index 0000000000000000000000000000000000000000..131d3f67a0f17ebc9db61efdc4fcf2de
 +            finish()
 +        }
 +        register.setOnClickListener { openAccountPage("register.html") }
-+        reset.setOnClickListener { openAccountPage("account.html#reset-password") }
++        reset.setOnClickListener { openAccountPage("reset-password.html") }
 +        val submit = {
 +            getSystemService(InputMethodManager::class.java).hideSoftInputFromWindow(password.windowToken, 0)
 +            model.login(username.text.toString(), password.text.toString(), remember.isChecked)
@@ -3219,6 +3236,11 @@ index 0000000000000000000000000000000000000000..131d3f67a0f17ebc9db61efdc4fcf2de
 +
 +        if (!showAccount) model.checkExisting()
 +        model.uiState.observe(this) { state ->
++            if (state.upgradeRequired) {
++                startActivity(Intent(this, LockedActivity::class.java).putExtra(LockedActivity.UPDATE_REQUIRED, true))
++                finish()
++                return@observe
++            }
 +            restore.isVisible = state.restoring || state.success
 +            form.isVisible = !restore.isVisible
 +            progress.isVisible = state.busy && !state.restoring
@@ -3328,10 +3350,10 @@ index 0000000000000000000000000000000000000000..93a7599c72678d96d94be268647e3dc7
 +    }
 +}
 diff --git a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-similarity index 56%
+similarity index 55%
 rename from app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 rename to app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
-index 84f61ea4a62c3086df23447da30a593cddcd347a..4845c6f46b7a03a78b9f1b31133bf6721b374a29 100644
+index 84f61ea4a62c3086df23447da30a593cddcd347a..3e64fbbe90e299c2770104dda11ce63354a7a187 100644
 --- a/app/src/main/java/io/github/jqssun/gpssetter/ui/BaseMapActivity.kt
 +++ b/app/src/main/java/io/github/phantom/gps/ui/BaseMapActivity.kt
 @@ -1 +1 @@
@@ -3592,27 +3614,33 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..4845c6f46b7a03a78b9f1b31133bf672
 @@ -233 +377 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        alertDialog =  MaterialAlertDialogBuilder(this).apply {
 +        alertDialog =  MaterialAlertDialogBuilder(this,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog).apply {
-@@ -253,3 +397,3 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -253,5 +397,4 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    private fun openFavoriteListDialog() {
 -        getAllUpdatedFavList()
 -        alertDialog = MaterialAlertDialogBuilder(this)
+-        alertDialog.setTitle(getString(R.string.favorites))
+-        val view = layoutInflater.inflate(R.layout.fav,null)
 +    protected fun openFavoriteListDialog() {
 +        if (favoriteListJob == null) getAllUpdatedFavList()
 +        alertDialog = MaterialAlertDialogBuilder(this,io.github.phantom.gps.R.style.ThemeOverlay_GeoX_Dialog)
-@@ -257 +401 @@ abstract class BaseMapActivity: AppCompatActivity() {
--        val view = layoutInflater.inflate(R.layout.fav,null)
 +        val view = android.view.LayoutInflater.from(alertDialog.context).inflate(R.layout.fav,null)
-@@ -259,0 +404 @@ abstract class BaseMapActivity: AppCompatActivity() {
-+        rcv.layoutParams.height = minOf((resources.displayMetrics.heightPixels * 0.45).toInt(), (320 * resources.displayMetrics.density).toInt())
-@@ -260,0 +406,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -259,0 +403 @@ abstract class BaseMapActivity: AppCompatActivity() {
++        rcv.layoutParams.height = minOf((resources.displayMetrics.heightPixels * 0.43).toInt(), (340 * resources.displayMetrics.density).toInt())
+@@ -260,0 +405,3 @@ abstract class BaseMapActivity: AppCompatActivity() {
++        view.findViewById<View>(R.id.close_favorites).setOnClickListener { dialog.dismiss() }
 +        view.findViewById<View>(R.id.add_favorite).isEnabled = coordinatesReady
 +        view.findViewById<View>(R.id.add_favorite).setOnClickListener { dialog.dismiss(); addFavoriteDialog() }
-@@ -278,0 +426 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -275,0 +423,4 @@ abstract class BaseMapActivity: AppCompatActivity() {
++        dialog.window?.apply {
++            setBackgroundDrawableResource(android.R.color.transparent)
++            setLayout((resources.displayMetrics.widthPixels * 0.92f).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
++        }
+@@ -278,0 +430 @@ abstract class BaseMapActivity: AppCompatActivity() {
 +    private var favoriteListJob: Job? = null
-@@ -280 +428 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -280 +432 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        lifecycleScope.launch {
 +        favoriteListJob = lifecycleScope.launch {
-@@ -291,46 +439,13 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -291,46 +443,13 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    private fun checkUpdates(){
 -        lifecycleScope.launchWhenResumed {
 -            viewModel.update.collect{
@@ -3672,11 +3700,11 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..4845c6f46b7a03a78b9f1b31133bf672
 +                                runCatching {
 +                                    startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(update.releaseUrl)))
 +                                }.onFailure { Toast.makeText(this@BaseMapActivity, R.string.app_update_failed, Toast.LENGTH_LONG).show() }
-@@ -338,2 +453 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -338,2 +457 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -                            else -> {}
 -                        }
 +                            .setNegativeButton(R.string.update_later, null).show()
-@@ -342,8 +455,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -342,8 +459,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -                update?.let { it ->
 -                    viewModel.startDownload(getActivityInstance(), it)
 -                } ?: run {
@@ -3685,10 +3713,10 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..4845c6f46b7a03a78b9f1b31133bf672
 -            }.run {
 -                dialog = create()
 -                dialog.show()
-@@ -352,2 +457,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -352,2 +461,0 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        dialog = alertDialog.create()
 -        dialog.show()
-@@ -385,13 +489,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -385,13 +493,2 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -    protected fun showStartNotification(address: String){
 -        notificationsChannel.showNotification(this){
 -            it.setSmallIcon(R.drawable.ic_stop)
@@ -3704,7 +3732,7 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..4845c6f46b7a03a78b9f1b31133bf672
 -        notificationsChannel.cancelAllNotifications(this)
 +    protected open fun onLocationStopped() {
 +        // Subclasses can override to update map marker state when stopped externally.
-@@ -480,2 +573,8 @@ abstract class BaseMapActivity: AppCompatActivity() {
+@@ -480,2 +577,8 @@ abstract class BaseMapActivity: AppCompatActivity() {
 -        if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
 -            getLastLocation()
 +        if (requestCode == PERMISSION_ID) {
@@ -3715,17 +3743,20 @@ index 84f61ea4a62c3086df23447da30a593cddcd347a..4845c6f46b7a03a78b9f1b31133bf672
 +            if (PrefManager.isClipboardMonitorEnabled) {
 +                ClipboardMonitorService.ensureRunning(this)
 +            }
-@@ -490,0 +590 @@ sealed class SearchProgress {
+@@ -490,0 +594 @@ sealed class SearchProgress {
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt b/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..3ac4755c3fedfb79a43c4ee788e0d9b10057685a
+index 0000000000000000000000000000000000000000..e2dbdfff10e6b207dcd5c43a3da7a5591b7b8df1
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/LockedActivity.kt
-@@ -0,0 +1,77 @@
+@@ -0,0 +1,103 @@
 +package io.github.phantom.gps.ui
 +
 +import android.content.Intent
++import android.net.Uri
++import io.github.phantom.gps.BuildConfig
++import io.github.phantom.gps.utils.MembershipAccount
 +import android.os.Bundle
 +import android.view.View
 +import android.widget.Button
@@ -3755,6 +3786,11 @@ index 0000000000000000000000000000000000000000..3ac4755c3fedfb79a43c4ee788e0d9b1
 +        bindState()
 +
 +        retryButton.setOnClickListener {
++            if (!MembershipAccount.isSignedIn(this)) {
++                startActivity(Intent(this, ActivationActivity::class.java))
++                finish()
++                return@setOnClickListener
++            }
 +            setLoading(true)
 +            LicenseGuard.verifyNowForRetry(this) { success ->
 +                runOnUiThread {
@@ -3770,6 +3806,11 @@ index 0000000000000000000000000000000000000000..3ac4755c3fedfb79a43c4ee788e0d9b1
 +        }
 +
 +        reactivateButton.setOnClickListener {
++            if (requiresUpdate()) {
++                val page = "download.html"
++                runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PUBLIC_SITE_BASE_URL + page))) }
++                return@setOnClickListener
++            }
 +            LicenseGuard.clearLicenseAndDeactivate(this)
 +            startActivity(Intent(this, ActivationActivity::class.java))
 +            finish()
@@ -3782,7 +3823,18 @@ index 0000000000000000000000000000000000000000..3ac4755c3fedfb79a43c4ee788e0d9b1
 +        })
 +    }
 +
++    private fun requiresUpdate() = intent.getBooleanExtra(UPDATE_REQUIRED, false) ||
++        LicenseStore.getLockReason(this) == "UPGRADE_REQUIRED"
++
 +    private fun bindState() {
++        if (requiresUpdate()) {
++            reasonText.text = "ต้องอัปเดต GeoX\nรุ่นที่ติดตั้งต่ำกว่ารุ่นขั้นต่ำที่อนุญาต"
++            reactivateButton.text = "เปิดหน้าดาวน์โหลด"
++            retryButton.text = "ตรวจสอบอีกครั้ง"
++            return
++        }
++        reactivateButton.text = "เข้าสู่ระบบใหม่"
++        retryButton.text = "ตรวจสิทธิ์อีกครั้ง"
 +        val reason = LicenseStore.getLockReason(this)
 +        reasonText.text = buildString {
 +            append(getString(R.string.session_locked_desc))
@@ -3793,6 +3845,8 @@ index 0000000000000000000000000000000000000000..3ac4755c3fedfb79a43c4ee788e0d9b1
 +        }
 +        retryButton.visibility = View.VISIBLE
 +    }
++
++    companion object { const val UPDATE_REQUIRED = "geox_update_required" }
 +
 +    private fun setLoading(loading: Boolean) {
 +        progressBar.visibility = if (loading) View.VISIBLE else View.GONE
@@ -3826,10 +3880,10 @@ index 0000000000000000000000000000000000000000..610e33609a6781da93f0f89994e8dadc
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt b/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..8e89bff5ef19b93794965ee6bca8eb5c7672eb46
+index 0000000000000000000000000000000000000000..e128ab8b54e2a0e648d7f4136e48c4f32ca9fa10
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/ui/MembershipLoginViewModel.kt
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,52 @@
 +package io.github.phantom.gps.ui
 +
 +import android.app.Application
@@ -3838,20 +3892,33 @@ index 0000000000000000000000000000000000000000..8e89bff5ef19b93794965ee6bca8eb5c
 +import kotlinx.coroutines.launch
 +
 +class MembershipLoginViewModel(app:Application):AndroidViewModel(app) {
-+    data class State(val busy:Boolean=false,val restoring:Boolean=false,val success:Boolean=false,val error:String="",val notice:String="")
++    data class State(val busy:Boolean=false,val restoring:Boolean=false,val upgradeRequired:Boolean=false,val success:Boolean=false,val error:String="",val notice:String="")
 +    private val state=MutableLiveData(State())
 +    val uiState:LiveData<State> = state
 +    private var checked=false
 +    fun checkExisting() {
 +        if(checked)return;checked=true
-+        if(!MembershipAccount.isSignedIn(getApplication()))return
++
 +        state.value = State(busy = true, restoring = true)
 +        viewModelScope.launch {
 +            val app = getApplication<Application>()
++            if (!MembershipAccount.isSignedIn(app)) {
++                val blocked = kotlinx.coroutines.withTimeoutOrNull(3000) {
++                    try {
++                        MembershipAccount.checkVersion()
++                        false
++                    } catch (e: Exception) {
++                        if (e is kotlinx.coroutines.CancellationException) throw e
++                        MembershipAccount.errorCode(e) == "UPGRADE_REQUIRED"
++                    }
++                } ?: false
++                state.value = State(upgradeRequired = blocked)
++                return@launch
++            }
 +            val ok = LicenseGuard.verifyExistingSession(app)
 +            if (ok) LicenseGuard.resumeMembershipServices(app)
 +            val reason = LicenseStore.getLockReason(app)
-+            state.value = State(success = ok, error = if (ok) "" else LicenseGuard.getUserFacingReason(app, reason))
++            state.value = State(success = ok, upgradeRequired = !ok && reason == "UPGRADE_REQUIRED", error = if (ok) "" else LicenseGuard.getUserFacingReason(app, reason))
 +        }
 +    }
 +    fun login(username:String,password:String,remember:Boolean) {
@@ -3865,7 +3932,7 @@ index 0000000000000000000000000000000000000000..8e89bff5ef19b93794965ee6bca8eb5c
 +                LicenseGuard.resumeMembershipServices(getApplication())
 +                state.value=State(success=true,notice=if(remembered)"" else "เข้าสู่ระบบสำเร็จ แต่จดจำบัญชีไม่สำเร็จ กรุณาลองเปิดตัวเลือกนี้ใหม่ภายหลัง")
 +            }
-+            catch(e:Exception){if(e is kotlinx.coroutines.CancellationException)throw e;state.value=State(error=MembershipAccount.message(e))}
++            catch(e:Exception){if(e is kotlinx.coroutines.CancellationException)throw e;state.value=State(upgradeRequired=MembershipAccount.errorCode(e)=="UPGRADE_REQUIRED",error=MembershipAccount.message(e))}
 +        }
 +    }
 +}
@@ -14207,6 +14274,90 @@ f&xGq|Da13%lc|7v@^H2n3i6?%pdk;JwFvn?@2A@w
 literal 0
 HcmV?d00001
 
+diff --git a/app/src/main/res/drawable/geox_favorite_bookmark.xml b/app/src/main/res/drawable/geox_favorite_bookmark.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..06f3601151df010f1c467b499227547af36585ca
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_favorite_bookmark.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="32dp" android:height="32dp" android:viewportWidth="24" android:viewportHeight="24">
++<path android:fillColor="#C7F568" android:pathData="M17,3H7c-1.1,0 -2,0.9 -2,2v16l7,-3 7,3V5c0,-1.1 -0.9,-2 -2,-2zM17,18l-5,-2.18L7,18V5h10z"/>
++</vector>
+\ No newline at end of file
+diff --git a/app/src/main/res/drawable/geox_favorite_close.xml b/app/src/main/res/drawable/geox_favorite_close.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..b16e2e4b9ffc37b25927b8945c22f9eb76cc3e85
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_favorite_close.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
++<path android:fillColor="#EFF5F0" android:pathData="M19,6.41L17.59,5 12,10.59 6.41,5 5,6.41 10.59,12 5,17.59 6.41,19 12,13.41 17.59,19 19,17.59 13.41,12z"/>
++</vector>
+\ No newline at end of file
+diff --git a/app/src/main/res/drawable/geox_favorite_dialog.xml b/app/src/main/res/drawable/geox_favorite_dialog.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b0560daa1f6abf3e4ceb7faacbd1cbf8d706394
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_favorite_dialog.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="utf-8"?>
++<shape xmlns:android="http://schemas.android.com/apk/res/android">
++    <solid android:color="#11231A"/>
++    <corners android:radius="28dp"/>
++    <stroke android:width="1dp" android:color="#81B962"/>
++</shape>
+\ No newline at end of file
+diff --git a/app/src/main/res/drawable/geox_favorite_icon_bg.xml b/app/src/main/res/drawable/geox_favorite_icon_bg.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..9b13995ea03f567db96e48ea58f29aeaf34dce65
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_favorite_icon_bg.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<shape xmlns:android="http://schemas.android.com/apk/res/android">
++    <solid android:color="#315D28"/><corners android:radius="12dp"/>
++</shape>
+\ No newline at end of file
+diff --git a/app/src/main/res/drawable/geox_favorite_pin.xml b/app/src/main/res/drawable/geox_favorite_pin.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..35de89f86aaa562476d16775f4c5533545bc415c
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_favorite_pin.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
++<path android:fillColor="#C7F568" android:pathData="M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM12,11.5a2.5,2.5 0,1 1,0 -5a2.5,2.5 0,0 1,0 5z"/>
++</vector>
+\ No newline at end of file
+diff --git a/app/src/main/res/drawable/geox_favorite_row.xml b/app/src/main/res/drawable/geox_favorite_row.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..4e4472899e99445358d9dc9c9866a3dddb30ee18
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_favorite_row.xml
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="utf-8"?>
++<selector xmlns:android="http://schemas.android.com/apk/res/android">
++    <item android:state_pressed="true">
++        <shape><solid android:color="#294B32"/><corners android:radius="17dp"/><stroke android:width="1dp" android:color="#C7F568"/></shape>
++    </item>
++    <item>
++        <shape><solid android:color="#1B3325"/><corners android:radius="17dp"/><stroke android:width="1dp" android:color="#3D6549"/></shape>
++    </item>
++</selector>
+\ No newline at end of file
+diff --git a/app/src/main/res/drawable/geox_favorite_trash_bg.xml b/app/src/main/res/drawable/geox_favorite_trash_bg.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..13687657f684e038a8c8cc4edaf74d74f6e99023
+--- /dev/null
++++ b/app/src/main/res/drawable/geox_favorite_trash_bg.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#55C7F568">
++    <item><shape><solid android:color="#12271B"/><corners android:radius="12dp"/><stroke android:width="1dp" android:color="#456B4D"/></shape></item>
++</ripple>
+\ No newline at end of file
 diff --git a/app/src/main/res/drawable/geox_login_background.xml b/app/src/main/res/drawable/geox_login_background.xml
 new file mode 100644
 index 0000000000000000000000000000000000000000..529dd0e6c325b78bf4c7a0ba310030254b72bf44
@@ -14686,10 +14837,10 @@ index 054c97b2e62bc248b0485ae238bb60a05c95ff14..d13677f661d55f60415c964153221752
 \ No newline at end of file
 diff --git a/app/src/main/res/layout/activity_member_login.xml b/app/src/main/res/layout/activity_member_login.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..fc4b5a8472c7b90cc2333289a954a3b8653e8232
+index 0000000000000000000000000000000000000000..66e2a3277b237986918761478b015d723fed8f31
 --- /dev/null
 +++ b/app/src/main/res/layout/activity_member_login.xml
-@@ -0,0 +1,92 @@
+@@ -0,0 +1,87 @@
 +<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
 +    android:layout_width="match_parent" android:layout_height="match_parent"
 +    android:fitsSystemWindows="true" android:background="@drawable/geox_login_background">
@@ -14699,28 +14850,20 @@ index 0000000000000000000000000000000000000000..fc4b5a8472c7b90cc2333289a954a3b8
 +            android:orientation="vertical" android:gravity="center_horizontal" android:paddingStart="18dp"
 +            android:paddingEnd="18dp" android:paddingTop="20dp" android:paddingBottom="16dp"
 +            android:focusableInTouchMode="true">
-+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GeoX" android:textSize="46sp" android:textColor="#C7FF63" android:gravity="center" android:textStyle="bold" />
-+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="YOUR LOCATION. YOUR CONTROL." android:textSize="12sp" android:textColor="#C7FF63" android:gravity="center" />
-+            <FrameLayout android:layout_width="match_parent" android:layout_height="68dp"
-+                android:layout_marginTop="12dp" android:importantForAccessibility="noHideDescendants">
-+                <ImageView android:layout_width="match_parent" android:layout_height="match_parent"
-+                    android:scaleType="fitXY" android:src="@drawable/geox_login_horizon" />
-+                <ImageView android:layout_width="25dp" android:layout_height="25dp"
-+                    android:layout_gravity="top|center_horizontal" android:layout_marginTop="4dp"
-+                    android:src="@drawable/geox_login_pin" />
-+            </FrameLayout>
++            <ImageView android:id="@+id/memberAppIcon"
++                android:layout_width="64dp" android:layout_height="64dp"
++                android:layout_marginBottom="8dp" android:scaleType="fitCenter"
++                android:src="@drawable/geox_brand_icon" android:importantForAccessibility="no" />
++            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
++                android:text="GeoX" android:textSize="34sp" android:textColor="#C7FF63"
++                android:gravity="center" android:textStyle="bold" />
++            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
++                android:layout_marginBottom="20dp" android:text="YOUR LOCATION. YOUR CONTROL."
++                android:textSize="11sp" android:textColor="#A1ADB2" android:gravity="center" />
 +            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-+                android:orientation="vertical" android:padding="20dp" android:background="@drawable/geox_login_card">
-+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-+                    <ImageView android:layout_width="24dp" android:layout_height="24dp"
-+                        android:src="@drawable/geox_login_shield" android:importantForAccessibility="no" />
-+                    <View android:layout_width="1dp" android:layout_height="28dp" android:layout_marginHorizontal="12dp" android:background="#62747A" />
-+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-+                        android:text="เข้าสู่ระบบสมาชิก เริ่มสิทธิ์ 7 วันเมื่อเข้าแอปครั้งแรก ต่ออายุผ่านแอดมิน"
-+                        android:textColor="#F5F7F8" android:textSize="13sp" />
-+                </LinearLayout>
++                android:orientation="vertical" android:padding="16dp" android:background="@drawable/geox_login_card">
 +                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" android:textSize="14sp" android:textColor="#C7FF63" android:id="@+id/memberStatus" android:visibility="gone" />
-+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ชื่อผู้ใช้ หรือ Gmail" android:textSize="15sp" android:textColor="#F5F7F8" android:layout_marginTop="14dp" android:drawablePadding="8dp" app:drawableStartCompat="@drawable/geox_login_person" />
++                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ชื่อผู้ใช้ หรือ Gmail" android:textSize="15sp" android:textColor="#F5F7F8" android:layout_marginTop="12dp" />
 + <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
 +    android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
 +    app:hintEnabled="false" app:boxBackgroundColor="#111C24" app:boxStrokeColor="@color/geox_login_input_stroke"
@@ -14731,7 +14874,7 @@ index 0000000000000000000000000000000000000000..fc4b5a8472c7b90cc2333289a954a3b8
 +        android:inputType="textVisiblePassword" android:autofillHints="username"
 +        android:textColor="#F5F7F8" android:textColorHint="#A1ADB2" android:singleLine="true" android:imeOptions="actionNext" />
 + </com.google.android.material.textfield.TextInputLayout>
-+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="รหัสผ่าน GeoX" android:textSize="15sp" android:textColor="#F5F7F8" android:layout_marginTop="14dp" android:drawablePadding="8dp" app:drawableStartCompat="@drawable/geox_login_lock" />
++                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="รหัสผ่าน GeoX" android:textSize="15sp" android:textColor="#F5F7F8" android:layout_marginTop="12dp" />
 + <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
 +    android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
 +    app:hintEnabled="false" app:boxBackgroundColor="#111C24" app:boxStrokeColor="@color/geox_login_input_stroke"
@@ -14745,29 +14888,32 @@ index 0000000000000000000000000000000000000000..fc4b5a8472c7b90cc2333289a954a3b8
 +                <CheckBox android:id="@+id/memberRemember" android:layout_width="match_parent"
 +                    android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="8dp"
 +                    android:text="จดจำบัญชีในเครื่องนี้" android:buttonTint="#C7FF63" android:textColor="#F5F7F8" />
-+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="บันทึกหลังเข้าสู่ระบบสำเร็จ เมื่อต้องเข้าสู่ระบบใหม่ แอปจะกรอกข้อมูลให้ โดยยังต้องตรวจสิทธิ์ตามปกติ" android:textSize="12sp" android:textColor="#A1ADB2"  />
++                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="กรอกข้อมูลที่จดจำให้เมื่อเข้าสู่ระบบครั้งถัดไป" android:textSize="12sp" android:textColor="#A1ADB2"  />
 +                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" android:textSize="14sp" android:textColor="#FFB5B5" android:id="@+id/memberError" android:layout_marginTop="8dp" android:accessibilityLiveRegion="polite" android:visibility="gone" />
 +                <com.google.android.material.button.MaterialButton android:id="@+id/memberLogin"
-+                    android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp"
-+                    android:layout_marginTop="12dp" android:text="เข้าสู่ระบบ" android:textSize="17sp" android:textStyle="bold"
++                    android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp"
++                    android:layout_marginTop="12dp" android:text="เข้าสู่ระบบ" android:textSize="15sp" android:textStyle="bold"
 +                    android:textColor="#0B1017" app:backgroundTint="@color/geox_login_primary" app:cornerRadius="17dp"
-+                    app:icon="@drawable/geox_login_enter" app:iconTint="#0B1017" app:iconGravity="textStart" />
++                    />
 +                <com.google.android.material.progressindicator.CircularProgressIndicator android:id="@+id/memberProgress" android:visibility="gone"
 +        android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center"
 +        android:indeterminate="true" app:indicatorSize="26dp" app:indicatorColor="#C7FF63" />
-+                <com.google.android.material.button.MaterialButton android:id="@+id/memberRegister"
-+     style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent"
-+     android:layout_height="wrap_content" android:minHeight="48dp" android:text="สมัครสมาชิก / จัดการบัญชีบนเว็บ"
-+     android:textAllCaps="false" android:layout_marginTop="6dp" android:textColor="#C7FF63" app:cornerRadius="17dp" app:strokeColor="#C7FF63" app:icon="@drawable/geox_login_web" app:iconTint="#C7FF63" app:iconSize="18dp" app:iconGravity="textStart" />
++                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
++                    android:orientation="horizontal" android:layout_marginTop="6dp">
++                    <com.google.android.material.button.MaterialButton android:id="@+id/memberRegister"
++                        style="@style/Widget.Material3.Button.TextButton" android:layout_width="0dp"
++                        android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp"
++                        android:text="สมัคร / จัดการบัญชี" android:textColor="#C7FF63" />
++                    <com.google.android.material.button.MaterialButton android:id="@+id/memberReset"
++                        style="@style/Widget.Material3.Button.TextButton" android:layout_width="0dp"
++                        android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp"
++                        android:text="ลืมรหัสผ่าน?" android:textColor="#C7FF63" />
++                </LinearLayout>
 +                <com.google.android.material.button.MaterialButton android:id="@+id/memberLogout"
 +     style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent"
 +     android:layout_height="wrap_content" android:minHeight="48dp" android:text="ออกจากระบบ"
 +     android:textAllCaps="false" android:visibility="gone" />
 +            </LinearLayout>
-+            <com.google.android.material.button.MaterialButton android:id="@+id/memberReset"
-+     style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent"
-+     android:layout_height="wrap_content" android:minHeight="48dp" android:text="ลืมรหัสผ่าน?"
-+     android:textAllCaps="false" android:textColor="#C7FF63" />
 +            <com.google.android.material.button.MaterialButton android:id="@+id/memberForget"
 +     style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent"
 +     android:layout_height="wrap_content" android:minHeight="48dp" android:text="ลืมบัญชีที่จดจำไว้"
@@ -14816,15 +14962,16 @@ index 64bc3f68ebede8422f4ed0ebb9f665f6f3c56b72..06874407e7a70a5b7cae2159a6f3c85d
 +<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp" android:background="#1B2823"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical"><ImageView android:layout_width="56dp" android:layout_height="56dp" android:src="@drawable/geox_brand_icon" android:importantForAccessibility="no"/><LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical"><TextView android:id="@+id/member_username" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GeoX" android:textSize="20sp" android:textStyle="bold" android:textColor="#EFF5F0"/><TextView android:id="@+id/member_remaining" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="14sp" android:textStyle="bold" android:textColor="#C7F568" android:paddingTop="4dp"/></LinearLayout></LinearLayout><TextView android:id="@+id/member_details" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="13sp" android:textColor="#9AA8A3" android:paddingTop="12dp"/></LinearLayout>
 \ No newline at end of file
 diff --git a/app/src/main/res/layout/fav.xml b/app/src/main/res/layout/fav.xml
-index e5d6d8c8b9e77d18bf31ada0f03e1ee6dcd861fb..4cec091e2fea78e6cfa53a687578d58292847c6a 100644
+index e5d6d8c8b9e77d18bf31ada0f03e1ee6dcd861fb..98c0d88d39728d3ca4eeff799dea0cb4127ad4f6 100644
 --- a/app/src/main/res/layout/fav.xml
 +++ b/app/src/main/res/layout/fav.xml
-@@ -1,16 +1 @@
--<?xml version="1.0" encoding="utf-8"?>
+@@ -2,3 +2,2 @@
 -<LinearLayout
 -    xmlns:android="http://schemas.android.com/apk/res/android"
 -    android:orientation="vertical"
--    android:layout_width="match_parent"
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
+@@ -6,10 +5,38 @@
 -    android:layout_height="match_parent">
 -
 -
@@ -14835,10 +14982,105 @@ index e5d6d8c8b9e77d18bf31ada0f03e1ee6dcd861fb..4cec091e2fea78e6cfa53a687578d582
 -        android:layout_height="match_parent"
 -        android:dividerHeight="2dp"/>
 -
--</LinearLayout>
-\ No newline at end of file
-+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="12dp"><androidx.recyclerview.widget.RecyclerView android:id="@+id/favorites_list" android:layout_width="match_parent" android:layout_height="320dp"/><com.google.android.material.button.MaterialButton android:id="@+id/add_favorite" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="end" android:text="Add favorite"/></LinearLayout>
-\ No newline at end of file
++    android:layout_height="wrap_content"
++    android:orientation="vertical"
++    android:padding="20dp"
++    android:background="@drawable/geox_favorite_dialog">
++    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
++        android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="16dp">
++        <ImageView android:layout_width="40dp" android:layout_height="44dp"
++            android:src="@drawable/geox_favorite_bookmark" android:contentDescription="@null"/>
++        <LinearLayout android:layout_width="0dp" android:layout_weight="1"
++            android:layout_height="wrap_content" android:layout_marginStart="8dp"
++            android:orientation="vertical">
++            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
++                android:text="Favorites" android:textColor="#EFF5F0" android:textSize="25sp"
++                android:textStyle="bold"/>
++            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
++                android:text="ตำแหน่งโปรด · แตะเพื่อใช้งาน"
++                android:textColor="#9AAC9E" android:textSize="12sp"/>
++        </LinearLayout>
++        <ImageView android:id="@+id/close_favorites" android:layout_width="48dp"
++            android:layout_height="48dp" android:padding="13dp"
++            android:background="@drawable/geox_favorite_trash_bg"
++            android:src="@drawable/geox_favorite_close"
++            android:clickable="true" android:focusable="true"
++            android:contentDescription="ปิดรายการตำแหน่งโปรด"/>
++    </LinearLayout>
++    <View android:layout_width="match_parent" android:layout_height="1dp"
++        android:background="#3D6549" android:layout_marginBottom="10dp"/>
++    <androidx.recyclerview.widget.RecyclerView android:id="@+id/favorites_list"
++        android:layout_width="match_parent" android:layout_height="280dp"
++        android:clipToPadding="false" android:paddingBottom="6dp"/>
++    <com.google.android.material.button.MaterialButton
++        android:id="@+id/add_favorite" android:layout_width="match_parent"
++        android:layout_height="56dp" android:layout_marginTop="14dp"
++        android:text="+  Add Favorite" android:textAllCaps="false"
++        android:textSize="17sp" android:textStyle="bold" android:textColor="#132018"
++        android:backgroundTint="#C7F568"
++        android:insetTop="0dp" android:insetBottom="0dp"
++        app:cornerRadius="28dp"/>
+diff --git a/app/src/main/res/layout/fav_items.xml b/app/src/main/res/layout/fav_items.xml
+index a9b6c36e8b3b89598f5aefb89166aa1c0c802b14..477eaba2222b792833ce0f31bd3aa96138ea681c 100644
+--- a/app/src/main/res/layout/fav_items.xml
++++ b/app/src/main/res/layout/fav_items.xml
+@@ -2,32 +2,24 @@
+-<LinearLayout
+-    xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:orientation="horizontal"
+-    android:paddingStart="20dp"
+-    android:paddingTop="5dp"
+-    android:paddingBottom="5dp"
+-    android:layout_weight="2"
+-    android:layout_width="match_parent"
+-    android:layout_height="wrap_content">
+-
+-
+-    <TextView
+-        android:textAppearance="@style/TextAppearance.AppCompat.Widget.TextView.SpinnerItem"
+-        android:id="@+id/address"
+-        android:layout_width="0dp"
+-        android:layout_height="wrap_content"
+-        android:layout_marginStart="8dp"
+-        android:layout_weight="1"
+-        android:text="@string/address"
+-        android:background="?attr/selectableItemBackgroundBorderless"
+-        android:clickable="true"/>
+-
+-    <ImageView
+-        android:id="@+id/del"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:src="@drawable/ic_delete"
+-        android:layout_marginEnd="@dimen/padding_16"
+-        android:contentDescription="@string/delete_favorite_item"
+-        android:background="?attr/selectableItemBackgroundBorderless"
+-        android:clickable="true"/>
+-
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:id="@+id/favorite_row"
++    android:layout_width="match_parent" android:layout_height="64dp"
++    android:orientation="horizontal" android:gravity="center_vertical"
++    android:layout_marginTop="5dp" android:layout_marginBottom="5dp"
++    android:paddingStart="12dp" android:paddingEnd="8dp"
++    android:background="@drawable/geox_favorite_row"
++    android:clickable="true" android:focusable="true">
++    <ImageView android:layout_width="42dp" android:layout_height="42dp"
++        android:padding="9dp" android:src="@drawable/geox_favorite_pin"
++        android:background="@drawable/geox_favorite_icon_bg"
++        android:contentDescription="@null"/>
++    <TextView android:id="@+id/address"
++        android:layout_width="0dp" android:layout_weight="1"
++        android:layout_height="match_parent" android:gravity="center_vertical"
++        android:paddingStart="12dp" android:paddingEnd="8dp"
++        android:singleLine="true" android:ellipsize="end"
++        android:textColor="#EFF5F0" android:textSize="16sp"/>
++    <ImageView android:id="@+id/del"
++        android:layout_width="48dp" android:layout_height="48dp"
++        android:padding="12dp" android:src="@drawable/ic_delete"
++        android:background="@drawable/geox_favorite_trash_bg"
++        android:clickable="true" android:focusable="true"
++        android:contentDescription="@string/delete_favorite_item"/>
 diff --git a/app/src/main/res/layout/include_search.xml b/app/src/main/res/layout/include_search.xml
 index 69494f18cfdd1ac1dcedafcce12e9695d61dde05..ab9c87418e3598a2d9de017c4f4ac480b149dea4 100644
 --- a/app/src/main/res/layout/include_search.xml
