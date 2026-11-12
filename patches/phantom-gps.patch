@@ -1,5 +1,5 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..5aad63d7efa4f111b16b5278f96377359b613276 100644
+index d211674657a4308ba7437287558c90117ce56c75..4de7f4ae941bc54cc350a304a04075ca3ca8acd6 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
@@ -7,7 +7,7 @@ index d211674657a4308ba7437287558c90117ce56c75..5aad63d7efa4f111b16b5278f9637735
 @@ -10 +11,27 @@ plugins {
 -def tagName = '0.0.6'
 +def modernXposed = providers.gradleProperty('geoxModern').orNull == 'true'
-+def tagName = '0.1.12'
++def tagName = '0.1.13'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -41,7 +41,7 @@ index d211674657a4308ba7437287558c90117ce56c75..5aad63d7efa4f111b16b5278f9637735
 +        applicationId "io.github.phantom.gps"
 @@ -18 +45,3 @@ android {
 -        versionCode 6
-+        versionCode 33
++        versionCode 34
 +        buildConfigField "boolean", "MODERN_XPOSED", modernXposed.toString()
 +        buildConfigField "boolean", "INSTANTSYNC_EXPERIMENT", modernXposed.toString()
 @@ -20 +49,3 @@ android {
@@ -553,10 +553,10 @@ index 578bfcbf9e0c6f9250b0fc09dfa9de3f31112cbb..00000000000000000000000000000000
 -    }
 -}
 diff --git a/app/src/full/java/io/github/jqssun/gpssetter/ui/MapActivity.kt b/app/src/full/java/io/github/phantom/gps/ui/MapActivity.kt
-similarity index 72%
+similarity index 70%
 rename from app/src/full/java/io/github/jqssun/gpssetter/ui/MapActivity.kt
 rename to app/src/full/java/io/github/phantom/gps/ui/MapActivity.kt
-index fd5073389c761425ed5f24818508150f22d01e0d..65ff46c4b487cffb7b93dce7adb58c0d01d0f56b 100644
+index fd5073389c761425ed5f24818508150f22d01e0d..4b0c77ff9b1d93adc36289dc359dd0cef569c264 100644
 --- a/app/src/full/java/io/github/jqssun/gpssetter/ui/MapActivity.kt
 +++ b/app/src/full/java/io/github/phantom/gps/ui/MapActivity.kt
 @@ -1 +1 @@
@@ -627,10 +627,12 @@ index fd5073389c761425ed5f24818508150f22d01e0d..65ff46c4b487cffb7b93dce7adb58c0d
 -                viewModel.update(false, it!!.latitude, it.longitude)
 -            }
 -            removeMarker()
-@@ -167 +179,2 @@ class MapActivity: BaseMapActivity(), OnMapReadyCallback, GoogleMap.OnMapClickLi
+@@ -167,2 +179,3 @@ class MapActivity: BaseMapActivity(), OnMapReadyCallback, GoogleMap.OnMapClickLi
 -            cancelNotification()
+-            showToast(getString(R.string.location_unset))
 +            removeMarker()
-+            LocationController.stop(this)
++            val published = LocationController.stop(this)
++            showToast(if (published) getString(R.string.location_unset) else "กำลังส่งคำสั่งหยุดไปยัง LSPosed")
 @@ -171,0 +185 @@ class MapActivity: BaseMapActivity(), OnMapReadyCallback, GoogleMap.OnMapClickLi
 +
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/DeviceIdProvider.kt b/app/src/full/java/io/github/phantom/gps/utils/DeviceIdProvider.kt
@@ -885,10 +887,10 @@ index 0000000000000000000000000000000000000000..13d6c5a695ebd5445ab90bc8a1b1c658
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..6e8a7bff2910e155d7e6759bd85dddbc1d065089
+index 0000000000000000000000000000000000000000..ea094b7b0e7e40e031bf27f787e5b8d5561dea0f
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/LicenseGuard.kt
-@@ -0,0 +1,115 @@
+@@ -0,0 +1,117 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Activity
@@ -946,7 +948,9 @@ index 0000000000000000000000000000000000000000..6e8a7bff2910e155d7e6759bd85dddbc
 +        return true
 +    }
 +    fun stopActiveHeartbeat(context:Context) {
-+        context.stopService(Intent(context,MembershipHeartbeatService::class.java))
++        if (MembershipHeartbeatService.running) {
++            context.stopService(Intent(context,MembershipHeartbeatService::class.java))
++        }
 +    }
 +    fun stopAllMaintenance(context:Context) {
 +        foregroundChecks?.cancel();foregroundChecks=null
@@ -1496,7 +1500,7 @@ index 0000000000000000000000000000000000000000..12a7bca093cd6a2c745e1dcd9f88c6b3
 +}
 diff --git a/app/src/full/java/io/github/phantom/gps/utils/MembershipHeartbeatService.kt b/app/src/full/java/io/github/phantom/gps/utils/MembershipHeartbeatService.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..c608fdd30a610f6131d5545edd598d1deb273a64
+index 0000000000000000000000000000000000000000..cad156fa78ed013cca9897554e73304f6cf4049e
 --- /dev/null
 +++ b/app/src/full/java/io/github/phantom/gps/utils/MembershipHeartbeatService.kt
 @@ -0,0 +1,44 @@
@@ -1515,12 +1519,12 @@ index 0000000000000000000000000000000000000000..c608fdd30a610f6131d5545edd598d1d
 +    private var job:Job?=null
 +    private var randomTickJob:Job?=null
 +    override fun onStartCommand(intent:Intent?,flags:Int,startId:Int):Int {
++        startForeground(NotificationsChannel.NOTIFICATION_ID_LOCATION,LocationNotification.build(this))
 +        if(!AppIntegrity.isSelfValid(this)||!LocationNoticePolicy.needsActiveService(MembershipAccount.isSignedIn(this),PrefManager.isStarted)){stopSelf();return START_NOT_STICKY}
 +        if(job?.isActive==true)return START_STICKY
 +        running=true
 +        getSystemService(NotificationManager::class.java).cancel(141)
 +        getSystemService(NotificationManager::class.java).cancel(NotificationsChannel.NOTIFICATION_ID_CLIPBOARD)
-+        startForeground(NotificationsChannel.NOTIFICATION_ID_LOCATION,LocationNotification.build(this))
 +        // Timer refreshes hook callbacks but never rewrites preferences each second.
 +        // Ticker lives in the existing authorized foreground heartbeat service.
 +        randomTickJob=scope.launch {
@@ -5997,10 +6001,10 @@ index 0000000000000000000000000000000000000000..363d32453f64237a503dde1b8cbc6347
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/HookDiagnostics.kt b/app/src/main/java/io/github/phantom/gps/utils/HookDiagnostics.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..548cb4f5d6b67adec46a515952889dcc56799501
+index 0000000000000000000000000000000000000000..6775cf17533bec20946b31b49b4a28a353607981
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/HookDiagnostics.kt
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,65 @@
 +package io.github.phantom.gps.utils
 +
 +import android.os.Bundle
@@ -6050,7 +6054,12 @@ index 0000000000000000000000000000000000000000..548cb4f5d6b67adec46a515952889dcc
 +                    "\nAndroid ${data.getInt("platform_hooks")} · Fused ${data.getInt("fused_hooks")}" +
 +                        " · GNSS ${data.getInt("gnss_hooks")} · NMEA ${data.getInt("nmea_hooks")}"
 +                } else ""
-+                states.add("Hook ${data.getString("version","?")}: $text$coverage")
++                val delivery = when (data.getString("active_callback_delivered")) {
++                    "PLATFORM" -> "\nActive Callback: Android"
++                    "FUSED" -> "\nActive Callback: Fused"
++                    else -> ""
++                }
++                states.add("Hook ${data.getString("version","?")}: $text$coverage$delivery")
 +                dialog.setMessage(sharing+"\n\n"+states.joinToString("\n\n"))
 +            }
 +        }
@@ -6093,10 +6102,10 @@ index 0000000000000000000000000000000000000000..c0fcf9cb72d803a3be64e3c0222b0134
 +}
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/JoystickService.kt b/app/src/main/java/io/github/phantom/gps/utils/JoystickService.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..2d4bcb660c92c3a068fde178925a37f094dacae5
+index 0000000000000000000000000000000000000000..254650a06f8e47d0450d34ff29bc3e5479afe639
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/JoystickService.kt
-@@ -0,0 +1,148 @@
+@@ -0,0 +1,151 @@
 +package io.github.phantom.gps.utils
 +
 +import android.annotation.SuppressLint
@@ -6125,10 +6134,12 @@ index 0000000000000000000000000000000000000000..2d4bcb660c92c3a068fde178925a37f0
 +    private var lat : Double = PrefManager.getLat
 +    private var lon : Double = PrefManager.getLng
 +    private var lastMoveAtMs = 0L
++    private var gestureGeneration = PrefManager.stopGeneration
 +    private val publishThread = HandlerThread("GeoX-joystick-location")
 +    private lateinit var publishHandler: Handler
 +    private val publishLock = Any()
-+    private var latestLocation: Pair<Double, Double>? = null
++    private data class Move(val latitude: Double, val longitude: Double, val generation: Long)
++    private var latestLocation: Move? = null
 +    private var publishQueued = false
 +    private val publishFrame = object : Runnable {
 +        override fun run() {
@@ -6136,7 +6147,7 @@ index 0000000000000000000000000000000000000000..2d4bcb660c92c3a068fde178925a37f0
 +                publishQueued = false
 +                latestLocation.also { latestLocation = null }
 +            } ?: return
-+            if (PrefManager.isStarted && PrefManager.updateNow(true, position.first, position.second)) {
++            if (PrefManager.updateJoystick(position.generation, position.latitude, position.longitude)) {
 +                LocationRefresh.send(applicationContext)
 +            }
 +            synchronized(publishLock) {
@@ -6160,6 +6171,7 @@ index 0000000000000000000000000000000000000000..2d4bcb660c92c3a068fde178925a37f0
 +        mJoystickView?.setOnTouchListener { v, event ->
 +            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
 +                // Rebase each new gesture when another GeoX control moved the pin.
++                gestureGeneration = PrefManager.stopGeneration
 +                lat = PrefManager.getLat
 +                lon = PrefManager.getLng
 +                lastMoveAtMs = 0L
@@ -6235,7 +6247,7 @@ index 0000000000000000000000000000000000000000..2d4bcb660c92c3a068fde178925a37f0
 +    private fun scheduleLocation(latitude: Double, longitude: Double, immediate: Boolean = false) {
 +        if (!latitude.isFinite() || !longitude.isFinite()) return
 +        synchronized(publishLock) {
-+            latestLocation = latitude to longitude
++            latestLocation = Move(latitude, longitude, gestureGeneration)
 +            if (immediate) publishHandler.removeCallbacks(publishFrame)
 +            if (immediate || !publishQueued) {
 +                publishQueued = true
@@ -6274,10 +6286,10 @@ index 0000000000000000000000000000000000000000..9b8ee376ca5a8a19d53be2273822b69a
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt b/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..38b99a5f46b1e802c5292e8a7d8bedecad423a88
+index 0000000000000000000000000000000000000000..fa6323a7f8cc3d1454d8c150f85b2ea101fe9274
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/LocationController.kt
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,72 @@
 +package io.github.phantom.gps.utils
 +
 +import android.app.Notification
@@ -6285,6 +6297,10 @@ index 0000000000000000000000000000000000000000..38b99a5f46b1e802c5292e8a7d8bedec
 +import android.content.Intent
 +import androidx.core.app.NotificationCompat
 +import io.github.phantom.gps.R
++import io.github.phantom.gps.gsApp
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.delay
++import kotlinx.coroutines.launch
 +
 +object LocationController {
 +
@@ -6315,8 +6331,16 @@ index 0000000000000000000000000000000000000000..38b99a5f46b1e802c5292e8a7d8bedec
 +        return true
 +    }
 +
-+    fun stop(context: Context) {
-+        PrefManager.updateNow(start = false, la = PrefManager.getLat, ln = PrefManager.getLng)
++    fun stop(context: Context): Boolean {
++        val published = PrefManager.updateNow(start = false, la = PrefManager.getLat, ln = PrefManager.getLng)
++        if (!published && io.github.phantom.gps.BuildConfig.MODERN_XPOSED) {
++            val app = context.applicationContext
++            val generation = PrefManager.stopGeneration
++            gsApp.globalScope.launch(Dispatchers.IO) {
++                delay(300L)
++                if (PrefManager.retryStop(generation)) LocationRefresh.send(app)
++            }
++        }
 +        LocationRefresh.send(context)
 +        context.stopService(Intent(context, JoystickService::class.java))
 +        LicenseGuard.stopActiveHeartbeat(context)
@@ -6327,6 +6351,7 @@ index 0000000000000000000000000000000000000000..38b99a5f46b1e802c5292e8a7d8bedec
 +                addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
 +            }
 +        )
++        return published
 +    }
 +
 +    fun updateStartedNotification(context: Context, label: String?) {
@@ -7019,10 +7044,10 @@ index 0000000000000000000000000000000000000000..42c33415002004f2b24906ad517311ff
 +
 diff --git a/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..4860c7cb857ca1004c0576b1d31787004307b379
+index 0000000000000000000000000000000000000000..8212a32e5e3f7775cad98a06da377fd433f6d711
 --- /dev/null
 +++ b/app/src/main/java/io/github/phantom/gps/utils/PrefManager.kt
-@@ -0,0 +1,241 @@
+@@ -0,0 +1,253 @@
 +package io.github.phantom.gps.utils
 +
 +import android.annotation.SuppressLint
@@ -7217,8 +7242,20 @@ index 0000000000000000000000000000000000000000..4860c7cb857ca1004c0576b1d3178700
 +     * Synchronous write for cross-process consumers (XSharedPreferences in Xposed).
 +     * Prefer this for "Start/Stop" actions where we want the hook to react immediately.
 +     */
++    @Volatile var stopGeneration = 0L
++        private set
++
++    @Synchronized
++    fun retryStop(generation: Long): Boolean =
++        generation == stopGeneration && !isStarted && publishHookState()
++
++    @Synchronized
++    fun updateJoystick(generation: Long, latitude: Double, longitude: Double): Boolean =
++        generation == stopGeneration && isStarted && updateNow(true, latitude, longitude)
++
 +    @Synchronized
 +    fun updateNow(start: Boolean, la: Double, ln: Double, trace: ClipboardTrace? = null, requestId: String = ""): Boolean {
++        if (!start) stopGeneration++
 +        if(start&&!isHookSharingAvailable)return false
 +        val previous = if (BuildConfig.MODERN_XPOSED && start) pref.all else null
 +        val prefEditor = pref.edit()
@@ -22834,10 +22871,10 @@ index 0000000000000000000000000000000000000000..b2f2ac459b22619adf98ee5c56121528
 +}
 diff --git a/app/src/modern/java/io/github/phantom/gps/xposed/InstantLocationDispatcher.kt b/app/src/modern/java/io/github/phantom/gps/xposed/InstantLocationDispatcher.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..97fffd0d2c98d1b07fd83d3ae323001f0767506e
+index 0000000000000000000000000000000000000000..86f7d3c71f31fb21517cb35b069b3df5fbdb4587
 --- /dev/null
 +++ b/app/src/modern/java/io/github/phantom/gps/xposed/InstantLocationDispatcher.kt
-@@ -0,0 +1,87 @@
+@@ -0,0 +1,114 @@
 +package io.github.phantom.gps.xposed
 +
 +import android.location.Location
@@ -22880,9 +22917,31 @@ index 0000000000000000000000000000000000000000..97fffd0d2c98d1b07fd83d3ae323001f
 +        subscribers.removeAll { it.callback.get() == null || it.callback.get() === callback }
 +    }
 +
-+    @Synchronized fun clearGeneration() { lastGeneration = null }
++    @Synchronized
++    fun clearGeneration(): Boolean {
++        val wasActive = lastGeneration != null
++        lastGeneration = null
++        return wasActive
++    }
 +
-+    fun dispatch(latitude: Double, longitude: Double, accuracy: Float, generation: String): Int {
++    @Synchronized
++    fun hasSubscribers(): Boolean = subscribers.any { it.callback.get() != null }
++
++    @Synchronized
++    private fun isCurrent(subscriber: Subscriber, generation: String?): Boolean =
++        lastGeneration == generation && subscribers.any { it === subscriber }
++
++    fun restore(location: Location, isStillStopped: () -> Boolean) {
++        val current = synchronized(this) { subscribers.toList() }
++        current.forEach { subscriber ->
++            subscriber.handler.post {
++                if (!isStillStopped() || !isCurrent(subscriber, null)) return@post
++                deliver(subscriber, Location(location))
++            }
++        }
++    }
++
++    fun dispatch(latitude: Double, longitude: Double, accuracy: Float, generation: String, onDelivered: (String) -> Unit): Int {
 +        if (!latitude.isFinite() || !longitude.isFinite() ||
 +            latitude !in -90.0..90.0 || longitude !in -180.0..180.0 ||
 +            !accuracy.isFinite() || accuracy < 0f) return 0
@@ -22896,7 +22955,7 @@ index 0000000000000000000000000000000000000000..97fffd0d2c98d1b07fd83d3ae323001f
 +        }
 +        current.forEach { subscriber ->
 +            subscriber.handler.post {
-+                val callback = subscriber.callback.get() ?: return@post
++                if (!isCurrent(subscriber, generation)) return@post
 +                val fix = Location("gps").apply {
 +                    this.latitude = latitude
 +                    this.longitude = longitude
@@ -22904,15 +22963,20 @@ index 0000000000000000000000000000000000000000..97fffd0d2c98d1b07fd83d3ae323001f
 +                    this.time = System.currentTimeMillis()
 +                    this.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
 +                }
-+                runCatching {
-+                    when (subscriber.kind) {
-+                        Kind.PLATFORM -> (callback as LocationListener).onLocationChanged(fix)
-+                        Kind.FUSED -> sendFused(callback, fix)
-+                    }
-+                }.onFailure { Log.w("GeoX-InstantSync", "Callback dispatch failed", it) }
++                if (deliver(subscriber, fix)) onDelivered(subscriber.kind.name)
 +            }
 +        }
 +        return current.size
++    }
++
++    private fun deliver(subscriber: Subscriber, fix: Location): Boolean {
++        val callback = subscriber.callback.get() ?: return false
++        return runCatching {
++            when (subscriber.kind) {
++                Kind.PLATFORM -> (callback as LocationListener).onLocationChanged(fix)
++                Kind.FUSED -> sendFused(callback, fix)
++            }
++        }.onFailure { Log.w("GeoX-InstantSync", "Callback dispatch failed", it) }.isSuccess
 +    }
 +
 +    private fun sendFused(callback: Any, location: Location) {
@@ -22927,10 +22991,10 @@ index 0000000000000000000000000000000000000000..97fffd0d2c98d1b07fd83d3ae323001f
 +}
 diff --git a/app/src/modern/java/io/github/phantom/gps/xposed/ModernHookEntry.kt b/app/src/modern/java/io/github/phantom/gps/xposed/ModernHookEntry.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..367485b38a0b196f4c5a4fc2ad3d8f02957f328f
+index 0000000000000000000000000000000000000000..29c70d04d2fb90e29858047aa9f24a7c89abf7b3
 --- /dev/null
 +++ b/app/src/modern/java/io/github/phantom/gps/xposed/ModernHookEntry.kt
-@@ -0,0 +1,458 @@
+@@ -0,0 +1,496 @@
 +package io.github.phantom.gps.xposed
 +
 +import android.app.Application
@@ -23101,11 +23165,45 @@ index 0000000000000000000000000000000000000000..367485b38a0b196f4c5a4fc2ad3d8f02
 +        return false
 +    }
 +
-+    private fun pushInstantSnapshot(current: State) {
-+        val fix = current.fix ?: run { instantDispatcher.clearGeneration(); return }
++    @Volatile private var lastDelivered: Pair<HookLocationSnapshot, String>? = null
++    private var restoreRequest: android.os.CancellationSignal? = null
++    @Volatile private var restoreGeneration = 0L
++
++    @Suppress("DEPRECATION")
++    @android.annotation.SuppressLint("MissingPermission")
++    private fun pushInstantSnapshot(ctx: Context, current: State, handler: Handler) {
++        val fix = current.fix
++        if (fix == null) {
++            lastDelivered = null
++            if (!instantDispatcher.clearGeneration() || current.reason != "STOPPED" ||
++                current.systemMode || Build.VERSION.SDK_INT < 30 || !instantDispatcher.hasSubscribers()) return
++            val manager = ctx.getSystemService(LocationManager::class.java) ?: return
++            val provider = runCatching {
++                manager.getBestProvider(android.location.Criteria(), true)
++            }.getOrNull() ?: return
++            val signal = android.os.CancellationSignal()
++            val generation = ++restoreGeneration
++            restoreRequest = signal
++            runCatching {
++                manager.getCurrentLocation(provider, signal, java.util.concurrent.Executor { handler.post(it) }) { location ->
++                    if (restoreGeneration != generation) return@getCurrentLocation
++                    restoreRequest = null
++                    if (location == null || location.isFromMockProvider) return@getCurrentLocation
++                    instantDispatcher.restore(location) {
++                        restoreGeneration == generation && readState().reason == "STOPPED"
++                    }
++                }
++            }.onFailure { restoreRequest = null }
++            return
++        }
++        restoreGeneration++
++        restoreRequest?.cancel()
++        restoreRequest = null
 +        val generation = listOf(fix.lat, fix.lon, fix.snapshot.requestId,
 +            fix.snapshot.traceId, fix.snapshot.started, fix.frame).joinToString(":")
-+        val count = instantDispatcher.dispatch(fix.lat, fix.lon, fix.snapshot.accuracy, generation)
++        val count = instantDispatcher.dispatch(fix.lat, fix.lon, fix.snapshot.accuracy, generation) { path ->
++            lastDelivered = fix.snapshot to path
++        }
 +        if (count > 0) log(Log.INFO, "GeoX-InstantSync", "Scheduled $count callbacks")
 +    }
 +
@@ -23198,7 +23296,7 @@ index 0000000000000000000000000000000000000000..367485b38a0b196f4c5a4fc2ad3d8f02
 +                val current = readState(force = true)
 +                when (intent.action) {
 +                    LocationRefresh.ACTION -> {
-+                        if (BuildConfig.INSTANTSYNC_EXPERIMENT && ctx.packageName != "android") pushInstantSnapshot(current)
++                        if (BuildConfig.INSTANTSYNC_EXPERIMENT && ctx.packageName != "android") pushInstantSnapshot(ctx, current, Handler(worker.looper))
 +                        promoteIfActive(ctx, current)
 +                    }
 +                    LocationRefresh.CONFIRM_ACTION -> {
@@ -23216,6 +23314,10 @@ index 0000000000000000000000000000000000000000..367485b38a0b196f4c5a4fc2ad3d8f02
 +                            putString("reason", current.reason)
 +                            putBoolean("system_mode_enabled", current.systemMode)
 +                            putBoolean("system_hooks_ready", platformHooks > 0)
++                            val delivery = lastDelivered
++                            if (delivery != null && delivery.first == current.fix?.snapshot) {
++                                putString("active_callback_delivered", delivery.second)
++                            }
 +                            putInt("platform_hooks", platformHooks)
 +                            putInt("fused_hooks", fusedHooks)
 +                            putInt("gnss_hooks", gnssHooks)
@@ -23251,7 +23353,7 @@ index 0000000000000000000000000000000000000000..367485b38a0b196f4c5a4fc2ad3d8f02
 +            requestId != id -> 409
 +            else -> 101
 +        }
-+        reply.send(code, Bundle().apply { putString("request_id", id) })
++        reply.send(code, Bundle().apply { putString("request_id", id); putBoolean("snapshot_loaded", code == 101) })
 +    }
 +
 +    private fun promoteIfActive(ctx: Context, current: State) {

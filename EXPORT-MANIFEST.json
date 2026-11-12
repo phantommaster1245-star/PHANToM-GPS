@@ -1,8 +1,8 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "sourceTree": "09a0076b18997f602043a5cdb45e9456788770f0",
+  "sourceTree": "001f978ed6ed54bff5b0813166f13d28df7112dc",
   "brand": "GeoX",
-  "version": "0.1.07",
+  "version": "0.1.13",
   "files": [
     {
       "path": ".gitattributes",
@@ -28,6 +28,26 @@
       "path": "GEOX_0.1.07_MODERN_HANDOFF.md",
       "bytes": 4032,
       "sha256": "5bab22947457a6cd1559939171e36f186799a88fa3b74dee9d92d169972a4f60"
+    },
+    {
+      "path": "GEOX_0.1.09_FAVORITES.md",
+      "bytes": 1513,
+      "sha256": "aa16ac031d6a8e3d5f68f98566e9953fe6f7ad5b4f2fde3e2b0c38111b19284a"
+    },
+    {
+      "path": "GEOX_0.1.10_INSTANTSYNC_RELEASE.md",
+      "bytes": 2411,
+      "sha256": "a6b212723d486f27a3fe1c87ef01a8c033caf31009ec06bc3ed41773e8836ab1"
+    },
+    {
+      "path": "GEOX_0.1.11_CONTINUOUS_RELEASE.md",
+      "bytes": 1971,
+      "sha256": "cde1af378629c916b2db8fe761fa1b3cd6fcfd86975c09367fd372ae2e7dbf2e"
+    },
+    {
+      "path": "GEOX_0.1.12_SEAMLESS_AUTH_RELEASE.md",
+      "bytes": 2461,
+      "sha256": "7d7c15b759ecbdc50a69218a8bb7c024050e9b16a3949fc430d735cc8dbac12d"
     },
     {
       "path": "GEOX_FULL_LOCK_HANDOFF.md",
@@ -61,8 +81,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5784,
-      "sha256": "7701c02acc19449f3f49dc757c3ce10203f682986bf00c88dcfa47e39f0886f9"
+      "bytes": 5967,
+      "sha256": "3531ac21017836cb93ce1de81e1e421039bdf25a1d5b4c6b9c9ee7afe529b216"
     },
     {
       "path": "VALIDATION.txt",
@@ -72,7 +92,7 @@
     {
       "path": "VERSIONING.md",
       "bytes": 289,
-      "sha256": "8fabec5bf98ee2c20c1d8b88822a0840a8c13c515c6ce298dee4869b62922e43"
+      "sha256": "c0f1c26293d448a353e17c02450f968a98a5c6b59a2d5f22e1e1bcb0a46f052b"
     },
     {
       "path": "build.gradle",
@@ -281,8 +301,8 @@
     },
     {
       "path": "patches/phantom-gps.patch",
-      "bytes": 1397059,
-      "sha256": "26454fc0ae3c1014afafc5202b105730102e1ec9da9caef7b684bc43a199b1b0"
+      "bytes": 1434703,
+      "sha256": "2fadf91ed791acd1d91a1d78be09a2f8e60f9b7ce12df0d7b4ea1b25b92c8a1c"
     },
     {
       "path": "settings.gradle",
@@ -301,8 +321,8 @@
     },
     {
       "path": "web/README.md",
-      "bytes": 3387,
-      "sha256": "6840297624d607cdd3138e53f7a2e2036cd9da8e893179e1086a86fdd4764f83"
+      "bytes": 3412,
+      "sha256": "3841976f56d35e1fada7d83e3c1e81448f7bb8574a3a737012737a93acb491e7"
     },
     {
       "path": "web/dist/account.html",
@@ -455,14 +475,44 @@
       "sha256": "8397887bfeb8629ebafc607947816564275fde9a6ad2a84e5dd637b3732ddda6"
     },
     {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.08.apk",
+      "bytes": 4328031,
+      "sha256": "738cd5418c53b3f3ea58f8007594206ffb67ea9545234fd7d2e4617d3cc52c82"
+    },
+    {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.09.apk",
+      "bytes": 4332727,
+      "sha256": "d308e5db7dce1c1e5d9762721d2a2cab16817b7ff84dc2d18d3d4a7ad7303b96"
+    },
+    {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.10.apk",
+      "bytes": 4332727,
+      "sha256": "10571da2d97a08515e3998f3f884abed3d61440edfda5deffc16fe163ff3ce27"
+    },
+    {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.11.apk",
+      "bytes": 4332727,
+      "sha256": "4c03c28976908499e35890b6a66ca6c027bbff2337d1a4195ab4447c47ead44c"
+    },
+    {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.12.apk",
+      "bytes": 4332887,
+      "sha256": "b46760436279bbaf1ddbefd6ed38b86d8f0f9629138c9cd950b58dea623b59ae"
+    },
+    {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.13.apk",
+      "bytes": 4480392,
+      "sha256": "3ddfb8420aae6be5c53cc5e478dd4ee701c30fea5dd842191ae609a82c032044"
+    },
+    {
       "path": "web/dist/downloads/channels.json",
-      "bytes": 45,
-      "sha256": "467d39c5791d477fcaf100715490e45ea19a9f552ba42da3cf2b273172abcb1a"
+      "bytes": 117,
+      "sha256": "c1087ee2c8ea828f14a1d9a9b88eb5ff26c199f721336df96f44e7ad7b0ef7f0"
     },
     {
       "path": "web/dist/downloads/version.json",
-      "bytes": 887,
-      "sha256": "f4477197857331d21bf2488035cf8ff2b1bd18e3f38167f9d81377462701f950"
+      "bytes": 774,
+      "sha256": "93b71799cf3f988783d5d324e50e70b9ce18a8a094043bbd55376c94bd3926b0"
     },
     {
       "path": "web/dist/index.html",
