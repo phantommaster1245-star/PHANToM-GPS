@@ -476,8 +476,8 @@
     },
     {
       "path": "web/dist/reset-password.html",
-      "bytes": 1900,
-      "sha256": "ab8fc1d00346805bc366ff26d6f6706da84cafb10ca8a5a28348aa5ed67ea974"
+      "bytes": 2430,
+      "sha256": "b0ffe9a09ca835342739f112b964c5bdb8c9e4c8dba6ced2a0ba7377bddabd08"
     },
     {
       "path": "web/tests/membership.test.mjs",
