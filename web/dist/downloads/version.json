@@ -1,14 +1,12 @@
 {
   "packageName": "io.github.phantom.gps",
-  "version": "v0.1.13",
-  "versionCode": 34,
-  "filename": "PHANToM-GPS-v0.1.13.apk",
-  "sha256": "3ddfb8420aae6be5c53cc5e478dd4ee701c30fea5dd842191ae609a82c032044",
-  "bytes": 4480392,
-  "publishedAt": "2026-11-12T09:37:24.366342+00:00",
+  "version": "v0.1.14",
+  "versionCode": 35,
+  "filename": "PHANToM-GPS-v0.1.14.apk",
+  "sha256": "7ae1787bb202e765b8a113f5491b69457a2c76e77f9352158cb7fa1144b1bedd",
+  "bytes": 4480848,
+  "publishedAt": "2026-11-12T11:52:29.811176+00:00",
   "changes": [
-    "ปรับ STOP ให้ตรวจผลการส่งสถานะไปยัง LSPosed และตัดคิวพิกัดจากคำสั่งเก่า",
-    "ขอตำแหน่งจริงเบื้องหลังหลัง STOP บน Android 11 ขึ้นไปเมื่อปิด Advanced Hook",
-    "แก้แอปล้มเมื่อสลับ START และ STOP ต่อเนื่อง"
+    "เพิ่มเครดิต Dev by PHANToM ในหน้าเกี่ยวกับ GeoX"
   ]
 }

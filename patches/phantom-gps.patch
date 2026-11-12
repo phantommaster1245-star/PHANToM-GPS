@@ -1,5 +1,5 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index d211674657a4308ba7437287558c90117ce56c75..4de7f4ae941bc54cc350a304a04075ca3ca8acd6 100644
+index d211674657a4308ba7437287558c90117ce56c75..138758b78a9a7522353437fd2e121cd84cde46f3 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -3,0 +4 @@ plugins {
@@ -7,7 +7,7 @@ index d211674657a4308ba7437287558c90117ce56c75..4de7f4ae941bc54cc350a304a04075ca
 @@ -10 +11,27 @@ plugins {
 -def tagName = '0.0.6'
 +def modernXposed = providers.gradleProperty('geoxModern').orNull == 'true'
-+def tagName = '0.1.13'
++def tagName = '0.1.14'
 +
 +def sha256Hex(byte[] bytes) {
 +    def digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -41,7 +41,7 @@ index d211674657a4308ba7437287558c90117ce56c75..4de7f4ae941bc54cc350a304a04075ca
 +        applicationId "io.github.phantom.gps"
 @@ -18 +45,3 @@ android {
 -        versionCode 6
-+        versionCode 34
++        versionCode 35
 +        buildConfigField "boolean", "MODERN_XPOSED", modernXposed.toString()
 +        buildConfigField "boolean", "INSTANTSYNC_EXPERIMENT", modernXposed.toString()
 @@ -20 +49,3 @@ android {
@@ -14825,6 +14825,18 @@ index 7b0cd4c437beac7223a7c08be5f6bd6b6c6380ba..00000000000000000000000000000000
 -      android:pathData="M509.96,290.04L509.97,290L509.93,290.06L240,405.38L376.37,423.65L394.62,560L509.94,290.1L510,290.02L509.96,290.04Z"
 -      android:fillType="nonZero"/>
 -</vector>
+diff --git a/app/src/main/res/layout/about.xml b/app/src/main/res/layout/about.xml
+index 08dbfbc9a3cf6b7a506550867bbf70120d34502a..2d76f9b1b2587c78b3007eaf8c34a7959aa08d99 100644
+--- a/app/src/main/res/layout/about.xml
++++ b/app/src/main/res/layout/about.xml
+@@ -33,0 +34,7 @@
++        <com.google.android.material.textview.MaterialTextView
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="4dp"
++            android:text="@string/geox_developer_credit"
++            android:textSize="14sp" />
++
 diff --git a/app/src/main/res/layout/activity_activation.xml b/app/src/main/res/layout/activity_activation.xml
 new file mode 100644
 index 0000000000000000000000000000000000000000..411c6ccadb1c2b06b6d69fe05a4cac10795aed18
@@ -22449,7 +22461,7 @@ index 93e8e6d939a758aa333d2776ca2adb9912ee6757..6afae3b755778703822f36bc91ce894a
 \ No newline at end of file
 +</resources>
 diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
-index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..bc04cdf9c3b7c8abebbf77e5644a9c700499fcfb 100644
+index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..12717bdf844b212fd53c816aa871ebdf37f1b6c8 100644
 --- a/app/src/main/res/values/strings.xml
 +++ b/app/src/main/res/values/strings.xml
 @@ -4,2 +4,2 @@
@@ -22524,7 +22536,7 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..bc04cdf9c3b7c8abebbf77e5644a9c70
 +    <string name="license_locked_reason_package_mismatch">This license does not match this app package.</string>
 +    <string name="license_locked_reason_missing">This license could not be found on the server.</string>
 +    <string name="license_locked_reason_generic">This device cannot use the app until the license is verified again.</string>
-@@ -61 +113,25 @@
+@@ -61 +113,26 @@
 -</resources>
 \ No newline at end of file
 +    <string name="check_update_now">ตรวจสอบอัปเดตตอนนี้</string>
@@ -22551,7 +22563,8 @@ index 0c5cd4bb926ca6ecd8c0886b8ad08e5ebbe99e25..bc04cdf9c3b7c8abebbf77e5644a9c70
 +    <string name="activation_checking">กำลังตรวจสอบการเปิดใช้งาน…</string>
 +    <string name="activation_submitting">กำลังเปิดใช้งานแอป…</string>
 +    <string name="activation_retry_check">ตรวจสอบอีกครั้ง</string>
-+<string name="geox_ready">Ready</string><string name="geox_active">Active</string><string name="geox_selected_location">SELECTED LOCATION</string><string name="geox_start">START</string><string name="geox_stop">STOP</string><string name="geox_search">ค้นหาสถานที่ หรือพิกัด</string></resources>
++<string name="geox_ready">Ready</string><string name="geox_active">Active</string><string name="geox_selected_location">SELECTED LOCATION</string><string name="geox_start">START</string><string name="geox_stop">STOP</string><string name="geox_search">ค้นหาสถานที่ หรือพิกัด</string>    <string name="geox_developer_credit" translatable="false">Dev by PHANToM</string>
++</resources>
 diff --git a/app/src/main/res/values/themes.xml b/app/src/main/res/values/themes.xml
 index 423f85f518f6d6ba568f2b95ef0b1a8315ca4588..aff1dc182646dfc756126246c1116463d5c27fba 100644
 --- a/app/src/main/res/values/themes.xml

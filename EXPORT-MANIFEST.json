@@ -1,8 +1,8 @@
 {
   "base": "0577d8e8a3a0fea7d0e421509be8506c760080ba",
-  "sourceTree": "001f978ed6ed54bff5b0813166f13d28df7112dc",
+  "sourceTree": "0a229dfb6e5e3d28859f1b486a0717e26939e26a",
   "brand": "GeoX",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "files": [
     {
       "path": ".gitattributes",
@@ -92,7 +92,7 @@
     {
       "path": "VERSIONING.md",
       "bytes": 289,
-      "sha256": "c0f1c26293d448a353e17c02450f968a98a5c6b59a2d5f22e1e1bcb0a46f052b"
+      "sha256": "bc5a7804eed2584e65d600c47a1ceddaad396500d91423aea2774ea840bed820"
     },
     {
       "path": "build.gradle",
@@ -301,8 +301,8 @@
     },
     {
       "path": "patches/phantom-gps.patch",
-      "bytes": 1434703,
-      "sha256": "2fadf91ed791acd1d91a1d78be09a2f8e60f9b7ce12df0d7b4ea1b25b92c8a1c"
+      "bytes": 1435374,
+      "sha256": "085218cc19b73fdfc43d6b62216b15a78605df250c588d0071a5a5f51ffdf8b2"
     },
     {
       "path": "settings.gradle",
@@ -505,14 +505,19 @@
       "sha256": "3ddfb8420aae6be5c53cc5e478dd4ee701c30fea5dd842191ae609a82c032044"
     },
     {
+      "path": "web/dist/downloads/PHANToM-GPS-v0.1.14.apk",
+      "bytes": 4480848,
+      "sha256": "7ae1787bb202e765b8a113f5491b69457a2c76e77f9352158cb7fa1144b1bedd"
+    },
+    {
       "path": "web/dist/downloads/channels.json",
-      "bytes": 117,
-      "sha256": "c1087ee2c8ea828f14a1d9a9b88eb5ff26c199f721336df96f44e7ad7b0ef7f0"
+      "bytes": 174,
+      "sha256": "b3fb306aabf640d83b2810348a60e3b4d993dc84a7f21a49a82416f109563cae"
     },
     {
       "path": "web/dist/downloads/version.json",
-      "bytes": 774,
-      "sha256": "93b71799cf3f988783d5d324e50e70b9ce18a8a094043bbd55376c94bd3926b0"
+      "bytes": 410,
+      "sha256": "bc6c090cd0bf89ea11eb8de8dfdf87c5aa4e773c875b3923ce622c51b5a2a79f"
     },
     {
       "path": "web/dist/index.html",
